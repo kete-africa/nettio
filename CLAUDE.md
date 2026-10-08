@@ -66,4 +66,6 @@ pnpm typecheck        # the build, then the types
 pnpm test             # rules, rights, isolation (Neon "test" branch)
 pnpm test:e2e         # the screens in a browser
 pnpm demo             # try it signed in, with a small laundry set up (no Compte Kete needed)
+pnpm eval:ask         # « Demander » with the real model (reads .env.demo)
+pnpm eval:dictate     # a deposit said or photographed, with the real model (reads .env.demo)
 ```

@@ -15,6 +15,10 @@ import { SignJWT } from 'jose';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const localEnv = fileURLToPath(new URL('../.env', import.meta.url));
 if (existsSync(localEnv)) process.loadEnvFile(localEnv);
+// The model, kept apart from the tests' environment: the tests and the browser tests must run
+// with no model connected (`.env.demo`, git-ignored; see .env.example).
+const demoEnv = fileURLToPath(new URL('../.env.demo', import.meta.url));
+if (existsSync(demoEnv)) process.loadEnvFile(demoEnv);
 
 const PORT = 3403;
 const ORGANIZATION = 'org_demo';
