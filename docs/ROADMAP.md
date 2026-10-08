@@ -112,7 +112,8 @@ accounting, Europe (VAT, certified till, card).
 |---|---|---|
 | 0 — the proof of the pain | — | no |
 | 1 — the foundation | yes (`001-foundation`) | no |
-| 2 — the deposit and the day's money | `002-counter` built; `003-money-day` planned | no |
-| 3 to 10 | planned | no |
+| 2 — the deposit and the day's money | yes (`002-counter`, `003-money-day`) | no |
+| 3 — knowing whether I earn | yes (`004-earn`) | no |
+| 4 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.

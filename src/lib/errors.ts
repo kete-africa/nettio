@@ -44,6 +44,15 @@ const sentences: Record<string, () => string> = {
   customer_needed: m.error_customer_needed,
   site_does_not_receive: m.error_site_does_not_receive,
   not_your_site: m.error_not_your_site,
+  cash_session_needed: m.error_cash_session_needed,
+  cash_session_open: m.error_cash_session_open,
+  cash_session_closed: m.error_cash_session_closed,
+  not_your_till: m.error_not_your_till,
+  site_needed: m.error_site_needed,
+  recurring_not_from_till: m.error_recurring_not_from_till,
+  expense_voided: m.error_expense_voided,
+  expense_not_recurring: m.error_invalid_input,
+  stop_before_start: m.error_stop_before_start,
 };
 
 /** The sentence a screen shows for a gesture that did not go through. */

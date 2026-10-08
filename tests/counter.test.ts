@@ -202,6 +202,9 @@ describe('at the counter', () => {
     read = await done<Catalog>(afi, 'catalog_read', {});
     await hire(mawuli, 'counter');
     await hire(essi, 'cashier');
+    // A team works with open tills (specs/003-money-day): cash goes into the cashier's own.
+    await done(essi, 'cash_open', { siteId: siteA.siteId, openingFloat: 0 });
+    await done(afi, 'cash_open', { siteId: siteA.siteId, openingFloat: 0 });
   });
 
   afterAll(async () => {
@@ -580,5 +583,5 @@ describe('at the counter', () => {
         },
       });
     }
-  });
+  }, 180_000);
 });

@@ -103,6 +103,10 @@ test('ready, then handed over with its balance; the day counts it', async ({ pag
   await page.getByRole('button', { name: 'Remettre' }).click();
   drawer = page.getByRole('dialog');
   await expect(drawer.getByLabel('Montant (F CFA)')).toHaveValue('3000');
+  // Cash needs an open till in a team (specs/003-money-day): the message says what to do.
+  await drawer.getByRole('button', { name: 'Remettre' }).click();
+  await expect(drawer.getByText('Ouvrez votre caisse')).toBeVisible();
+  await drawer.getByRole('button', { name: 'Mobile Money' }).click();
   await drawer.getByRole('button', { name: 'Remettre' }).click();
   await expect(page.getByText('Retiré', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Remis au client')).toBeVisible();

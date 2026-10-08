@@ -21,6 +21,7 @@ import { findStaffOf, notePresence, readSettings } from './infrastructure/busine
 
 /** The person on a screen, as the shell needs her: her name, her role, what she may open. */
 export interface Me {
+  userId: string;
   name: string;
   /** Null while she has no organization at the Compte Kete. */
   organizationId: string | null;
@@ -41,7 +42,14 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
   if (!identity) return null;
   const organizationId = identity.organizationId;
   if (!organizationId) {
-    return { name: identity.name, organizationId: null, role: null, permissions: [], business: null };
+    return {
+      userId: identity.userId,
+      name: identity.name,
+      organizationId: null,
+      role: null,
+      permissions: [],
+      business: null,
+    };
   }
   const { staff, settings } = await transaction(organizationId, async (db) => {
     const role = identity.role === 'owner' || identity.role === 'admin' ? 'owner' : null;
@@ -55,6 +63,7 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
   return asPerson(
     identity,
     () => ({
+      userId: identity.userId,
       name: identity.name,
       organizationId,
       role: staff?.active ? staff.role : null,

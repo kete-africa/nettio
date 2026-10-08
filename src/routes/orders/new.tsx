@@ -6,7 +6,7 @@ import type { Customer } from '@/features/customers';
 import { lookupCustomer } from '@/features/customers/functions';
 import type { PaymentMethod } from '@/features/orders';
 import { priceOrder, type PricedLine } from '@/features/orders/domain/pricing';
-import { fetchCounter, receiveOrder } from '@/features/orders/functions';
+import { checkCost, fetchCounter, receiveOrder } from '@/features/orders/functions';
 import { gestureKey, MoneyFields, wholeAmount } from '@/features/orders/ui/MoneyFields';
 import { errorSentence } from '@/lib/errors';
 import { CheckField, cx, ErrorNote, Note, SelectField } from '@/lib/fields';
@@ -53,6 +53,8 @@ function NewOrderPage() {
   const [key, setKey] = useState(() => gestureKey('dep'));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** The guard-rail: the total falls under the variable cost of the content (specs/004-earn). */
+  const [guard, setGuard] = useState<{ below: boolean; variableCost: number | null } | null>(null);
 
   // The site the person last worked at, on this device.
   useEffect(() => {
@@ -132,6 +134,37 @@ function NewOrderPage() {
   const promised = new Date(
     Date.now() + (express ? settings.expressHours : settings.promisedHours) * 3_600_000,
   );
+  // The guard-rail follows what is typed; it says, it never blocks.
+  const guardKey = price
+    ? `${price.total}|${lines.map((l) => `${l.id}:${l.priced.quantity}`).join(',')}`
+    : '';
+  useEffect(() => {
+    setGuard(null);
+    if (!guardKey) return;
+    const [total = '0', content = ''] = guardKey.split('|');
+    if (!content) return;
+    let stale = false;
+    const timer = setTimeout(() => {
+      checkCost({
+        data: {
+          total: Number(total),
+          lines: content.split(',').map((entry) => {
+            const [id = '', quantity = '0'] = entry.split(':');
+            const [lineService = '', lineArticle = ''] = id.split('|');
+            return { serviceId: lineService, articleId: lineArticle || null, quantity: Number(quantity) };
+          }),
+        },
+      })
+        .then((outcome) => {
+          if (!stale && outcome.ok) setGuard(outcome.output);
+        })
+        .catch(() => undefined);
+    }, 500);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [guardKey]);
   const customerKnown = Boolean(found?.customer);
   const ready =
     lines.length > 0 &&
@@ -453,6 +486,15 @@ function NewOrderPage() {
             <Line label={m.order_promised()} value={formatDayTime(promised)} />
           </dl>
 
+          {guard?.below && (
+            <div className="mt-4">
+              <Note>
+                {guard.variableCost === null
+                  ? m.counter_below_cost()
+                  : m.counter_below_cost_amount({ cost: formatMoney(guard.variableCost) })}
+              </Note>
+            </div>
+          )}
           {paying && (
             <div className="mt-5">
               <MoneyFields
