@@ -71,5 +71,5 @@ addresses its owner gave, through the mail and messaging providers of the deploy
 
 ## Not built
 
-Photo entry of a deposit (voice entry lives in the orders feature, specs/011-dictate). See the
-specs' « Known limits ».
+« Demander » by messaging. (Voice and photo entry of a deposit live in the orders feature,
+specs/011-dictate and 014-photo.) See the specs' « Known limits ».

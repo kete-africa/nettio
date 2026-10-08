@@ -768,8 +768,8 @@
   "source_messages": "Messages aux clients",
   "sign_in_not_registered": "La connexion n’est pas disponible : ce Nettio n’est pas encore inscrit au Compte Kete. Un opérateur Kete doit l’inscrire, puis poser son identifiant sur ce déploiement.",
   "result_month_running": "Le mois n’est pas terminé : les charges fixes du mois entier sont déjà comptées, et réparties sur les seules pièces traitées jusqu’ici. Le résultat et les coûts complets s’amélioreront à mesure que les dépôts arrivent.",
-  "dictate_title": "Dire le dépôt",
-  "dictate_hint": "Écrivez ou dictez comme vous le diriez : « 4 chemises et 2 pantalons pour le 90 12 34 56, forfait Business ». Nettio remplit le dépôt ; vous vérifiez et vous enregistrez.",
+  "dictate_title": "Dire ou photographier le dépôt",
+  "dictate_hint": "Écrivez ou dictez comme vous le diriez : « 4 chemises et 2 pantalons pour le 90 12 34 56, forfait Business ». Ou photographiez la liste du client, ou le linge posé pièce par pièce. Nettio remplit le dépôt ; vous vérifiez et vous enregistrez.",
   "dictate_sentence": "Le dépôt, en une phrase",
   "dictate_understand": "Remplir le dépôt",
   "dictate_thinking": "Nettio écoute…",
@@ -822,5 +822,9 @@
   "delivery_never": "Aucun relevé n’est encore parti tout seul.",
   "delivery_status_sent": "Parti",
   "delivery_status_failed": "Refusé",
-  "delivery_status_not_connected": "Canal non branché"
+  "delivery_status_not_connected": "Canal non branché",
+  "dictate_photo": "Photo",
+  "dictate_seen": "Nettio a lu sur la photo : « {seen} ». Vérifiez le dépôt ci-dessous avant d’enregistrer.",
+  "dictate_nothing_seen": "Nettio n’a rien trouvé d’un dépôt sur cette photo. Photographiez une liste écrite, ou le linge posé pièce par pièce, de près et bien éclairé.",
+  "dictate_photo_unreadable": "La photo n’a pas pu être lue. Reprenez-la, ou saisissez le dépôt avec les touches."
 }

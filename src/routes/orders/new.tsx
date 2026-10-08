@@ -65,7 +65,8 @@ function NewOrderPage() {
   // A deposit said in a sentence, or dictated (specs/011-dictate): it fills this form, no more.
   const [sentence, setSentence] = useState('');
   const [listening, setListening] = useState<'idle' | 'recording' | 'thinking'>('idle');
-  const [heard, setHeard] = useState<{ said: string; notFound: string[] } | null>(null);
+  const [heard, setHeard] = useState<{ said: string; photo: boolean; notFound: string[] } | null>(null);
+  const picture = useRef<HTMLInputElement | null>(null);
   const [dictationError, setDictationError] = useState<string | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   /** The guard-rail: the total falls under the variable cost of the content (specs/004-earn). */
@@ -189,7 +190,9 @@ function NewOrderPage() {
     (price.discount === 0 || reason.trim() !== '');
 
   /** Fills the form with what Nettio understood; the person checks, corrects and saves. */
-  async function grasp(said: { text: string } | { audio: string }) {
+  async function grasp(
+    said: { text: string } | { audio: string } | { image: string; mediaType: 'image/jpeg' },
+  ) {
     setListening('thinking');
     setDictationError(null);
     try {
@@ -200,6 +203,7 @@ function NewOrderPage() {
           no_voice: m.dictate_no_voice,
           budget_spent: m.ask_budget_spent,
           nothing_heard: m.dictate_nothing_heard,
+          nothing_seen: m.dictate_nothing_seen,
           not_allowed: m.error_not_allowed,
         };
         setDictationError((reasons[outcome.reason] ?? m.error_generic)());
@@ -225,12 +229,39 @@ function NewOrderPage() {
       if (understood.customerName) setName(understood.customerName);
       if (understood.packId) setPackId(understood.packId);
       if (understood.express) setExpress(true);
-      setHeard({ said: outcome.heard, notFound: understood.notFound });
+      setHeard({
+        said: outcome.heard,
+        photo: outcome.source === 'photo',
+        notFound: understood.notFound,
+      });
       setSentence('');
     } catch {
       setDictationError(m.error_generic());
     } finally {
       setListening('idle');
+    }
+  }
+
+  /**
+   * A picture of a list or of the laundry laid out: made smaller on the phone first (a counter's
+   * connection is slow), read once, never kept.
+   */
+  async function look(file: File | undefined) {
+    if (!file) return;
+    setDictationError(null);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1] ?? '';
+      if (image.length < 100) throw new Error('empty');
+      await grasp({ image, mediaType: 'image/jpeg' });
+    } catch {
+      setDictationError(m.dictate_photo_unreadable());
     }
   }
 
@@ -342,6 +373,31 @@ function NewOrderPage() {
             onChange={setSentence}
           />
           <div className="mt-3 flex flex-wrap justify-end gap-3">
+            {counter.dictation.photo && (
+              <>
+                <input
+                  ref={picture}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="sr-only"
+                  aria-label={m.dictate_photo()}
+                  tabIndex={-1}
+                  onChange={(event) => {
+                    void look(event.target.files?.[0]);
+                    event.target.value = '';
+                  }}
+                />
+                <Button
+                  variant="secondary"
+                  disabled={listening !== 'idle'}
+                  onClick={() => picture.current?.click()}
+                >
+                  <Icon name="file" />
+                  {m.dictate_photo()}
+                </Button>
+              </>
+            )}
             {counter.dictation.voice && (
               <Button variant="secondary" disabled={listening === 'thinking'} onClick={() => void record()}>
                 <Icon name={listening === 'recording' ? 'stop' : 'mic'} />
@@ -356,7 +412,13 @@ function NewOrderPage() {
             </Button>
           </div>
           <div className="mt-3 flex flex-col gap-2" aria-live="polite">
-            {heard && <Note>{m.dictate_understood({ said: heard.said })}</Note>}
+            {heard && (
+              <Note>
+                {heard.photo
+                  ? m.dictate_seen({ seen: heard.said })
+                  : m.dictate_understood({ said: heard.said })}
+              </Note>
+            )}
             {heard && heard.notFound.length > 0 && (
               <ErrorNote>{m.dictate_not_found({ items: heard.notFound.join(' · ') })}</ErrorNote>
             )}

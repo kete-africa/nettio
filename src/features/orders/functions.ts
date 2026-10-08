@@ -6,7 +6,7 @@ import { getModel, getTranscriber } from '@/platform/ai';
 import { holds } from '@/platform/rights';
 import { perform, signedIn } from '@/platform/screen';
 import type { DaySummary } from './infrastructure/orders.tables';
-import { understandDeposit, type UnderstandOutcome } from './understand';
+import { pictureTypes, understandDeposit, type UnderstandOutcome } from './understand';
 import {
   cancelInput,
   collectInput,
@@ -32,8 +32,8 @@ export interface Counter {
   };
   mayExceedDiscount: boolean;
   mayCollect: boolean;
-  /** Whether a deposit may be said in a sentence, and dictated (specs/011-dictate). */
-  dictation: { text: boolean; voice: boolean };
+  /** Whether a deposit may be said in a sentence, dictated, photographed (specs/011, 014). */
+  dictation: { text: boolean; voice: boolean; photo: boolean };
 }
 
 /** The key of a gesture: the same one sent twice — a double tap, a retry — runs once. */
@@ -44,7 +44,11 @@ export const fetchCounter = createServerFn({ method: 'GET' }).handler(async () =
   if (!read.ok) return null;
   return {
     ...read.output,
-    dictation: { text: getModel() !== null, voice: getModel() !== null && getTranscriber() !== null },
+    dictation: {
+      text: getModel() !== null,
+      voice: getModel() !== null && getTranscriber() !== null,
+      photo: getModel() !== null,
+    },
   };
 });
 
@@ -144,8 +148,8 @@ export const checkCost = createServerFn({ method: 'POST' })
   );
 
 /**
- * A deposit said in a sentence, or dictated: what Nettio understood of it, to fill the counter's
- * form. Nothing is saved here; the person checks and saves the deposit herself.
+ * A deposit said in a sentence, dictated, or photographed: what Nettio understood of it, to fill
+ * the counter's form. Nothing is saved here; the person checks and saves the deposit herself.
  */
 export const understand = createServerFn({ method: 'POST' })
   .validator((input: unknown) =>
@@ -154,6 +158,8 @@ export const understand = createServerFn({ method: 'POST' })
         z.object({ text: z.string().trim().min(2).max(1500) }),
         // A recording of a few seconds, base64: 3 MB at most.
         z.object({ audio: z.string().min(100).max(4_200_000) }),
+        // A picture the screen made smaller first, base64: 3 MB at most.
+        z.object({ image: z.string().min(100).max(4_200_000), mediaType: z.enum(pictureTypes) }),
       ])
       .parse(input),
   )
@@ -167,7 +173,11 @@ export const understand = createServerFn({ method: 'POST' })
         }
         return understandDeposit(
           { userId: identity.userId, organizationId: caller.organizationId },
-          'text' in data ? { text: data.text } : { audio: new Uint8Array(Buffer.from(data.audio, 'base64')) },
+          'text' in data
+            ? { text: data.text }
+            : 'audio' in data
+              ? { audio: new Uint8Array(Buffer.from(data.audio, 'base64')) }
+              : { image: new Uint8Array(Buffer.from(data.image, 'base64')), mediaType: data.mediaType },
           counter.output.catalog,
         );
       });

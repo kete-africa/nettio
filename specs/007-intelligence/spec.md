@@ -60,8 +60,8 @@ copilot reads, and prepares drafts a person validates. Nothing more is needed he
 ## Known limits
 
 - **Voice entry of a deposit is built since** `specs/011-dictate` — not proven in a real, noisy
-  counter (`docs/product/decisions.md`, « Ce qui n'est pas encore su »). **Photo entry is not
-  built.**
+  counter (`docs/product/decisions.md`, « Ce qui n'est pas encore su »). Photo entry: `specs/014-photo`,
+  not proven on a real photograph.
 - **The evening statement is sent by itself since** `specs/013-statement-sent`: at the hour and to
   where the owner decided. No channel was exercised live yet.
 - **A first evaluation with the real model exists, and it is small**: `pnpm eval:ask` asks eight
