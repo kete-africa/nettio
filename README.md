@@ -25,6 +25,17 @@ pnpm db:migrate
 pnpm dev
 ```
 
+## Try it without the Compte Kete
+
+```bash
+pnpm demo                 # a browser opens, signed in as the owner of « Pressing Démo »
+pnpm demo -- --as cashier # or manager, counter, workshop, accountant
+```
+
+The production build on the Neon "test" branch, in its own organization (`org_demo`), with prices,
+packs, cost sheets, charges, an open till and a few deposits. The session is signed with a secret
+made for that run only; nothing of it works on another deployment.
+
 ## Check it
 
 ```bash

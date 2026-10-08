@@ -81,9 +81,7 @@ A behavior change ships with its documentation and its diagram (feature `README.
   Kit feature, branched from `dev`).
 - Each feature: `specs/NNN-slug/spec.md` (what and why, acceptance scenarios), `plan.md` (how),
   `tasks.md` (the steps), then code, tests and documentation in the same pull request to `dev`.
-- A pull request merges with the checks of `.github/workflows/ci.yml` green — run locally and
-  reported in the pull request while the organization's CI minutes are blocked
-  (`docs/decisions/0003`).
+- A pull request merges with the checks of `.github/workflows/ci.yml` green.
 - Never push to `main`, never bypass a branch protection.
 
 ## Governance

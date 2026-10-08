@@ -12,7 +12,8 @@
     "design:generate": "tsx scripts/design-generate.ts",
     "test": "vitest run",
     "typecheck": "vite build && tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo": "tsx scripts/demo.ts"
   },
   "dependencies": {
     "@kete/admin": "npm:@kete-africa/admin@^0.2.1",

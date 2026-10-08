@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded
 date: 2026-10-08
 ---
 
@@ -31,3 +31,11 @@ Nothing else changes: `main` is never pushed by an agent; a failing step blocks 
   failure.
 - Therefore, when CI is back, the first action is to run the workflow on `dev` and fix what it
   finds before anything goes to `main`. This decision is then superseded.
+
+## Superseded on 2026-10-08
+
+The author made the repository public so that its pipelines run without the organization's paid
+minutes. The workflow ran on `dev` (commit `9d899a2`) and passed: types and build, design check,
+the 163 tests on a Postgres container. From now on a pull request merges when GitHub's own check
+is green. The browser tests (`pnpm test:e2e`) are not in the workflow yet: they need the Neon
+"test" branch and still run locally.

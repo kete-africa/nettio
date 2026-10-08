@@ -54,8 +54,8 @@ e2e/               the screens in a browser (Playwright), on the Neon "test" bra
 ## Branches
 
 `main` (production — the human gesture only) · `dev` (integration) · `NNN-slug` (one feature).
-While the organization's CI minutes are blocked, the CI's checks run locally before a merge into
-`dev` (`docs/decisions/0003`).
+A pull request merges into `dev` when the CI check is green; the browser tests still run locally
+(`docs/decisions/0003`, superseded).
 
 ## Commands
 
@@ -65,4 +65,5 @@ pnpm db:migrate       # pending migrations, with the owner role
 pnpm typecheck        # the build, then the types
 pnpm test             # rules, rights, isolation (Neon "test" branch)
 pnpm test:e2e         # the screens in a browser
+pnpm demo             # try it signed in, with a small laundry set up (no Compte Kete needed)
 ```
