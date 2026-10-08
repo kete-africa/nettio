@@ -26,7 +26,8 @@ flowchart TB
 | ----------------- | ---------------------------- | ------------------------------------ |
 | Sign-in           | `platform/session.ts`        | `@kete/auth` (Compte Kete)           |
 | Organization data | `platform/db.ts`             | `@kete/tenancy` (RLS)                |
-| Rights            | `platform/rights.ts`         | `@kete/capabilities`, `@kete/center` |
+| Rights            | `platform/rights.ts`, `platform/permissions.ts`, `features/business` | `@kete/capabilities`, `@kete/center`; business roles are Nettio's |
+| A screen's gesture | `platform/screen.ts` (`perform`) | — a `RuleError` comes back as a code the screen words |
 | The center        | `platform/center.ts`         | `@kete/center` (Kete Enterprise)     |
 | Gestures, journal | `features/*/commands`        | `@kete/commands`                     |
 | Agents, drafts    | `platform/registry.ts`       | `@kete/capabilities`, `@kete/drafts` |
@@ -35,4 +36,5 @@ flowchart TB
 | Events, manifest  | `platform/events.ts`         | `@kete/sdk`                          |
 | Feedback          | `lib/shell.tsx`, `/api/avis` | `@kete/feedback`                     |
 | Journal           | `/journal`, `lib/journal.ts` | `@kete/admin` (audit)                |
-| Design            | `platform/app.ts`, `styles/` | `@kete/design`                       |
+| Design            | `platform/app.ts`, `styles/`, `lib/shell.tsx` | `@kete/design`, design `kete` (decision 0002) |
+| The diagram       | `features/business/domain/flow.ts`, `ui/FlowDiagram.tsx` | `@xyflow/react` |

@@ -9,3 +9,5 @@ project.inlang/README.md
 .env
 .env.*
 !.env.example
+test-results/
+playwright-report/

@@ -1,6 +1,6 @@
 {
   "product": "prd_nettio",
-  "name": "nettio",
+  "name": "Nettio",
   "version": "0.1.0",
   "events": [],
   "governance": {
@@ -8,11 +8,13 @@
       "name": "Kete"
     },
     "dataCategories": [
-      "personal"
+      "personal",
+      "financial",
+      "confidential"
     ],
     "ai": {
       "used": false
     },
-    "criticality": "low"
+    "criticality": "medium"
   }
 }
