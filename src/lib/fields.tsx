@@ -142,3 +142,46 @@ export function ChoiceField<Value extends string>({
     </fieldset>
   );
 }
+
+/** A few lines of text, labelled like a TextField. */
+export function TextAreaField({
+  label,
+  hint,
+  value,
+  rows = 4,
+  maxLength,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  rows?: number;
+  maxLength?: number;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-body-sm font-semibold text-fg">
+        {label}
+      </label>
+      <textarea
+        id={id}
+        rows={rows}
+        maxLength={maxLength}
+        disabled={disabled}
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-control border border-line-strong bg-surface-control px-3.5 py-2.5 font-ui text-body text-fg"
+      />
+      {hint && (
+        <p id={`${id}-hint`} className="text-body-sm text-fg-muted">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}

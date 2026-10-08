@@ -114,7 +114,7 @@ accounting, Europe (VAT, certified till, card).
 | 1 — the foundation | yes (`001-foundation`) | no |
 | 2 — the deposit and the day's money | yes (`002-counter`, `003-money-day`) | no |
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
-| 4 — the workshop and the customer's messaging | `005-workshop` built; `006-messaging` planned | no |
+| 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.

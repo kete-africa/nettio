@@ -1,8 +1,10 @@
 import { defineCommand } from '@kete/commands';
+import { queueOrderMessage } from '@/features/messaging/infrastructure/outbox';
 import { lockOrder, noteEvent, setStatus } from '@/features/orders';
 import { personBehind, signer } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
 import { announce } from '@/platform/announce';
+import { askDelivery } from '@/platform/channels';
 import { advance, currentStep, sendBack } from './domain/work';
 import {
   insertIncident,
@@ -56,6 +58,9 @@ export const advanceWork = defineCommand({
         kind: 'ready',
         actor: signer(actor),
       });
+      if (await queueOrderMessage(db, organizationId, { orderId: order.orderId, kind: 'ready' })) {
+        askDelivery(organizationId);
+      }
       await announce(db, {
         type: 'order.ready',
         organization: organizationId,

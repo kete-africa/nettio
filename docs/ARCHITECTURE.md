@@ -33,6 +33,7 @@ flowchart TB
 | Agents, drafts    | `platform/registry.ts`       | `@kete/capabilities`, `@kete/drafts` |
 | Copilots          | `platform/mcp.ts`            | `@kete/capabilities`, `@kete/views`  |
 | E-mails, jobs     | `platform/jobs.ts`           | `@kete/notify`, `@kete/jobs`         |
+| Customer messaging | `features/messaging` (port), `platform/whatsapp.ts`, `platform/telegram.ts`, `platform/channels.ts`, `platform/inbound.ts` | `@kete/notify` (chat channel port); the adapters are Nettio's (decision 0004) |
 | Events, manifest  | `platform/events.ts`         | `@kete/sdk`                          |
 | Feedback          | `lib/shell.tsx`, `/api/avis` | `@kete/feedback`                     |
 | Journal           | `/journal`, `lib/journal.ts` | `@kete/admin` (audit)                |
