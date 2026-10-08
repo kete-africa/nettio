@@ -36,3 +36,49 @@ jobs:
         run: pnpm design:generate --check
       - name: Tests (every surface, every organization apart)
         run: pnpm test
+
+  screens:
+    # The screens in a browser (Playwright), on the production build and a Postgres of this run.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: nettio_owner
+          POSTGRES_PASSWORD: owner
+          POSTGRES_DB: nettio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nettio_owner -d nettio"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.KETE_PACKAGES_TOKEN }}
+      # Two roles, as everywhere: the owner migrates, the app role lives under row-level security.
+      KETE_TEST_OWNER_URL: postgresql://nettio_owner:owner@localhost:5432/nettio
+      KETE_TEST_APP_URL: postgresql://nettio_app:app@localhost:5432/nettio
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.14.0
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com
+          scope: '@kete-africa'
+      - run: pnpm install --frozen-lockfile
+      - name: The application role (no superuser, no bypass of row-level security)
+        env:
+          PGPASSWORD: owner
+        run: >-
+          psql -h localhost -U nettio_owner -d nettio -v ON_ERROR_STOP=1
+          -c "create role nettio_app login password 'app' nosuperuser nobypassrls nocreatedb nocreaterole"
+      - name: The browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: The screens, end to end
+        run: pnpm test:e2e

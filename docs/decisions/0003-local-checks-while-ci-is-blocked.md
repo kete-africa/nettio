@@ -37,5 +37,6 @@ Nothing else changes: `main` is never pushed by an agent; a failing step blocks 
 The author made the repository public so that its pipelines run without the organization's paid
 minutes. The workflow ran on `dev` (commit `9d899a2`) and passed: types and build, design check,
 the 163 tests on a Postgres container. From now on a pull request merges when GitHub's own check
-is green. The browser tests (`pnpm test:e2e`) are not in the workflow yet: they need the Neon
-"test" branch and still run locally.
+is green. The browser tests (`pnpm test:e2e`) joined the workflow the same day, as the job
+`screens`: the production build, on a Postgres of the run with the two roles (owner, and an
+application role under row-level security).

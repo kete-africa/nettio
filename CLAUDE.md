@@ -54,8 +54,8 @@ e2e/               the screens in a browser (Playwright), on the Neon "test" bra
 ## Branches
 
 `main` (production — the human gesture only) · `dev` (integration) · `NNN-slug` (one feature).
-A pull request merges into `dev` when the CI check is green; the browser tests still run locally
-(`docs/decisions/0003`, superseded).
+A pull request merges into `dev` when the CI is green: `check` (types, build, design, tests) and
+`screens` (the browser tests).
 
 ## Commands
 
