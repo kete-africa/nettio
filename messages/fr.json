@@ -766,5 +766,6 @@
   "source_business_overview": "Réglages du pressing",
   "source_team_read": "Équipe et droits",
   "source_messages": "Messages aux clients",
-  "sign_in_not_registered": "La connexion n’est pas disponible : ce Nettio n’est pas encore inscrit au Compte Kete. Un opérateur Kete doit l’inscrire, puis poser son identifiant sur ce déploiement."
+  "sign_in_not_registered": "La connexion n’est pas disponible : ce Nettio n’est pas encore inscrit au Compte Kete. Un opérateur Kete doit l’inscrire, puis poser son identifiant sur ce déploiement.",
+  "result_month_running": "Le mois n’est pas terminé : les charges fixes du mois entier sont déjà comptées, et réparties sur les seules pièces traitées jusqu’ici. Le résultat et les coûts complets s’amélioreront à mesure que les dépôts arrivent."
 }

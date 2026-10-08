@@ -64,8 +64,11 @@ copilot reads, and prepares drafts a person validates. Nothing more is needed he
   encore su »); the capability `orders_receive` already takes an agent's draft.
 - **The evening statement is not sent by itself**: it is read in the app, by MCP, or shared by
   hand. Sending it needs the owner's own channel and a schedule per organization.
-- **No answer of a real model was evaluated.** The tests drive « Demander » with a scripted model:
-  they prove the wiring, the rights and the limits — not the quality of an answer.
+- **A first evaluation with the real model exists, and it is small**: `pnpm eval:ask` asks eight
+  questions on the demo laundry and checks what each answer must — or must never — do (the
+  computed figure, « never measured », no price advice, no action, the person's rights). On
+  2026-10-08, with `gpt-5.6-luna`: 8 of 8. Eight questions are a smoke test, not a proof of
+  quality: no real launderer's question is in it yet. The unit tests still use a scripted model.
 - No monthly budget is set by default: the operator sets one per organization.
 
 ## Success Criteria

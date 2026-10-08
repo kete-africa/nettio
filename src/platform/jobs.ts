@@ -28,14 +28,26 @@ const deliverMessagesJob = defineJob<{ organizationId: string }>({
   },
 });
 
+/**
+ * Whether this process also works the jobs (NETTIO_WORKER=on): for a deployment with one
+ * container, like Firmo's staging. Otherwise the worker role does (`pnpm worker`).
+ */
+export const worksInProcess = (): boolean => process.env.NETTIO_WORKER === 'on';
+
 let jobs: Jobs | undefined;
 let started: Promise<void> | undefined;
+
+/** Starts the queue once: to send jobs, and to work them when this process is also the worker. */
+export function startJobs(): Promise<void> {
+  started ??= getJobs().start();
+  return started;
+}
 
 /**
  * The app's background jobs (pg-boss, on its own Postgres): the web process sends them, the worker
  * works them — one image, two roles.
  */
-export function getJobs(work = false): Jobs {
+export function getJobs(work = worksInProcess()): Jobs {
   jobs ??= createJobs({
     connectionString: env.ownerDatabaseUrl,
     // Events to Kete Cockpit (counters) and to the center (business facts), every minute.
@@ -55,16 +67,12 @@ export async function sendJob(
   data: object,
   options?: { singletonKey?: string },
 ): Promise<void> {
-  const queue = getJobs();
-  started ??= queue.start();
-  await started;
-  await queue.send(name, data, options);
+  await startJobs();
+  await getJobs().send(name, data, options);
 }
 
 /** E-mails leave through the queue: a request never waits for the provider, an outage is retried. */
 export async function mailer(): Promise<Mailer> {
-  const queue = getJobs();
-  started ??= queue.start();
-  await started;
-  return createMailer({ sender: queuedSender(queue), from: env.mailFrom });
+  await startJobs();
+  return createMailer({ sender: queuedSender(getJobs()), from: env.mailFrom });
 }
