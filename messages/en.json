@@ -765,5 +765,6 @@
   "source_catalog_read": "Catalogue",
   "source_business_overview": "The laundry’s settings",
   "source_team_read": "Team and rights",
-  "source_messages": "Messages to customers"
+  "source_messages": "Messages to customers",
+  "sign_in_not_registered": "Sign-in is not available: this Nettio is not registered at the Compte Kete yet. A Kete operator must register it, then set its identifier on this deployment."
 }
