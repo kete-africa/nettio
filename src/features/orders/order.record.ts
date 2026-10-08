@@ -50,6 +50,8 @@ export const readyInput = z.object({
   location: z.string().trim().max(60).default(''),
 });
 
+export const storeInput = z.object({ orderId: id, location: z.string().trim().min(1).max(60) });
+
 export const collectInput = z.object({
   orderId: id,
   /** The balance, cashed with the handing over. */

@@ -11,6 +11,7 @@ import {
   readyInput,
   receiveOrderInput,
   refundInput,
+  storeInput,
   type Order,
   type OrderSummary,
 } from './order.record';
@@ -84,6 +85,10 @@ export const receiveOrder = createServerFn({ method: 'POST' })
 export const markReady = createServerFn({ method: 'POST' })
   .validator((input: unknown) => readyInput.parse(input))
   .handler(({ data }) => perform<{ orderId: string }>('orders_mark_ready', data));
+
+export const storeOrder = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => storeInput.parse(input))
+  .handler(({ data }) => perform<{ orderId: string }>('orders_store', data));
 
 export const collectOrder = createServerFn({ method: 'POST' })
   .validator((input: unknown) => z.object({ key, collection: collectInput }).parse(input))

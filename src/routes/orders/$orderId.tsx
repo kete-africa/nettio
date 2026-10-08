@@ -21,9 +21,12 @@ import {
   markReady,
   recordPayment,
   refundPayment,
+  storeOrder,
 } from '@/features/orders/functions';
 import { gestureKey, MoneyFields, wholeAmount } from '@/features/orders/ui/MoneyFields';
 import { eventWords, kindWords, methodWords, statusTones, statusWords } from '@/features/orders/ui/words';
+import { fetchWork } from '@/features/workshop/functions';
+import { OrderWork } from '@/features/workshop/ui/OrderWork';
 import { errorSentence } from '@/lib/errors';
 import { ErrorNote } from '@/lib/fields';
 import { formatDayTime, formatMoney, formatNumber } from '@/lib/format';
@@ -34,15 +37,18 @@ import * as m from '@/paraglide/messages.js';
 // A deposit in full: its real content, its money, its history — and the gestures the person may
 // do with it, each one named.
 export const Route = createFileRoute('/_app/depots/$orderId')({
-  loader: ({ params }) => fetchOrder({ data: { orderId: params.orderId } }),
+  loader: async ({ params }) => ({
+    order: await fetchOrder({ data: { orderId: params.orderId } }),
+    work: await fetchWork({ data: { orderId: params.orderId } }),
+  }),
   component: OrderPage,
 });
 
-type Gesture = 'pay' | 'ready' | 'collect' | 'refund' | 'cancel';
+type Gesture = 'pay' | 'ready' | 'store' | 'collect' | 'refund' | 'cancel';
 
 function OrderPage() {
   const { me } = Route.useRouteContext();
-  const order = Route.useLoaderData();
+  const { order, work } = Route.useLoaderData();
   const router = useRouter();
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [amount, setAmount] = useState('');
@@ -56,9 +62,12 @@ function OrderPage() {
 
   const balance = order.total - order.paid;
   const open = order.status === 'received' || order.status === 'in_progress';
+  const units = work?.units ?? [];
+  // A deposit with work left becomes ready in the workshop, never by hand.
+  const workLeft = units.some((unit) => !unit.finishedAt);
   const start = (next: Gesture) => {
     setError(null);
-    setText('');
+    setText(next === 'store' ? order.location : '');
     setAmount(next === 'refund' ? String(order.paid) : balance > 0 ? String(balance) : '');
     setGesture(next);
   };
@@ -95,6 +104,7 @@ function OrderPage() {
       return run(() => recordPayment({ data: { key, payment: { orderId, amount: money, method } } }));
     }
     if (gesture === 'ready') return run(() => markReady({ data: { orderId, location: text } }));
+    if (gesture === 'store') return run(() => storeOrder({ data: { orderId, location: text } }));
     if (gesture === 'collect') {
       return run(() =>
         collectOrder({
@@ -119,6 +129,7 @@ function OrderPage() {
   const titles: Record<Gesture, () => string> = {
     pay: m.action_cash,
     ready: m.action_mark_ready,
+    store: m.action_store,
     collect: m.action_hand_over,
     refund: m.action_refund,
     cancel: m.action_cancel_order,
@@ -141,8 +152,13 @@ function OrderPage() {
             {order.status === 'ready' && can(me, 'payments:collect') && (
               <Button onClick={() => start('collect')}>{m.action_hand_over()}</Button>
             )}
-            {open && can(me, 'workshop:operate') && (
+            {open && !workLeft && can(me, 'workshop:operate') && (
               <Button onClick={() => start('ready')}>{m.action_mark_ready()}</Button>
+            )}
+            {order.status === 'ready' && can(me, 'workshop:operate') && (
+              <Button variant="secondary" onClick={() => start('store')}>
+                {m.action_store()}
+              </Button>
             )}
             {order.status !== 'cancelled' && balance > 0 && can(me, 'payments:collect') && (
               <Button variant="secondary" onClick={() => start('pay')}>
@@ -242,6 +258,12 @@ function OrderPage() {
         </dl>
       </PageSection>
 
+      {units.length > 0 && (
+        <PageSection title={m.nav_workshop()}>
+          <OrderWork units={units} incidents={work?.incidents ?? []} />
+        </PageSection>
+      )}
+
       <PageSection title={m.order_payments()}>
         {order.payments.length === 0 ? (
           <p className="text-fg-muted">{m.order_no_payment()}</p>
@@ -314,7 +336,10 @@ function OrderPage() {
               {m.action_close()}
             </Button>
             <Button
-              disabled={busy || ((gesture === 'cancel' || gesture === 'refund') && !text.trim())}
+              disabled={
+                busy ||
+                ((gesture === 'cancel' || gesture === 'refund' || gesture === 'store') && !text.trim())
+              }
               onClick={() => (irreversible ? setConfirming(true) : void submit())}
             >
               {gesture ? titles[gesture]() : ''}
@@ -340,7 +365,7 @@ function OrderPage() {
           {gesture === 'collect' && balance > 0 && can(me, 'orders:release_unpaid') && (
             <p className="text-body-sm text-fg-muted">{m.order_collect_unpaid_hint()}</p>
           )}
-          {gesture === 'ready' && (
+          {(gesture === 'ready' || gesture === 'store') && (
             <TextField
               label={m.order_location()}
               hint={m.order_location_hint()}

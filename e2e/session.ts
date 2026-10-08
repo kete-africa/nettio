@@ -51,3 +51,23 @@ export async function sideways(page: Page): Promise<number> {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
 }
+
+/**
+ * Takes the one deposit waiting in the workshop through every step left of its route, one touch
+ * per step, until Nettio says it is ready.
+ */
+export async function throughTheWorkshop(page: Page, number: string): Promise<void> {
+  await page.goto('/atelier');
+  const ready = page.getByText(`${number} est prêt`);
+  for (let touch = 0; touch < 12; touch++) {
+    // Either a step still waits, or Nettio said the deposit is ready.
+    const button = page.getByRole('button', { name: /^Valider : / }).first();
+    await ready.or(button).first().waitFor();
+    if (await ready.isVisible()) return;
+    const label = (await button.textContent()) ?? '';
+    await button.click();
+    // The queue moves on: this step no longer waits.
+    await page.getByRole('button', { name: label, exact: true }).waitFor({ state: 'detached' });
+  }
+  throw new Error(`${number} did not become ready`);
+}

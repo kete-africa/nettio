@@ -14,7 +14,10 @@ sequenceDiagram
   N-->>R: A-0412, total, promised date
   R-->>C: the receipt — printed, or sent from the laundry's WhatsApp or Telegram
   T->>N: payments_record — an advance (never above what is due)
-  W->>N: orders_mark_ready — where it is stored
+  N->>W: its work units wait at the first step of their route
+  W->>N: workshop_advance — one touch per step, signed
+  N->>N: last step of the last unit → the deposit is ready
+  W->>N: orders_store — where it is stored
   C->>T: comes back
   T->>N: orders_collect — the balance cashed in the same gesture
   N-->>T: collected; unpaid needs orders:release_unpaid

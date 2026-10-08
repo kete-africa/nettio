@@ -53,6 +53,10 @@ const sections: Section[] = [
     ],
   },
   {
+    label: m.nav_section_workshop,
+    entries: [{ to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' }],
+  },
+  {
     label: m.nav_section_money,
     entries: [
       { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
@@ -95,6 +99,7 @@ const tabs: Entry[] = [
     permission: 'orders:create',
     primary: true,
   },
+  { to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' },
   { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
   { to: '/argent/resultat', icon: 'sparkle', label: m.nav_result, permission: 'money:read' },
 ];
@@ -121,7 +126,8 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
         .map((section) => ({ ...section, entries: section.entries.filter(open) }))
         .filter((section) => section.entries.length > 0)
     : [];
-  const phone = me.business ? tabs.filter(open) : [];
+  // Five places at most under the thumb; the rest is in the menu.
+  const phone = me.business ? tabs.filter(open).slice(0, 5) : [];
   return (
     <Shell
       brand={me.business?.businessName ?? m.app_name()}

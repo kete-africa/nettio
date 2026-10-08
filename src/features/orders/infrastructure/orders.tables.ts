@@ -285,6 +285,11 @@ export async function setStatus(
   );
 }
 
+/** Says where a deposit is stored, for whoever hands it over. */
+export async function setLocation(db: SqlExecutor, orderId: string, location: string): Promise<void> {
+  await db.query(`update orders set location = $2 where order_id = $1`, [orderId, location]);
+}
+
 type SummaryRow = {
   order_id: string;
   number: string;
