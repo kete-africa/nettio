@@ -7,6 +7,7 @@ import { customerPermissions } from '@/features/customers/policies';
 import { messagingPermissions } from '@/features/messaging/policies';
 import { moneyPermissions } from '@/features/money/policies';
 import { orderPermissions } from '@/features/orders/policies';
+import { teamPermissions } from '@/features/team/policies';
 
 /**
  * Every permission Nettio checks, with its words, the Compte Kete roles that hold it by the
@@ -21,6 +22,7 @@ export const businessPermissionList = [
   ...moneyPermissions,
   ...messagingPermissions,
   ...assistantPermissions,
+  ...teamPermissions,
 ];
 
 export const permissions = definePermissions(businessPermissionList);

@@ -1,6 +1,6 @@
 import { defineCommand } from '@kete/commands';
 import type { SqlExecutor } from '@kete/tenancy';
-import { listSites, readSettings, receives } from '@/features/business';
+import { findStaffOf, listSites, readSettings, receives } from '@/features/business';
 import { readCatalog } from '@/features/catalog';
 import { personBehind } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
@@ -151,6 +151,11 @@ export const recordExpense = defineCommand({
     }
     if (input.siteId && !(await listSites(db)).some((site) => site.siteId === input.siteId)) {
       throw new RuleError('not_found');
+    }
+    // Money handed to a person of the team is wages, on its day — never a monthly line.
+    if (input.paidTo) {
+      if (input.category !== 'wages' || input.recurring) throw new RuleError('paid_to_needs_wages');
+      if (!(await findStaffOf(db, input.paidTo))) throw new RuleError('not_found');
     }
     const cashSessionId =
       input.paidFrom === 'till'

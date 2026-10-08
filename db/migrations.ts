@@ -10,6 +10,7 @@ import { customersMigrationSql } from '@/features/customers';
 import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
+import { teamMigrationSql } from '@/features/team';
 import { workshopMigrationSql } from '@/features/workshop';
 
 export interface MigrationContext {
@@ -77,4 +78,6 @@ export const migrations: Migration[] = [
   },
   // The evening statement sent by itself (specs/013-statement-sent): where it leaves to.
   { name: '0012_statement_delivery', sql: (context) => statementDeliveryMigrationSql(context) },
+  // The team's work and pay (specs/015-team-pay): piece rates, and who a wage was handed to.
+  { name: '0013_team_pay', sql: (context) => teamMigrationSql(context) },
 ];

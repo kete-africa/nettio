@@ -34,6 +34,7 @@ import {
 import { paidFroms } from '@/features/money/money.record';
 import { MonthNav } from '@/features/money/ui/MonthNav';
 import { categoryWords, paidFromWords } from '@/features/money/ui/words';
+import { fetchTeamNames } from '@/features/team/functions';
 import { gestureKey } from '@/features/orders/ui/MoneyFields';
 import { errorSentence } from '@/lib/errors';
 import { CheckField, ChoiceField, ErrorNote, SelectField } from '@/lib/fields';
@@ -57,6 +58,7 @@ export const Route = createFileRoute('/_app/argent/depenses')({
   loader: async ({ deps }) => ({
     view: await fetchExpenses({ data: deps.mois ? { month: deps.mois } : {} }),
     business: await fetchBusiness(),
+    team: await fetchTeamNames(),
   }),
   component: ExpensesPage,
 });
@@ -71,11 +73,12 @@ interface Draft {
   paidFrom: PaidFrom;
   siteId: string;
   recurring: boolean;
+  paidTo: string;
 }
 
 function ExpensesPage() {
   const { me } = Route.useRouteContext();
-  const { view, business } = Route.useLoaderData();
+  const { view, business, team } = Route.useLoaderData();
   const router = useRouter();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -103,6 +106,7 @@ function ExpensesPage() {
       paidFrom: kind === 'draw' ? 'mobile_money' : 'till',
       siteId: sites[0]?.siteId ?? '',
       recurring: false,
+      paidTo: '',
     });
   };
 
@@ -161,6 +165,7 @@ function ExpensesPage() {
             paidFrom: draft.paidFrom,
             siteId,
             recurring: draft.recurring,
+            paidTo: draft.category === 'wages' && !draft.recurring && draft.paidTo ? draft.paidTo : null,
           },
         },
       }),
@@ -317,6 +322,18 @@ function ExpensesPage() {
                     label: categoryWords[value](),
                   }))}
                 />
+                {draft.category === 'wages' && !draft.recurring && team.length > 0 && (
+                  <SelectField
+                    label={m.expenses_paid_to()}
+                    hint={m.expenses_paid_to_hint()}
+                    value={draft.paidTo}
+                    onChange={(event) => setDraft({ ...draft, paidTo: event.target.value })}
+                    options={[
+                      { value: '', label: m.expenses_paid_to_nobody() },
+                      ...team.map((member) => ({ value: member.userId, label: member.name })),
+                    ]}
+                  />
+                )}
                 <ChoiceField
                   label={m.expenses_behavior()}
                   value={draft.behavior}

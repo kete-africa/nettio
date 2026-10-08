@@ -1,0 +1,33 @@
+import { createServerFn } from '@tanstack/react-start';
+import { perform } from '@/platform/screen';
+import type { TeamWork } from './capabilities';
+import type { PersonPay } from './domain/pay';
+import { rateInput, workInput } from './team.record';
+
+/** The work and the pay of the team for a month, for whoever reads it; null otherwise. */
+export const fetchTeamWork = createServerFn({ method: 'GET' })
+  .validator((input: unknown) => workInput.parse(input ?? {}))
+  .handler(async ({ data }): Promise<TeamWork | null> => {
+    const read = await perform<TeamWork>('team_work', data);
+    return read.ok ? read.output : null;
+  });
+
+/** The person's own work this month; null when she does not work in the workshop. */
+export const fetchMyWork = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<PersonPay | null> => {
+    const read = await perform<{ month: string; mine: PersonPay | null }>('my_work', {});
+    return read.ok ? read.output.mine : null;
+  },
+);
+
+/** The names of the team, to say who a wage was handed to. */
+export const fetchTeamNames = createServerFn({ method: 'GET' }).handler(async () => {
+  const read = await perform<{ userId: string; name: string }[]>('team_names', {});
+  return read.ok ? read.output : [];
+});
+
+export const saveRate = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => rateInput.parse(input))
+  .handler(({ data }) =>
+    perform<{ stepId: string; amount: number | null }>('team_set_rate', data),
+  );

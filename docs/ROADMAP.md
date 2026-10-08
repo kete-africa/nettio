@@ -74,6 +74,10 @@ week.
 Schedules, clocking, fast person switch on a shared device with a personal code, validations from
 messaging, complaints, piece-rate pay, salary advances.
 
+| Spec | What |
+|---|---|
+| `015-team-pay` | Each person's work counted from the steps she validated, the owner's piece rates, advances and pay handed |
+
 **Proof**: a site runs a full week without the owner on site.
 
 ## Phase 7 — Customers, companies and delivery
@@ -119,6 +123,7 @@ accounting, Europe (VAT, certified till, card).
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 — Kete Intelligence at every station | yes (`007-intelligence`, `011-dictate`, `013-statement-sent`, `014-photo`): the day's statement — read, and sent by itself in the evening —, « Demander », a deposit said in a sentence, dictated or photographed, every capability open to copilots. Not built: « Demander » by messaging | no |
-| 6 to 10 | planned | no |
+| 6 — the team | in part (`015-team-pay`): work and pay by the piece, advances. Not built: schedules, clocking, person switch, validations from messaging, complaints | no |
+| 7 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.
