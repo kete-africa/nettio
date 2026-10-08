@@ -25,21 +25,22 @@ import {
   resolveUnitIncident,
 } from '@/features/workshop/functions';
 import { incidentWords } from '@/features/workshop/ui/words';
+import { fetchMyWork } from '@/features/team/functions';
 import { errorSentence } from '@/lib/errors';
 import { ErrorNote, Note, SelectField } from '@/lib/fields';
-import { formatDayTime, formatNumber } from '@/lib/format';
+import { formatDayTime, formatMoney, formatNumber } from '@/lib/format';
 import type { Outcome } from '@/lib/rule-error';
 import * as m from '@/paraglide/messages.js';
 
 // The workshop (specs/005-workshop): a queue per step, the soonest promised first, and one touch
 // to validate a step. « Je sais quoi faire maintenant. »
 export const Route = createFileRoute('/_app/atelier')({
-  loader: () => fetchQueue(),
+  loader: async () => ({ data: await fetchQueue(), mine: await fetchMyWork() }),
   component: WorkshopPage,
 });
 
 function WorkshopPage() {
-  const data = Route.useLoaderData();
+  const { data, mine } = Route.useLoaderData();
   const router = useRouter();
   const [stepId, setStepId] = useState<string | null>(null);
   const [reporting, setReporting] = useState<QueuedUnit | null>(null);
@@ -96,6 +97,19 @@ function WorkshopPage() {
         <KpiTile label={m.workshop_late()} value={formatNumber(queue.late)} hint={m.workshop_late_hint()} />
         <KpiTile label={m.workshop_incidents()} value={formatNumber(incidents.length)} hint={m.workshop_incidents_hint()} />
       </KpiGrid>
+      {mine && mine.lines.length > 0 && (
+        <p className="mt-3 text-body-sm text-fg-muted">
+          {mine.earned > 0 || mine.paid > 0
+            ? m.workshop_my_work_paid({
+                pieces: formatNumber(mine.lines.reduce((sum, line) => sum + line.pieces, 0), 1),
+                earned: formatMoney(mine.earned),
+                paid: formatMoney(mine.paid),
+              })
+            : m.workshop_my_work({
+                pieces: formatNumber(mine.lines.reduce((sum, line) => sum + line.pieces, 0), 1),
+              })}
+        </p>
+      )}
       <div className="mt-4 flex flex-col gap-3" aria-live="polite">
         {said && <Note>{said}</Note>}
         {!reporting && !resolving && <ErrorNote>{error}</ErrorNote>}

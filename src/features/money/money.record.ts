@@ -42,6 +42,8 @@ export const expenseInput = z.object({
   siteId: id.nullable().default(null),
   /** Counts every month from its date until it is stopped: rent, wages. */
   recurring: z.boolean().default(false),
+  /** Who it was handed to, for wages: an advance, a pay (the user id of a person of the team). */
+  paidTo: id.nullable().default(null),
 });
 
 export const voidExpenseInput = z.object({
@@ -115,6 +117,8 @@ export interface Expense {
   stoppedOn: string | null;
   voided: boolean;
   voidReason: string;
+  /** Who it was handed to, for wages. */
+  paidTo: string | null;
 }
 
 export interface OwnerDraw {

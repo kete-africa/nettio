@@ -1,5 +1,5 @@
 import { Button, EmptyState, FormPage, FormSection, TextField } from '@kete/design';
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import type { Profile, Staffing } from '@/features/business';
 import { startBusiness } from '@/features/business/functions';
@@ -15,8 +15,6 @@ export const Route = createFileRoute('/_app/demarrage')({ component: StartPage }
 
 function StartPage() {
   const { me } = Route.useRouteContext();
-  const router = useRouter();
-  const navigate = useNavigate();
   const [businessName, setBusinessName] = useState('');
   const [profile, setProfile] = useState<Profile>('established');
   const [staffing, setStaffing] = useState<Staffing>('team');
@@ -48,8 +46,11 @@ function StartPage() {
       });
       setError(failure(outcome));
       if (outcome.ok) {
-        await router.invalidate();
-        await navigate({ to: '/pressing/schema' });
+        // The frame decides where a person may be from what it knows of her laundry: refreshed
+        // here, it sends her to her day; not refreshed, it sends her back here. So the whole app
+        // is loaded again, on the diagram — once in a laundry's life.
+        window.location.assign('/pressing/schema');
+        return;
       }
     } catch {
       setError(m.error_generic());

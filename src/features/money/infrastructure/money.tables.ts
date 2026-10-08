@@ -270,11 +270,12 @@ type ExpenseRow = {
   stopped_on: string | null;
   voided: boolean;
   void_reason: string;
+  paid_to: string | null;
 };
 
 const expenseColumns = `expense_id, to_char(spent_on, 'YYYY-MM-DD') as spent_on, label, category,
   behavior, amount, paid_from, site_id, recurring, to_char(stopped_on, 'YYYY-MM-DD') as stopped_on,
-  voided_at is not null as voided, void_reason`;
+  voided_at is not null as voided, void_reason, paid_to`;
 
 const toExpense = (row: ExpenseRow): Expense => ({
   expenseId: row.expense_id,
@@ -289,6 +290,7 @@ const toExpense = (row: ExpenseRow): Expense => ({
   stoppedOn: row.stopped_on,
   voided: row.voided,
   voidReason: row.void_reason,
+  paidTo: row.paid_to,
 });
 
 /**
@@ -338,8 +340,8 @@ export async function insertExpense(
   const expenseId = newId('exp');
   await db.query(
     `insert into expenses (expense_id, organization_id, site_id, spent_on, label, category, behavior,
-                           amount, paid_from, cash_session_id, recurring, created_by)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                           amount, paid_from, cash_session_id, recurring, created_by, paid_to)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
     [
       expenseId,
       organizationId,
@@ -353,6 +355,7 @@ export async function insertExpense(
       expense.cashSessionId,
       expense.recurring,
       expense.createdBy,
+      expense.paidTo,
     ],
   );
   return expenseId;

@@ -9,6 +9,7 @@ const sentences: Record<string, () => string> = {
   not_found: m.error_not_found,
   already_set_up: m.error_already_set_up,
   not_set_up: m.error_not_set_up,
+  paid_to_needs_wages: m.error_paid_to_needs_wages,
   statement_no_destination: m.error_statement_no_destination,
   site_code_taken: m.error_site_code_taken,
   site_plant_not_needed: m.error_site_plant_not_needed,
