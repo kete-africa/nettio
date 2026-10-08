@@ -29,6 +29,7 @@ function SettingsPage() {
     laborIsVariable: settings?.laborIsVariable ?? false,
     laborMinuteCost: String(settings?.laborMinuteCost ?? 0),
     dormantDays: String(settings?.dormantDays ?? 30),
+    phonePrefix: settings?.phonePrefix ?? '228',
   }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +70,7 @@ function SettingsPage() {
           laborIsVariable: form.laborIsVariable,
           laborMinuteCost: Number(form.laborMinuteCost),
           dormantDays: Number(form.dormantDays),
+          phonePrefix: form.phonePrefix,
         },
       });
       setError(failure(outcome));
@@ -125,6 +127,14 @@ function SettingsPage() {
           m.settings_discount_ceiling_hint(),
         )}
         {number('dormantDays', m.settings_dormant_days(), m.settings_dormant_days_hint())}
+        <TextField
+          label={m.settings_phone_prefix()}
+          hint={m.settings_phone_prefix_hint()}
+          inputMode="numeric"
+          maxLength={4}
+          value={form.phonePrefix}
+          onChange={(event) => set('phonePrefix', event.target.value.replace(/D/g, ''))}
+        />
       </FormSection>
       <FormSection title={m.settings_section_workshop()}>
         <ChoiceField

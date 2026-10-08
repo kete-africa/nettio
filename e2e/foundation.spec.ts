@@ -65,7 +65,7 @@ test('the diagram on a desktop screen', async ({ page, context }) => {
 test('today says what is missing before the counter can sell', async ({ page, context }) => {
   await signIn(context, afi);
   await page.goto('/aujourdhui');
-  await expect(page.getByText('4 service(s) sans prix')).toBeVisible();
+  await expect(page.getByText('4 service(s) sans prix', { exact: true })).toBeVisible();
   await shot(page, '04-today');
 });
 

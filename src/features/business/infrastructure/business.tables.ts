@@ -97,6 +97,7 @@ type SettingsRow = {
   labor_is_variable: boolean;
   labor_minute_cost: string;
   dormant_days: number;
+  phone_prefix: string;
 };
 
 /** The settings of the organization, or null while the business is not set up. */
@@ -104,7 +105,7 @@ export async function readSettings(db: SqlExecutor): Promise<Settings | null> {
   const { rows } = await db.query<SettingsRow>(
     `select business_name, profile, staffing, tracking, currency, promised_hours, express_hours,
             express_percent, discount_ceiling_percent, working_days, labor_is_variable,
-            labor_minute_cost, dormant_days
+            labor_minute_cost, dormant_days, phone_prefix
        from settings`,
   );
   const row = rows[0];
@@ -123,6 +124,7 @@ export async function readSettings(db: SqlExecutor): Promise<Settings | null> {
     laborIsVariable: row.labor_is_variable,
     laborMinuteCost: Number(row.labor_minute_cost),
     dormantDays: row.dormant_days,
+    phonePrefix: row.phone_prefix,
   };
 }
 
@@ -146,7 +148,7 @@ export async function updateSettings(
     `update settings set business_name = $1, staffing = $2, tracking = $3, promised_hours = $4,
             express_hours = $5, express_percent = $6, discount_ceiling_percent = $7,
             working_days = $8, labor_is_variable = $9, labor_minute_cost = $10, dormant_days = $11,
-            updated_at = now()`,
+            phone_prefix = $12, updated_at = now()`,
     [
       settings.businessName,
       settings.staffing,
@@ -159,6 +161,7 @@ export async function updateSettings(
       settings.laborIsVariable,
       settings.laborMinuteCost,
       settings.dormantDays,
+      settings.phonePrefix,
     ],
   );
 }

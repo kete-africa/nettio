@@ -1,56 +1,158 @@
-import { EmptyState, PageHeader, PageSection, Row, RowList } from '@kete/design';
-import { createFileRoute } from '@tanstack/react-router';
+import {
+  Button,
+  EmptyState,
+  KpiGrid,
+  KpiTile,
+  PageHeader,
+  PageSection,
+  Row,
+  RowList,
+  Tag,
+} from '@kete/design';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { fetchCatalog } from '@/features/catalog/functions';
-import { formatDay } from '@/lib/format';
+import { fetchToday } from '@/features/orders/functions';
+import { statusTones, statusWords } from '@/features/orders/ui/words';
+import { formatDay, formatMoney, formatNumber } from '@/lib/format';
 import { can } from '@/lib/signed-in';
 import * as m from '@/paraglide/messages.js';
 
-// « Aujourd'hui » answers one question: where does my day stand. Until the counter opens
-// (specs/002), it says what is still missing before it can.
+// « Aujourd'hui » answers one question: where does my day stand. The day's figures, what waits,
+// what is late — each one computed by code, with its unit.
 export const Route = createFileRoute('/_app/aujourdhui')({
-  loader: () => fetchCatalog(),
+  loader: async () => ({ catalog: await fetchCatalog(), today: await fetchToday() }),
   component: TodayPage,
 });
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const catalog = Route.useLoaderData();
-  if (!me.role) {
+  const { catalog, today } = Route.useLoaderData();
+  const navigate = useNavigate();
+  if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
   }
   const gaps = catalog?.gaps;
-  const missing = (gaps?.servicesWithoutPrice.length ?? 0) + (gaps?.packsWithoutService.length ?? 0);
+  const { summary, latest } = today;
+  const toDo = [
+    ...(gaps && gaps.servicesWithoutPrice.length > 0
+      ? [
+          {
+            href: '/pressing/catalogue',
+            title: m.today_services_without_price({ count: gaps.servicesWithoutPrice.length }),
+            meta: gaps.servicesWithoutPrice.join(' · '),
+          },
+        ]
+      : []),
+    ...(gaps && gaps.packsWithoutService.length > 0
+      ? [
+          {
+            href: '/pressing/catalogue',
+            title: m.today_packs_without_service({ count: gaps.packsWithoutService.length }),
+            meta: gaps.packsWithoutService.join(' · '),
+          },
+        ]
+      : []),
+    ...(summary && summary.late > 0
+      ? [{ href: '/depots?etape=open', title: m.today_late({ count: summary.late }), meta: m.today_late_meta() }]
+      : []),
+    ...(summary && summary.dormant > 0
+      ? [
+          {
+            href: '/depots?etape=ready',
+            title: m.today_dormant({ count: summary.dormant }),
+            meta: m.today_dormant_meta(),
+          },
+        ]
+      : []),
+  ];
   return (
     <>
-      <PageHeader title={m.today_title()} description={formatDay(new Date())} />
-      <PageSection first title={m.today_to_do()}>
-        {missing === 0 ? (
-          <EmptyState title={m.today_nothing_title()}>{m.today_nothing_body()}</EmptyState>
+      <PageHeader
+        title={m.today_title()}
+        description={formatDay(new Date())}
+        actions={
+          can(me, 'orders:create') ? (
+            <Button onClick={() => void navigate({ to: '/depots/nouveau' })}>{m.nav_new_order()}</Button>
+          ) : undefined
+        }
+      />
+      {summary && (
+        <KpiGrid label={m.today_figures()}>
+          <KpiTile
+            label={m.today_cashed()}
+            value={formatNumber(summary.cashed)}
+            hint={m.today_cashed_hint()}
+          />
+          <KpiTile
+            label={m.today_received()}
+            value={formatNumber(summary.received)}
+            hint={m.today_received_hint({ pieces: formatNumber(summary.pieces) })}
+          />
+          <KpiTile
+            label={m.today_ready()}
+            value={formatNumber(summary.ready)}
+            hint={m.today_ready_hint()}
+            href="/depots?etape=ready"
+          />
+          <KpiTile
+            label={m.today_outstanding()}
+            value={formatNumber(summary.outstanding)}
+            hint={m.today_outstanding_hint()}
+          />
+        </KpiGrid>
+      )}
+      <PageSection first={!summary} title={m.today_to_do()}>
+        {toDo.length === 0 ? (
+          <p className="text-fg-muted">{m.today_nothing_title()}</p>
         ) : (
           <RowList label={m.today_to_do()}>
-            {gaps && gaps.servicesWithoutPrice.length > 0 && (
-              <Row
-                href="/pressing/catalogue"
-                title={m.today_services_without_price({ count: gaps.servicesWithoutPrice.length })}
-                meta={gaps.servicesWithoutPrice.join(' · ')}
-              />
-            )}
-            {gaps && gaps.packsWithoutService.length > 0 && (
-              <Row
-                href="/pressing/catalogue"
-                title={m.today_packs_without_service({ count: gaps.packsWithoutService.length })}
-                meta={gaps.packsWithoutService.join(' · ')}
-              />
-            )}
+            {toDo.map((item) => (
+              <Row key={item.title} href={item.href} title={item.title} meta={item.meta} />
+            ))}
           </RowList>
         )}
       </PageSection>
-      {can(me, 'business:read') && (
-        <PageSection title={m.today_business()}>
-          <RowList label={m.today_business()}>
-            <Row href="/pressing/schema" title={m.nav_diagram()} meta={m.today_diagram_meta()} />
-            <Row href="/pressing/catalogue" title={m.nav_catalog()} meta={m.today_catalog_meta()} />
-          </RowList>
+      {summary && (
+        <PageSection title={m.today_latest()}>
+          {latest.length === 0 ? (
+            <EmptyState
+              title={m.orders_empty_title()}
+              {...(can(me, 'orders:create')
+                ? {
+                    action: (
+                      <Button onClick={() => void navigate({ to: '/depots/nouveau' })}>
+                        {m.nav_new_order()}
+                      </Button>
+                    ),
+                  }
+                : {})}
+            >
+              {m.orders_empty_body()}
+            </EmptyState>
+          ) : (
+            <RowList label={m.today_latest()}>
+              {latest.map((order) => (
+                <Row
+                  key={order.orderId}
+                  onClick={() =>
+                    void navigate({ to: '/depots/$orderId', params: { orderId: order.orderId } })
+                  }
+                  title={`${order.number} · ${order.customerName}`}
+                  meta={<Tag tone={statusTones[order.status]}>{statusWords[order.status]()}</Tag>}
+                  end={
+                    <span className="text-right font-number">
+                      <span className="block">{formatMoney(order.total)}</span>
+                      <span className="block text-body-sm text-fg-muted">
+                        {order.total - order.paid > 0
+                          ? m.order_balance_of({ amount: formatMoney(order.total - order.paid) })
+                          : m.order_paid_in_full()}
+                      </span>
+                    </span>
+                  }
+                />
+              ))}
+            </RowList>
+          )}
         </PageSection>
       )}
     </>

@@ -27,6 +27,8 @@ async function sendFeedback(input: object): Promise<void> {
 }
 
 interface Entry {
+  /** The phone's raised round tab: the gesture of the trade. */
+  primary?: boolean;
   to: NonNullable<LinkProps['to']>;
   icon: IconName;
   label: () => string;
@@ -43,7 +45,12 @@ interface Section {
 const sections: Section[] = [
   {
     label: m.nav_section_counter,
-    entries: [{ to: '/aujourdhui', icon: 'home', label: m.nav_today }],
+    entries: [
+      { to: '/aujourdhui', icon: 'home', label: m.nav_today },
+      { to: '/depots/nouveau', icon: 'new', label: m.nav_new_order, permission: 'orders:create' },
+      { to: '/depots', icon: 'list', label: m.nav_orders, permission: 'orders:read' },
+      { to: '/clients', icon: 'people', label: m.nav_customers, permission: 'customers:read' },
+    ],
   },
   {
     label: m.nav_section_business,
@@ -71,9 +78,16 @@ const sections: Section[] = [
 /** The places a phone keeps under the thumb; the rest is behind the menu. */
 const tabs: Entry[] = [
   { to: '/aujourdhui', icon: 'home', label: m.nav_today },
-  { to: '/pressing/schema', icon: 'chart', label: m.nav_diagram, permission: 'business:read' },
-  { to: '/pressing/catalogue', icon: 'library', label: m.nav_catalog, permission: 'business:read' },
-  { to: '/pressing/equipe', icon: 'people', label: m.nav_team, permission: 'staff:manage' },
+  { to: '/depots', icon: 'list', label: m.nav_orders, permission: 'orders:read' },
+  {
+    to: '/depots/nouveau',
+    icon: 'plus',
+    label: m.nav_new_order_short,
+    permission: 'orders:create',
+    primary: true,
+  },
+  { to: '/clients', icon: 'people', label: m.nav_customers, permission: 'customers:read' },
+  { to: '/pressing/schema', icon: 'chart', label: m.nav_business, permission: 'business:read' },
 ];
 
 /** The frame of every signed-in screen: the laundry, the places she may open, her tools. */
@@ -86,7 +100,12 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
     if (current === 'dark' || current === 'light' || current === 'auto') setTheme(current);
   }, []);
   const open = (entry: Entry) => !entry.permission || can(me, entry.permission);
-  const isCurrent = (to: Entry['to']) => pathname === to || pathname.startsWith(`${to}/`);
+  // The longest address that matches: « Nouveau dépôt » is not « Dépôts ».
+  const all = [...sections.flatMap((section) => section.entries), ...tabs].map((entry) => entry.to);
+  const best = all
+    .filter((to) => pathname === to || pathname.startsWith(`${to}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  const isCurrent = (to: Entry['to']) => to === best;
   // Before the laundry is set up there is nowhere to go but its start.
   const visible = me.business
     ? sections
@@ -162,6 +181,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
               <TabBarItem
                 key={entry.to}
                 icon={entry.icon}
+                primary={entry.primary ?? false}
                 current={isCurrent(entry.to)}
                 onClick={() => void navigate({ to: entry.to })}
               >
