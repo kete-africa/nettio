@@ -50,6 +50,7 @@ const sections: Section[] = [
       { to: '/depots/nouveau', icon: 'new', label: m.nav_new_order, permission: 'orders:create' },
       { to: '/depots', icon: 'list', label: m.nav_orders, permission: 'orders:read' },
       { to: '/clients', icon: 'people', label: m.nav_customers, permission: 'customers:read' },
+      { to: '/demander', icon: 'sparkle', label: m.nav_ask, permission: 'assistant:ask' },
     ],
   },
   {
@@ -61,14 +62,14 @@ const sections: Section[] = [
     entries: [
       { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
       { to: '/argent/depenses', icon: 'file', label: m.nav_expenses, permission: 'expenses:read' },
-      { to: '/argent/resultat', icon: 'sparkle', label: m.nav_result, permission: 'money:read' },
+      { to: '/argent/resultat', icon: 'chart', label: m.nav_result, permission: 'money:read' },
       { to: '/argent/couts', icon: 'layers', label: m.nav_costs, permission: 'money:read' },
     ],
   },
   {
     label: m.nav_section_business,
     entries: [
-      { to: '/pressing/schema', icon: 'chart', label: m.nav_diagram, permission: 'business:read' },
+      { to: '/pressing/schema', icon: 'apps', label: m.nav_diagram, permission: 'business:read' },
       {
         to: '/pressing/catalogue',
         icon: 'library',
@@ -102,7 +103,7 @@ const tabs: Entry[] = [
   },
   { to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' },
   { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
-  { to: '/argent/resultat', icon: 'sparkle', label: m.nav_result, permission: 'money:read' },
+  { to: '/argent/resultat', icon: 'chart', label: m.nav_result, permission: 'money:read' },
 ];
 
 /** The frame of every signed-in screen: the laundry, the places she may open, her tools. */

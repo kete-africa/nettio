@@ -32,6 +32,7 @@ flowchart TB
 | Gestures, journal | `features/*/commands`        | `@kete/commands`                     |
 | Agents, drafts    | `platform/registry.ts`       | `@kete/capabilities`, `@kete/drafts` |
 | Copilots          | `platform/mcp.ts`            | `@kete/capabilities`, `@kete/views`  |
+| « Demander »      | `features/assistant/ask.ts`, `platform/ai.ts` | `@kete/ai` (model port, usage and budgets) |
 | E-mails, jobs     | `platform/jobs.ts`           | `@kete/notify`, `@kete/jobs`         |
 | Customer messaging | `features/messaging` (port), `platform/whatsapp.ts`, `platform/telegram.ts`, `platform/channels.ts`, `platform/inbound.ts` | `@kete/notify` (chat channel port); the adapters are Nettio's (decision 0004) |
 | Events, manifest  | `platform/events.ts`         | `@kete/sdk`                          |
