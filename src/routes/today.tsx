@@ -10,6 +10,7 @@ import {
   Tag,
 } from '@kete/design';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { fetchStatement } from '@/features/assistant/functions';
 import { fetchCatalog } from '@/features/catalog/functions';
 import { fetchToday } from '@/features/orders/functions';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
@@ -20,13 +21,18 @@ import * as m from '@/paraglide/messages.js';
 // « Aujourd'hui » answers one question: where does my day stand. The day's figures, what waits,
 // what is late — each one computed by code, with its unit.
 export const Route = createFileRoute('/_app/aujourdhui')({
-  loader: async () => ({ catalog: await fetchCatalog(), today: await fetchToday() }),
+  loader: async () => ({
+    catalog: await fetchCatalog(),
+    today: await fetchToday(),
+    // The day's statement, for whoever reads the money (specs/007-intelligence).
+    statement: await fetchStatement(),
+  }),
   component: TodayPage,
 });
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today } = Route.useLoaderData();
+  const { catalog, today, statement } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -112,6 +118,38 @@ function TodayPage() {
           </RowList>
         )}
       </PageSection>
+      {statement && (
+        <PageSection title={m.statement_title()}>
+          <div className="rounded-box border border-line bg-surface p-4">
+            <ul className="flex flex-col gap-1.5">
+              {statement.lines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            <p className="mt-3 text-body-sm text-fg-muted">{m.statement_how()}</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  void navigator.clipboard.writeText(
+                    [statement.business, ...statement.lines].join('\n'),
+                  )
+                }
+              >
+                {m.statement_copy()}
+              </Button>
+              <a
+                className="inline-flex h-(--control-height) items-center rounded-control border border-line-control bg-surface-control px-(--control-padding) font-semibold text-fg hover:bg-surface-hover"
+                target="_blank"
+                rel="noopener noreferrer"
+                href={`https://wa.me/?text=${encodeURIComponent([statement.business, ...statement.lines].join('\n'))}`}
+              >
+                {m.statement_share()}
+              </a>
+            </div>
+          </div>
+        </PageSection>
+      )}
       {summary && (
         <PageSection title={m.today_latest()}>
           {latest.length === 0 ? (

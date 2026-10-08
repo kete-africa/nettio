@@ -1,3 +1,4 @@
+import { aiCostMigrationSql, aiMigrationSql } from '@kete/ai';
 import { commandsDelegationMigrationSql, commandsMigrationSql } from '@kete/commands';
 import { draftsMigrationSql } from '@kete/drafts';
 import { feedbackMigrationSql } from '@kete/feedback';
@@ -57,4 +58,9 @@ export const migrations: Migration[] = [
   { name: '0008_workshop', sql: (context) => workshopMigrationSql(context) },
   // The customer's messaging (specs/006-messaging): templates, messages, the senders' lookup.
   { name: '0009_messaging', sql: (context) => messagingMigrationSql(context) },
+  // Kete Intelligence (specs/007-intelligence): each model call's usage, each organization's budget.
+  {
+    name: '0010_kete_ai',
+    sql: (context) => [aiMigrationSql(context), aiCostMigrationSql(context)].join('\n'),
+  },
 ];

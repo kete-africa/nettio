@@ -115,6 +115,7 @@ accounting, Europe (VAT, certified till, card).
 | 2 — the deposit and the day's money | yes (`002-counter`, `003-money-day`) | no |
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
-| 5 to 10 | planned | no |
+| 5 — Kete Intelligence at every station | in part (`007-intelligence`): the day's statement, « Demander », every capability open to copilots. Not built: voice and photo entry, the statement sent by itself | no |
+| 6 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.

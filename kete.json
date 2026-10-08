@@ -13,7 +13,8 @@
       "confidential"
     ],
     "ai": {
-      "used": false
+      "used": true,
+      "purpose": "Answering a person’s questions from readings she may open herself; the model never computes a figure nor acts."
     },
     "criticality": "medium"
   }

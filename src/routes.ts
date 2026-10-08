@@ -14,6 +14,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/clients', 'customers/index.tsx'),
     route('/clients/$customerId', 'customers/$customerId.tsx'),
     route('/atelier', 'workshop/queue.tsx'),
+    route('/demander', 'assistant/ask.tsx'),
     route('/argent/caisse', 'money/till.tsx'),
     route('/argent/depenses', 'money/expenses.tsx'),
     route('/argent/resultat', 'money/result.tsx'),
