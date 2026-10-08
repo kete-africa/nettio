@@ -12,6 +12,10 @@ import type { KeteIdentity } from '@kete/auth';
 
 const localEnv = fileURLToPath(new URL('../.env', import.meta.url));
 if (existsSync(localEnv)) process.loadEnvFile(localEnv);
+// The model, kept apart from the tests' environment: the tests and the browser tests must run
+// with no model connected (`.env.demo`, git-ignored; see .env.example).
+const demoEnv = fileURLToPath(new URL('../.env.demo', import.meta.url));
+if (existsSync(demoEnv)) process.loadEnvFile(demoEnv);
 Object.assign(process.env, {
   DATABASE_URL: process.env.KETE_TEST_APP_URL,
   OWNER_DATABASE_URL: process.env.KETE_TEST_OWNER_URL,
