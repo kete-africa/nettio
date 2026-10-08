@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # A token that reads kete-core's packages (read:packages): the repository's own token cannot.
+      NODE_AUTH_TOKEN: ${{ secrets.KETE_PACKAGES_TOKEN }}
+      # One Postgres container for the whole run (@kete/testing).
+      KETE_TEST_POSTGRES: container
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22.14.0
+          cache: pnpm
+          # Writes NODE_AUTH_TOKEN into the runner's user configuration, never into the repository.
+          registry-url: https://npm.pkg.github.com
+          scope: '@kete-africa'
+      - run: pnpm install --frozen-lockfile
+      - name: Types (and the build)
+        run: pnpm typecheck
+      - name: The app's own design, if it has one
+        run: pnpm design:generate --check
+      - name: Tests (every surface, every organization apart)
+        run: pnpm test

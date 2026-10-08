@@ -1,0 +1,18 @@
+{
+  "product": "prd_nettio",
+  "name": "nettio",
+  "version": "0.1.0",
+  "events": [],
+  "governance": {
+    "owner": {
+      "name": "Kete"
+    },
+    "dataCategories": [
+      "personal"
+    ],
+    "ai": {
+      "used": false
+    },
+    "criticality": "low"
+  }
+}

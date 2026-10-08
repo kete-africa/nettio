@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.tanstack/
+src/paraglide/
+src/routeTree.gen.ts
+project.inlang/cache/
+project.inlang/.meta.json
+project.inlang/README.md
+.env
+.env.*
+!.env.example
