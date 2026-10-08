@@ -63,4 +63,15 @@ export const migrations: Migration[] = [
     name: '0010_kete_ai',
     sql: (context) => [aiMigrationSql(context), aiCostMigrationSql(context)].join('\n'),
   },
+  // Two lines written by one gesture share its transaction's time: a history is dated by the
+  // clock instead, so that it always reads in the order things were done (found by the CI).
+  {
+    name: '0011_history_order',
+    sql: ({ schema }) =>
+      [
+        `alter table ${schema}.order_events alter column at set default clock_timestamp();`,
+        `alter table ${schema}.work_events alter column at set default clock_timestamp();`,
+        `alter table ${schema}.messages alter column created_at set default clock_timestamp();`,
+      ].join('\n'),
+  },
 ];
