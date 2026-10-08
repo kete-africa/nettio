@@ -1,15 +1,24 @@
-import { Button, Chip, ChipGroup, EmptyState, PageHeader, PageSection, TextField } from '@kete/design';
+import {
+  Button,
+  Chip,
+  ChipGroup,
+  EmptyState,
+  Icon,
+  PageHeader,
+  PageSection,
+  TextField,
+} from '@kete/design';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { packAdmits, priceOf } from '@/features/catalog/domain/catalog';
 import type { Customer } from '@/features/customers';
 import { lookupCustomer } from '@/features/customers/functions';
 import type { PaymentMethod } from '@/features/orders';
 import { priceOrder, type PricedLine } from '@/features/orders/domain/pricing';
-import { checkCost, fetchCounter, receiveOrder } from '@/features/orders/functions';
+import { checkCost, fetchCounter, receiveOrder, understand } from '@/features/orders/functions';
 import { gestureKey, MoneyFields, wholeAmount } from '@/features/orders/ui/MoneyFields';
 import { errorSentence } from '@/lib/errors';
-import { CheckField, cx, ErrorNote, Note, SelectField } from '@/lib/fields';
+import { CheckField, cx, ErrorNote, Note, SelectField, TextAreaField } from '@/lib/fields';
 import { formatDayTime, formatMoney, formatNumber } from '@/lib/format';
 import * as m from '@/paraglide/messages.js';
 
@@ -53,6 +62,12 @@ function NewOrderPage() {
   const [key, setKey] = useState(() => gestureKey('dep'));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A deposit said in a sentence, or dictated (specs/011-dictate): it fills this form, no more.
+  const [sentence, setSentence] = useState('');
+  const [listening, setListening] = useState<'idle' | 'recording' | 'thinking'>('idle');
+  const [heard, setHeard] = useState<{ said: string; notFound: string[] } | null>(null);
+  const [dictationError, setDictationError] = useState<string | null>(null);
+  const recorder = useRef<MediaRecorder | null>(null);
   /** The guard-rail: the total falls under the variable cost of the content (specs/004-earn). */
   const [guard, setGuard] = useState<{ below: boolean; variableCost: number | null } | null>(null);
 
@@ -173,6 +188,78 @@ function NewOrderPage() {
     (customerKnown || name.trim() !== '') &&
     (price.discount === 0 || reason.trim() !== '');
 
+  /** Fills the form with what Nettio understood; the person checks, corrects and saves. */
+  async function grasp(said: { text: string } | { audio: string }) {
+    setListening('thinking');
+    setDictationError(null);
+    try {
+      const outcome = await understand({ data: said });
+      if (!outcome.available) {
+        const reasons: Record<string, () => string> = {
+          not_connected: m.dictate_not_connected,
+          no_voice: m.dictate_no_voice,
+          budget_spent: m.ask_budget_spent,
+          nothing_heard: m.dictate_nothing_heard,
+          not_allowed: m.error_not_allowed,
+        };
+        setDictationError((reasons[outcome.reason] ?? m.error_generic)());
+        return;
+      }
+      const { understood } = outcome;
+      setQuantities((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          understood.lines.map((line) => [`${line.serviceId}|${line.articleId ?? ''}`, line.quantity]),
+        ),
+      }));
+      setDefects((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          understood.lines
+            .filter((line) => line.defects)
+            .map((line) => [`${line.serviceId}|${line.articleId ?? ''}`, line.defects]),
+        ),
+      }));
+      if (understood.lines[0]) setServiceId(understood.lines[0].serviceId);
+      if (understood.phone) setPhone(understood.phone);
+      if (understood.customerName) setName(understood.customerName);
+      if (understood.packId) setPackId(understood.packId);
+      if (understood.express) setExpress(true);
+      setHeard({ said: outcome.heard, notFound: understood.notFound });
+      setSentence('');
+    } catch {
+      setDictationError(m.error_generic());
+    } finally {
+      setListening('idle');
+    }
+  }
+
+  async function record() {
+    if (listening === 'recording') {
+      recorder.current?.stop();
+      return;
+    }
+    setDictationError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const next = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      next.ondataavailable = (event) => chunks.push(event.data);
+      next.onstop = () => {
+        for (const track of stream.getTracks()) track.stop();
+        const reader = new FileReader();
+        // The recording is read once, sent, and never kept.
+        reader.onloadend = () => void grasp({ audio: String(reader.result).split(',')[1] ?? '' });
+        reader.readAsDataURL(new Blob(chunks, { type: next.mimeType }));
+      };
+      recorder.current = next;
+      next.start();
+      setListening('recording');
+    } catch {
+      setDictationError(m.dictate_mic_refused());
+    }
+  }
+
   const step = (id: string, by: number) =>
     setQuantities((current) => ({ ...current, [id]: Math.max(0, (current[id] ?? 0) + by) }));
 
@@ -240,6 +327,42 @@ function NewOrderPage() {
             label: `${site.name} (${site.code})`,
           }))}
         />
+      )}
+
+      {counter.dictation.text && (
+        <section className="mb-8 rounded-box border border-line bg-surface p-4">
+          <h2 className="mb-1 font-heading text-title font-semibold">{m.dictate_title()}</h2>
+          <p className="mb-3 text-body-sm text-fg-muted">{m.dictate_hint()}</p>
+          <TextAreaField
+            label={m.dictate_sentence()}
+            value={sentence}
+            rows={2}
+            maxLength={1500}
+            disabled={listening !== 'idle'}
+            onChange={setSentence}
+          />
+          <div className="mt-3 flex flex-wrap justify-end gap-3">
+            {counter.dictation.voice && (
+              <Button variant="secondary" disabled={listening === 'thinking'} onClick={() => void record()}>
+                <Icon name={listening === 'recording' ? 'stop' : 'mic'} />
+                {listening === 'recording' ? m.dictate_stop() : m.dictate_record()}
+              </Button>
+            )}
+            <Button
+              disabled={listening !== 'idle' || sentence.trim().length < 2}
+              onClick={() => void grasp({ text: sentence })}
+            >
+              {listening === 'thinking' ? m.dictate_thinking() : m.dictate_understand()}
+            </Button>
+          </div>
+          <div className="mt-3 flex flex-col gap-2" aria-live="polite">
+            {heard && <Note>{m.dictate_understood({ said: heard.said })}</Note>}
+            {heard && heard.notFound.length > 0 && (
+              <ErrorNote>{m.dictate_not_found({ items: heard.notFound.join(' · ') })}</ErrorNote>
+            )}
+            <ErrorNote>{dictationError}</ErrorNote>
+          </div>
+        </section>
       )}
 
       <PageSection first title={m.counter_customer()}>

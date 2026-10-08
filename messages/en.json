@@ -767,5 +767,18 @@
   "source_team_read": "Team and rights",
   "source_messages": "Messages to customers",
   "sign_in_not_registered": "Sign-in is not available: this Nettio is not registered at the Compte Kete yet. A Kete operator must register it, then set its identifier on this deployment.",
-  "result_month_running": "The month is not over: the fixed charges of the whole month are already counted, and spread over the pieces treated so far only. The result and the complete costs will improve as deposits come in."
+  "result_month_running": "The month is not over: the fixed charges of the whole month are already counted, and spread over the pieces treated so far only. The result and the complete costs will improve as deposits come in.",
+  "dictate_title": "Say the deposit",
+  "dictate_hint": "Write or dictate as you would say it: “4 shirts and 2 trousers for 90 12 34 56, Business pack”. Nettio fills the deposit; you check and you save.",
+  "dictate_sentence": "The deposit, in a sentence",
+  "dictate_understand": "Fill the deposit",
+  "dictate_thinking": "Nettio is listening…",
+  "dictate_record": "Dictate",
+  "dictate_stop": "Stop",
+  "dictate_understood": "Nettio heard: “{said}”. Check the deposit below before saving.",
+  "dictate_not_found": "Not in the deposit, to enter by hand or to add to the catalogue: {items}",
+  "dictate_not_connected": "Entry in a sentence is not connected on this Nettio. Enter the deposit with the buttons.",
+  "dictate_no_voice": "Dictation is not connected. Write the sentence, or enter the deposit with the buttons.",
+  "dictate_nothing_heard": "Nettio heard nothing. Bring the phone closer and try again, or write the sentence.",
+  "dictate_mic_refused": "The microphone is not available: allow it in the browser, or write the sentence."
 }

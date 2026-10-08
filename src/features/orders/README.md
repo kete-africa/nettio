@@ -66,3 +66,14 @@ counts only: never a name, a phone nor a price (tested).
 
 `/depots/$orderId/recu`: a ticket to print, and the same words as a message the laundry sends from
 its own WhatsApp or Telegram (`ui/receipt.ts`). The channel adapters arrive with specs/006.
+
+## A deposit said in a sentence, or dictated
+
+`understand.ts` (specs/011-dictate, `docs/flows/a-deposit-said.md`): a model places the clerk's
+words on the catalogue, and `domain/understand.ts` — pure — keeps only the couples that have a
+price, in quantities that can be, naming what it dropped. It fills the form of « Nouveau dépôt »
+and writes nothing: the person checks, and saves through `orders_receive`. The model sees names
+and identifiers, never a price. `pnpm eval:dictate` measures it with the real model.
+
+What leaves the organization here: the sentence or the recording, and the catalogue's names, go
+to the model's provider — only when the laundry's Nettio has a model configured.

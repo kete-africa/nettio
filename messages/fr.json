@@ -767,5 +767,18 @@
   "source_team_read": "Équipe et droits",
   "source_messages": "Messages aux clients",
   "sign_in_not_registered": "La connexion n’est pas disponible : ce Nettio n’est pas encore inscrit au Compte Kete. Un opérateur Kete doit l’inscrire, puis poser son identifiant sur ce déploiement.",
-  "result_month_running": "Le mois n’est pas terminé : les charges fixes du mois entier sont déjà comptées, et réparties sur les seules pièces traitées jusqu’ici. Le résultat et les coûts complets s’amélioreront à mesure que les dépôts arrivent."
+  "result_month_running": "Le mois n’est pas terminé : les charges fixes du mois entier sont déjà comptées, et réparties sur les seules pièces traitées jusqu’ici. Le résultat et les coûts complets s’amélioreront à mesure que les dépôts arrivent.",
+  "dictate_title": "Dire le dépôt",
+  "dictate_hint": "Écrivez ou dictez comme vous le diriez : « 4 chemises et 2 pantalons pour le 90 12 34 56, forfait Business ». Nettio remplit le dépôt ; vous vérifiez et vous enregistrez.",
+  "dictate_sentence": "Le dépôt, en une phrase",
+  "dictate_understand": "Remplir le dépôt",
+  "dictate_thinking": "Nettio écoute…",
+  "dictate_record": "Dicter",
+  "dictate_stop": "Arrêter",
+  "dictate_understood": "Nettio a entendu : « {said} ». Vérifiez le dépôt ci-dessous avant d’enregistrer.",
+  "dictate_not_found": "Pas dans le dépôt, à saisir à la main ou à ajouter au catalogue : {items}",
+  "dictate_not_connected": "La saisie en une phrase n’est pas branchée sur ce Nettio. Saisissez le dépôt avec les touches.",
+  "dictate_no_voice": "La dictée n’est pas branchée. Écrivez la phrase, ou saisissez le dépôt avec les touches.",
+  "dictate_nothing_heard": "Nettio n’a rien entendu. Rapprochez le téléphone et recommencez, ou écrivez la phrase.",
+  "dictate_mic_refused": "Le micro n’est pas disponible : autorisez-le dans le navigateur, ou écrivez la phrase."
 }

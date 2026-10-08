@@ -2,8 +2,11 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import type { Site } from '@/features/business';
 import type { Article, Pack, Price, Service } from '@/features/catalog';
-import { perform } from '@/platform/screen';
+import { getModel, getTranscriber } from '@/platform/ai';
+import { holds } from '@/platform/rights';
+import { perform, signedIn } from '@/platform/screen';
 import type { DaySummary } from './infrastructure/orders.tables';
+import { understandDeposit, type UnderstandOutcome } from './understand';
 import {
   cancelInput,
   collectInput,
@@ -29,14 +32,20 @@ export interface Counter {
   };
   mayExceedDiscount: boolean;
   mayCollect: boolean;
+  /** Whether a deposit may be said in a sentence, and dictated (specs/011-dictate). */
+  dictation: { text: boolean; voice: boolean };
 }
 
 /** The key of a gesture: the same one sent twice — a double tap, a retry — runs once. */
 const key = z.string().regex(/^[A-Za-z0-9_.:-]{8,128}$/);
 
 export const fetchCounter = createServerFn({ method: 'GET' }).handler(async () => {
-  const read = await perform<Counter>('orders_counter', {});
-  return read.ok ? read.output : null;
+  const read = await perform<Omit<Counter, 'dictation'>>('orders_counter', {});
+  if (!read.ok) return null;
+  return {
+    ...read.output,
+    dictation: { text: getModel() !== null, voice: getModel() !== null && getTranscriber() !== null },
+  };
 });
 
 export const fetchOrders = createServerFn({ method: 'GET' })
@@ -132,4 +141,35 @@ export const checkCost = createServerFn({ method: 'POST' })
   )
   .handler(({ data }) =>
     perform<{ below: boolean; variableCost: number | null } | null>('orders_check_cost', data),
+  );
+
+/**
+ * A deposit said in a sentence, or dictated: what Nettio understood of it, to fill the counter's
+ * form. Nothing is saved here; the person checks and saves the deposit herself.
+ */
+export const understand = createServerFn({ method: 'POST' })
+  .validator((input: unknown) =>
+    z
+      .union([
+        z.object({ text: z.string().trim().min(2).max(1500) }),
+        // A recording of a few seconds, base64: 3 MB at most.
+        z.object({ audio: z.string().min(100).max(4_200_000) }),
+      ])
+      .parse(input),
+  )
+  .handler(
+    async ({ data }): Promise<UnderstandOutcome | { available: false; reason: 'not_allowed' }> => {
+      const { identity, caller, as } = await signedIn();
+      const counter = await perform<Omit<Counter, 'dictation'>>('orders_counter', {});
+      return as(async () => {
+        if (!counter.ok || !holds('orders:create')) {
+          return { available: false as const, reason: 'not_allowed' as const };
+        }
+        return understandDeposit(
+          { userId: identity.userId, organizationId: caller.organizationId },
+          'text' in data ? { text: data.text } : { audio: new Uint8Array(Buffer.from(data.audio, 'base64')) },
+          counter.output.catalog,
+        );
+      });
+    },
   );

@@ -26,5 +26,6 @@ sequenceDiagram
 Every arrow to Nettio is a named command, journaled, and a line of the deposit's history. The
 center hears `order.received`, `order.ready`, `order.collected`: identifiers and counts only.
 
-An agent may prepare `orders_receive` from a voice note or a photo (a draft); it never runs a
-money gesture.
+At the counter, the content may be said in a sentence or dictated: it fills the form, and the
+person saves it herself (`docs/flows/a-deposit-said.md`). An agent may prepare `orders_receive`
+as a draft; it never runs a money gesture.

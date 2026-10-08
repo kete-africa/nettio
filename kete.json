@@ -14,7 +14,7 @@
     ],
     "ai": {
       "used": true,
-      "purpose": "Answering a person’s questions from readings she may open herself; the model never computes a figure nor acts."
+      "purpose": "Answering a person’s questions from readings she may open, and placing on the catalogue a deposit she said or dictated, for her to check and save. The model computes no figure and never acts."
     },
     "criticality": "medium"
   }
