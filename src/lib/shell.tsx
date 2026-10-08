@@ -53,6 +53,15 @@ const sections: Section[] = [
     ],
   },
   {
+    label: m.nav_section_money,
+    entries: [
+      { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
+      { to: '/argent/depenses', icon: 'file', label: m.nav_expenses, permission: 'expenses:read' },
+      { to: '/argent/resultat', icon: 'sparkle', label: m.nav_result, permission: 'money:read' },
+      { to: '/argent/couts', icon: 'layers', label: m.nav_costs, permission: 'money:read' },
+    ],
+  },
+  {
     label: m.nav_section_business,
     entries: [
       { to: '/pressing/schema', icon: 'chart', label: m.nav_diagram, permission: 'business:read' },
@@ -86,8 +95,8 @@ const tabs: Entry[] = [
     permission: 'orders:create',
     primary: true,
   },
-  { to: '/clients', icon: 'people', label: m.nav_customers, permission: 'customers:read' },
-  { to: '/pressing/schema', icon: 'chart', label: m.nav_business, permission: 'business:read' },
+  { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
+  { to: '/argent/resultat', icon: 'sparkle', label: m.nav_result, permission: 'money:read' },
 ];
 
 /** The frame of every signed-in screen: the laundry, the places she may open, her tools. */

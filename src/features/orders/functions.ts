@@ -106,3 +106,25 @@ export const refundPayment = createServerFn({ method: 'POST' })
   .handler(({ data }) =>
     perform<{ orderId: string; balance: number }>('payments_refund', data.refund, data.key),
   );
+
+/** The guard-rail while a deposit is typed: under its variable cost, or not, or not known. */
+export const checkCost = createServerFn({ method: 'POST' })
+  .validator((input: unknown) =>
+    z
+      .object({
+        total: z.number().int().min(0),
+        lines: z
+          .array(
+            z.object({
+              serviceId: z.string().max(64),
+              articleId: z.string().max(64).nullable(),
+              quantity: z.number().positive(),
+            }),
+          )
+          .max(100),
+      })
+      .parse(input),
+  )
+  .handler(({ data }) =>
+    perform<{ below: boolean; variableCost: number | null } | null>('orders_check_cost', data),
+  );

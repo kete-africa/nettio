@@ -2,6 +2,7 @@ import { createCapabilityRegistry, createDatasetRegistry } from '@kete/capabilit
 import { businessCapabilities } from '@/features/business';
 import { catalogCapabilities } from '@/features/catalog';
 import { customerCapabilities } from '@/features/customers';
+import { moneyCapabilities } from '@/features/money';
 import { orderCapabilities } from '@/features/orders';
 import { transaction } from './db';
 import { holds } from './rights';
@@ -11,7 +12,13 @@ import { holds } from './rights';
  * rights, same journal, same autonomy rules (@kete/capabilities).
  */
 export const registry = createCapabilityRegistry(
-  [...businessCapabilities, ...catalogCapabilities, ...customerCapabilities, ...orderCapabilities],
+  [
+    ...businessCapabilities,
+    ...catalogCapabilities,
+    ...customerCapabilities,
+    ...orderCapabilities,
+    ...moneyCapabilities,
+  ],
   {
     authorize: async (_caller, permission) => holds(permission),
     transaction,

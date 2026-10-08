@@ -1,7 +1,9 @@
 import { defineCapability } from '@kete/capabilities';
 import { z } from 'zod';
 import { findStaffOf, listSites, readSettings, receives } from '@/features/business';
-import { readCatalog } from '@/features/catalog';
+import { priceOf, readCatalog } from '@/features/catalog';
+import { guardRail } from '@/features/money';
+import { personBehind } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
 import { holds } from '@/platform/rights';
 import {
@@ -46,8 +48,7 @@ export const orderCapabilities = [
     async run(_input, { db, actor }) {
       const settings = await readSettings(db);
       if (!settings) throw new RuleError('not_set_up');
-      const person = actor.kind === 'person' ? actor.id : (actor.onBehalfOf?.id ?? actor.id);
-      const staff = await findStaffOf(db, person);
+      const staff = await findStaffOf(db, personBehind(actor));
       const mine = (siteId: string) =>
         !staff || staff.siteIds.length === 0 || staff.siteIds.includes(siteId);
       const catalog = await readCatalog(db);
@@ -71,6 +72,38 @@ export const orderCapabilities = [
         mayExceedDiscount: holds('orders:discount'),
         mayCollect: holds('payments:collect'),
       };
+    },
+  }),
+  defineCapability({
+    name: 'orders_check_cost',
+    description:
+      'The counter’s guard-rail: whether a content sold at a total falls under its variable cost. Null when a piece has no cost sheet. The cost itself is only told to whoever reads the money.',
+    permission: 'orders:create',
+    autonomy: 1,
+    input: z.object({
+      total: z.number().int().min(0),
+      lines: z
+        .array(
+          z.object({
+            serviceId: z.string().max(64),
+            articleId: z.string().max(64).nullable(),
+            quantity: z.number().positive(),
+          }),
+        )
+        .max(100),
+    }),
+    async run(input, { db }) {
+      const catalog = await readCatalog(db);
+      const sold = input.lines.filter(
+        (line) => priceOf(catalog.prices, line.serviceId, line.articleId) !== undefined,
+      );
+      const guard = await guardRail(
+        db,
+        input.total,
+        sold.map((line) => ({ ...line, covered: 0 })),
+      );
+      if (!guard) return null;
+      return { below: guard.below, variableCost: holds('money:read') ? guard.variableCost : null };
     },
   }),
   defineCapability({

@@ -5,6 +5,7 @@ import { outboxMigrationSql } from '@kete/sdk';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
+import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
 
 export interface MigrationContext {
@@ -48,4 +49,6 @@ export const migrations: Migration[] = [
   // The counter (specs/002-counter): customers, deposits with their real content, payments.
   { name: '0005_customers', sql: (context) => customersMigrationSql(context) },
   { name: '0006_orders', sql: (context) => ordersMigrationSql(context) },
+  // The money (specs/003-money-day, 004-earn): tills, expenses, draws, cost sheets.
+  { name: '0007_money', sql: (context) => moneyMigrationSql(context) },
 ];

@@ -3,6 +3,8 @@ import type { SqlExecutor } from '@kete/tenancy';
 import { findStaffOf, listSites, readSettings, receives } from '@/features/business';
 import { priceOf, readCatalog } from '@/features/catalog';
 import { customerAt, findCustomer } from '@/features/customers';
+import { attachPayment, checkCashOut, flagBelowCost, guardRail, tillFor } from '@/features/money';
+import { personBehind, signer } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
 import { announce } from '@/platform/announce';
 import { holds } from '@/platform/rights';
@@ -34,13 +36,6 @@ import {
   refundInput,
 } from './order.record';
 
-/** Who signs a gesture in a deposit's history: the person, or the agent acting for her. */
-const signer = (actor: Actor) => ({ id: actor.id, kind: actor.kind });
-
-/** The person behind a gesture: herself, or the one an agent acts for. */
-const personBehind = (actor: Actor): string =>
-  actor.kind === 'person' ? actor.id : (actor.onBehalfOf?.id ?? actor.id);
-
 /** A person attached to some sites only works there; one attached to none works everywhere. */
 async function checkSiteOf(db: SqlExecutor, actor: Actor, siteId: string): Promise<void> {
   const staff = await findStaffOf(db, personBehind(actor));
@@ -58,7 +53,12 @@ async function takePayment(
   actor: Actor,
 ): Promise<number> {
   const kind = checkPayment(order, money.amount);
-  await insertPayment(db, organizationId, {
+  // Cash goes into the person's open till at this site (specs/003-money-day).
+  const till =
+    money.method === 'cash'
+      ? await tillFor(db, { cashierId: personBehind(actor), siteId: order.siteId })
+      : null;
+  const paymentId = await insertPayment(db, organizationId, {
     orderId: order.orderId,
     siteId: order.siteId,
     amount: money.amount,
@@ -66,6 +66,7 @@ async function takePayment(
     kind,
     createdBy: personBehind(actor),
   });
+  if (till) await attachPayment(db, paymentId, till.sessionId);
   await noteEvent(db, organizationId, {
     orderId: order.orderId,
     kind: 'paid',
@@ -185,13 +186,28 @@ export const receiveOrder = defineCommand({
         defects: line.defects,
       })),
     });
+    // The guard-rail (specs/004-earn): said, signed in the history, never blocking.
+    const guard = await guardRail(
+      db,
+      price.total,
+      lines.map((line, index) => ({
+        serviceId: line.serviceId,
+        articleId: line.articleId,
+        quantity: line.quantity,
+        covered: price.lines[index]?.covered ?? 0,
+      })),
+    );
+    if (guard?.below) await flagBelowCost(db, orderId);
     await noteEvent(db, organizationId, {
       orderId,
       kind: 'received',
       detail: {
         total: price.total,
         ...(pack ? { pack: pack.name } : {}),
-        ...(price.discount > 0 ? { discount: price.discount, reason: input.discountReason } : {}),
+        ...(price.discount > 0
+          ? { discount: price.discount, reason: input.discountReason ?? '' }
+          : {}),
+        ...(guard?.below ? { belowCost: true } : {}),
       },
       actor: signer(actor),
     });
@@ -217,6 +233,7 @@ export const receiveOrder = defineCommand({
       paid,
       balance: price.total - paid,
       promisedAt: promisedAt.toISOString(),
+      belowCost: guard?.below ?? false,
     };
   },
   summarize: (_input, output) => `Deposit ${output.number} received`,
@@ -325,7 +342,13 @@ export const refundPayment = defineCommand({
   async handler(input, { db, organizationId, actor }) {
     const order = await opened(db, input.orderId);
     checkRefund(order, input.amount, input.reason);
-    await insertPayment(db, organizationId, {
+    // Cash comes out of the person's open till, which must hold it.
+    const till =
+      input.method === 'cash'
+        ? await tillFor(db, { cashierId: personBehind(actor), siteId: order.siteId })
+        : null;
+    if (till) checkCashOut(input.amount, till);
+    const paymentId = await insertPayment(db, organizationId, {
       orderId: order.orderId,
       siteId: order.siteId,
       amount: input.amount,
@@ -334,6 +357,7 @@ export const refundPayment = defineCommand({
       reason: input.reason,
       createdBy: personBehind(actor),
     });
+    if (till) await attachPayment(db, paymentId, till.sessionId);
     await noteEvent(db, organizationId, {
       orderId: order.orderId,
       kind: 'refunded',

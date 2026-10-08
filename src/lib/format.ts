@@ -42,3 +42,25 @@ export function formatDayTime(date: Date | string): string {
     timeZone: 'Africa/Lome',
   }).format(new Date(date));
 }
+
+/** A month in words: octobre 2026. */
+export function formatMonth(month: string): string {
+  return new Intl.DateTimeFormat(getLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(`${month}-01T00:00:00Z`),
+  );
+}
+
+/** The month before or after: « 2026-12 » + 1 → « 2027-01 ». */
+export function shiftMonth(month: string, by: number): string {
+  const date = new Date(`${month}-01T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + by);
+  return date.toISOString().slice(0, 7);
+}
+
+export const currentMonth = (): string => new Date().toISOString().slice(0, 7);
+export const currentDay = (): string => new Date().toISOString().slice(0, 10);
+
+/** A signed amount: « + 290 F CFA », « − 400 F CFA ». */
+export function formatSigned(amount: number): string {
+  return `${amount < 0 ? '−' : '+'}\u00a0${formatMoney(Math.abs(amount))}`;
+}
