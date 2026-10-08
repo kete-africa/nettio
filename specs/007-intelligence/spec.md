@@ -59,9 +59,9 @@ copilot reads, and prepares drafts a person validates. Nothing more is needed he
 
 ## Known limits
 
-- **Voice and photo entry of a deposit are not built.** They need a transcription and an
-  extraction proven in a real, noisy counter (`docs/product/decisions.md`, « Ce qui n'est pas
-  encore su »); the capability `orders_receive` already takes an agent's draft.
+- **Voice entry of a deposit is built since** `specs/011-dictate` — not proven in a real, noisy
+  counter (`docs/product/decisions.md`, « Ce qui n'est pas encore su »). **Photo entry is not
+  built.**
 - **The evening statement is not sent by itself**: it is read in the app, by MCP, or shared by
   hand. Sending it needs the owner's own channel and a schedule per organization.
 - **A first evaluation with the real model exists, and it is small**: `pnpm eval:ask` asks eight

@@ -61,7 +61,8 @@ never becomes « ready » with a piece missing.
 
 | Spec | What |
 |---|---|
-| `007-intelligence` | « Demander » on every screen and by messaging (figures computed by code), the evening statement, voice and photo entry of a deposit as a draft, every capability open to copilots (MCP and its views) |
+| `007-intelligence` | « Demander » on every screen and by messaging (figures computed by code), the evening statement, every capability open to copilots (MCP and its views) |
+| `011-dictate` | A deposit said in a sentence or dictated: it fills the counter's form, the person checks and saves |
 
 **Proof**: the owner reads his evening statement without opening the app, and asks one question a
 week.
@@ -115,7 +116,7 @@ accounting, Europe (VAT, certified till, card).
 | 2 — the deposit and the day's money | yes (`002-counter`, `003-money-day`) | no |
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
-| 5 — Kete Intelligence at every station | in part (`007-intelligence`): the day's statement, « Demander », every capability open to copilots. Not built: voice and photo entry, the statement sent by itself | no |
+| 5 — Kete Intelligence at every station | in part (`007-intelligence`, `011-dictate`): the day's statement, « Demander », a deposit said in a sentence or dictated, every capability open to copilots. Not built: photo entry, the statement sent by itself | no |
 | 6 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.
