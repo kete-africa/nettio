@@ -1,9 +1,12 @@
 import { defineCommand, type Actor } from '@kete/commands';
 import type { SqlExecutor } from '@kete/tenancy';
-import { findStaffOf, listSites, readSettings, receives } from '@/features/business';
+import { findStaffOf, listSites, plantOf, readSettings, receives } from '@/features/business';
 import { priceOf, readCatalog } from '@/features/catalog';
 import { customerAt, findCustomer } from '@/features/customers';
 import { attachPayment, checkCashOut, flagBelowCost, guardRail, tillFor } from '@/features/money';
+// The door of the workshop depends on this feature: its units are opened through its tables.
+import { openUnits } from '@/features/workshop/domain/work';
+import { createUnits, unfinishedUnits } from '@/features/workshop/infrastructure/units';
 import { personBehind, signer } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
 import { announce } from '@/platform/announce';
@@ -24,6 +27,7 @@ import {
   insertPayment,
   lockOrder,
   noteEvent,
+  setLocation,
   setStatus,
   takeNumber,
 } from './infrastructure/orders.tables';
@@ -34,6 +38,7 @@ import {
   readyInput,
   receiveOrderInput,
   refundInput,
+  storeInput,
 } from './order.record';
 
 /** A person attached to some sites only works there; one attached to none works everywhere. */
@@ -186,6 +191,27 @@ export const receiveOrder = defineCommand({
         defects: line.defects,
       })),
     });
+    // The workshop (specs/005-workshop): its units wait at the site that processes the deposit.
+    const stepNames = new Map(catalog.steps.map((step) => [step.stepId, step.name]));
+    const units = openUnits(
+      items.map(({ line, service, article }) => ({
+        serviceId: service.serviceId,
+        serviceName: service.name,
+        route:
+          service.nature === 'workshop'
+            ? service.stepIds.map((stepId) => ({ stepId, name: stepNames.get(stepId) ?? '' }))
+            : [],
+        articleName: article?.name ?? null,
+        pricing: service.pricing,
+        quantity: line.quantity,
+      })),
+      settings.tracking,
+    );
+    if (units.length > 0) {
+      const plant = plantOf(site, await listSites(db));
+      if (!plant) throw new RuleError('site_has_no_plant');
+      await createUnits(db, organizationId, { orderId, siteId: plant.siteId, units });
+    }
     // The guard-rail (specs/004-earn): said, signed in the history, never blocking.
     const guard = await guardRail(
       db,
@@ -252,6 +278,8 @@ export const markOrderReady = defineCommand({
   reversibility: { reversible: false },
   async handler(input, { db, organizationId, actor }) {
     const order = await opened(db, input.orderId);
+    // A deposit is ready when its workshop is done: never with a piece still on a table.
+    if ((await unfinishedUnits(db, order.orderId)) > 0) throw new RuleError('workshop_not_finished');
     await setStatus(db, order.orderId, markReady(order.status), { location: input.location });
     await noteEvent(db, organizationId, {
       orderId: order.orderId,
@@ -267,6 +295,28 @@ export const markOrderReady = defineCommand({
     return { orderId: order.orderId, number: order.number, status: 'ready' as const };
   },
   summarize: (_input, output) => `Deposit ${output.number} ready`,
+});
+
+/** Says where a deposit is stored, for whoever hands it over. */
+export const storeOrder = defineCommand({
+  name: 'store-order',
+  input: storeInput,
+  reversibility: { reversible: false },
+  async handler(input, { db, organizationId, actor }) {
+    const order = await opened(db, input.orderId);
+    if (order.status === 'collected' || order.status === 'cancelled') {
+      throw new RuleError('order_not_open');
+    }
+    await setLocation(db, order.orderId, input.location);
+    await noteEvent(db, organizationId, {
+      orderId: order.orderId,
+      kind: 'stored',
+      detail: { location: input.location },
+      actor: signer(actor),
+    });
+    return { orderId: order.orderId, number: order.number, location: input.location };
+  },
+  summarize: (input, output) => `Deposit ${output.number} stored at ${input.location}`,
 });
 
 /** Takes money for a deposit: an advance, or its balance. Never more than what is due. */

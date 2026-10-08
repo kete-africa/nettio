@@ -36,6 +36,9 @@ export const kindWords: Record<PaymentKind, () => string> = {
 
 export const eventWords: Record<string, () => string> = {
   received: m.order_event_received,
+  in_progress: m.order_state_in_progress,
+  incident: m.order_event_incident,
+  stored: m.order_event_stored,
   paid: m.order_event_paid,
   ready: m.order_event_ready,
   collected: m.order_event_collected,

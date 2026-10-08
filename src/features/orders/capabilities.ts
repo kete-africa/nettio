@@ -13,6 +13,7 @@ import {
   receiveOrder,
   recordPayment,
   refundPayment,
+  storeOrder,
 } from './commands';
 import { daySummary, findOrder, listOrders } from './infrastructure/orders.tables';
 import {
@@ -22,6 +23,7 @@ import {
   readyInput,
   receiveOrderInput,
   refundInput,
+  storeInput,
 } from './order.record';
 
 /** The day of the laundry, at Lomé's hour (UTC, all year): from midnight to midnight. */
@@ -180,6 +182,15 @@ export const orderCapabilities = [
     input: readyInput,
     command: markOrderReady,
     draft: { recordType: 'order_ready' },
+  }),
+  defineCapability({
+    name: 'orders_store',
+    description: 'Says where a deposit is stored (a shelf, a rail), for whoever hands it over.',
+    permission: 'workshop:operate',
+    autonomy: 3,
+    input: storeInput,
+    command: storeOrder,
+    draft: { recordType: 'order_location' },
   }),
   defineCapability({
     name: 'orders_collect',

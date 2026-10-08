@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { freshOrganization, shot, sideways, signIn } from './session';
+import { freshOrganization, shot, sideways, signIn, throughTheWorkshop } from './session';
 
 // Specs/002-counter in a browser, at 375 px: a deposit under a pack with its real content, the
 // money taken with it, ready, handed over with its balance — and the receipt.
@@ -92,13 +92,12 @@ test('the receipt prints and goes out by WhatsApp or Telegram', async ({ page, c
 
 test('ready, then handed over with its balance; the day counts it', async ({ page, context }) => {
   await signIn(context, afi);
-  await page.goto('/depots');
+  // Ready comes from the workshop: every step of its route validated (specs/005-workshop).
+  await throughTheWorkshop(page, 'A-0001');
+  await page.goto('/depots?etape=ready');
   await page.getByText('A-0001 · Mme Adjovi').click();
-  await page.getByRole('button', { name: 'Marquer prêt' }).click();
-  let drawer = page.getByRole('dialog');
-  await drawer.getByLabel('Emplacement').fill('Rayon 3');
-  await drawer.getByRole('button', { name: 'Marquer prêt' }).click();
   await expect(page.getByText('Prêt', { exact: true }).first()).toBeVisible();
+  let drawer = page.getByRole('dialog');
 
   await page.getByRole('button', { name: 'Remettre' }).click();
   drawer = page.getByRole('dialog');

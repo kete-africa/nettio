@@ -4,7 +4,12 @@ export { orderEvents } from './events';
 export { orderPermissions } from './policies';
 export { isClosed, orderStatuses, paymentMethods } from './domain/order';
 export { priceOrder } from './domain/pricing';
-export { ordersMigrationSql } from './infrastructure/orders.tables';
+export {
+  lockOrder,
+  noteEvent,
+  ordersMigrationSql,
+  setStatus,
+} from './infrastructure/orders.tables';
 export type { OrderStatus, PaymentKind, PaymentMethod } from './domain/order';
 export type { OrderPrice, PricedLine, PricingPack } from './domain/pricing';
 export type { DaySummary } from './infrastructure/orders.tables';

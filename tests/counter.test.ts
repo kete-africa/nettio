@@ -200,6 +200,12 @@ describe('at the counter', () => {
       price: 6000,
     });
     read = await done<Catalog>(afi, 'catalog_read', {});
+    // These deposits are about the counter: their service has no workshop step, so one gesture
+    // marks them ready (specs/005-workshop proves the workshop).
+    await done(afi, 'catalog_save_service', {
+      ...read.services.find((s) => s.name === 'Lavage et repassage'),
+      stepIds: [],
+    });
     await hire(mawuli, 'counter');
     await hire(essi, 'cashier');
     // A team works with open tills (specs/003-money-day): cash goes into the cashier's own.
