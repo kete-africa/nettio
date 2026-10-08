@@ -4,7 +4,7 @@ import { getSignIn } from '@/platform/session';
 /** Only a path of this app: never an address elsewhere. */
 function returnPath(request: Request): string {
   const returnTo = new URL(request.url).searchParams.get('returnTo') ?? '';
-  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/taches';
+  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/aujourdhui';
 }
 
 // Sends the person to the Compte Kete to sign in, then back where she was going.

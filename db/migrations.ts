@@ -2,7 +2,8 @@ import { commandsDelegationMigrationSql, commandsMigrationSql } from '@kete/comm
 import { draftsMigrationSql } from '@kete/drafts';
 import { feedbackMigrationSql } from '@kete/feedback';
 import { outboxMigrationSql } from '@kete/sdk';
-import { tasksMigrationSql } from '@/features/tasks';
+import { businessMigrationSql } from '@/features/business';
+import { catalogMigrationSql } from '@/features/catalog';
 
 export interface MigrationContext {
   schema: string;
@@ -31,12 +32,15 @@ export const migrations: Migration[] = [
         feedbackMigrationSql(context),
       ].join('\n'),
   },
-  { name: '0001_tasks', sql: (context) => tasksMigrationSql(context) },
   // The journal keeps the chain of agents behind each gesture (doctrine D-039).
-  { name: '0002_kete_delegation', sql: (context) => commandsDelegationMigrationSql(context) },
+  { name: '0001_kete_delegation', sql: (context) => commandsDelegationMigrationSql(context) },
   // The business events to the center, in their own outbox (kete-core spec 049).
   {
-    name: '0003_kete_center_outbox',
+    name: '0002_kete_center_outbox',
     sql: (context) => outboxMigrationSql({ ...context, name: 'kete_center_outbox' }),
   },
+  // The laundry: its settings, sites, team and rights (specs/001-foundation).
+  { name: '0003_business', sql: (context) => businessMigrationSql(context) },
+  // Its catalogue: articles, steps, services and routes, prices, packs.
+  { name: '0004_catalog', sql: (context) => catalogMigrationSql(context) },
 ];

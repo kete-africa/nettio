@@ -9,15 +9,12 @@ import {
 } from '@kete/design';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
-import { decideReview, fetchReview } from '@/features/tasks/functions';
-import { AppShell } from '@/lib/shell';
-import { requirePerson } from '@/lib/signed-in';
+import { decideReview, fetchReview } from '@/lib/review';
 import * as m from '@/paraglide/messages.js';
 
 // The screen of a draft an agent prepared: the link a copilot always gives, and the only place a
 // level 4 decision is taken, after its confirmation (doctrine D-037).
-export const Route = createFileRoute('/verification/$draftId')({
-  beforeLoad: ({ location }) => requirePerson(location.href),
+export const Route = createFileRoute('/_app/verification/$draftId')({
   loader: ({ params }) => fetchReview({ data: { draftId: params.draftId } }),
   component: ReviewPage,
 });
@@ -42,11 +39,7 @@ function ReviewPage() {
   const [outcome, setOutcome] = useState<'validated' | 'refused' | 'error'>();
 
   if (!review) {
-    return (
-      <AppShell>
-        <EmptyState title={m.review_not_found()} />
-      </AppShell>
-    );
+    return <EmptyState title={m.review_not_found()} />;
   }
 
   const fields: VerificationField[] = review.fields.map((field) => ({
@@ -80,8 +73,7 @@ function ReviewPage() {
 
   const waiting = review.status === 'prepared';
   return (
-    <AppShell>
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <h1 className="font-heading text-headline font-semibold">{m.review_title()}</h1>
         <VerificationCard
           title={review.description}
@@ -150,6 +142,5 @@ function ReviewPage() {
           {m.review_confirm_body()}
         </ConfirmDialog>
       </div>
-    </AppShell>
   );
 }

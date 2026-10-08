@@ -1,28 +1,28 @@
 import type { KeteIdentity } from '@kete/auth';
-import { createRights, definePermissions } from '@kete/capabilities';
+import { createRights } from '@kete/capabilities';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { taskPermissions } from '@/features/tasks';
-import * as m from '@/paraglide/messages.js';
+import { findStaffOf, permissionsOfRole, readRolePermissions } from '@/features/business';
 import { getCenter } from './center';
-import { words } from './words';
+import { transaction } from './db';
+import { businessPermissionList, permissions } from './permissions';
 
-/**
- * Every permission the app checks, with its words and its default roles (kete-core spec 049): each
- * feature declares its own. The manifest describes them; Kete Enterprise lets an administrator
- * grant them to roles and positions.
- */
-export const permissions = definePermissions([
-  ...taskPermissions,
-  // The organization's journal: who did what, agents included (@kete/admin).
-  {
-    name: 'journal:read',
-    label: words(m.perm_journal_read),
-    description: words(m.perm_journal_read_body),
-    roles: ['owner', 'admin'],
+export { permissions };
+
+// Whether the center answered that it manages this app's rights, for the request being read.
+const probe = new AsyncLocalStorage<{ managed: boolean | null }>();
+// People whose rights the center manages, and until when its last answer stands in (24 h).
+const managedUntil = new Map<string, number>();
+const DAY = 86_400_000;
+
+const rights = createRights({
+  permissions,
+  grants: async (token) => {
+    const grants = await getCenter().grants(token);
+    const store = probe.getStore();
+    if (store && grants) store.managed = grants.managed;
+    return grants;
   },
-]);
-
-const rights = createRights({ permissions, grants: (token) => getCenter().grants(token) });
+});
 
 const current = new AsyncLocalStorage<{
   identity: KeteIdentity | null;
@@ -30,15 +30,40 @@ const current = new AsyncLocalStorage<{
 }>();
 
 /**
- * Runs `work` for this person: every right checked within it is hers — her grants at the center,
- * read with her token, or the defaults of her role.
+ * What the person holds in Nettio (specs/001-foundation):
+ * 1. once her organization manages the app's rights at the center, its grants decide;
+ * 2. the owner and the admins of the Compte Kete organization are owners of the laundry;
+ * 3. anyone else holds what the owner ticked for her business role — nothing without a role.
+ */
+async function permissionsFor(identity: KeteIdentity, token?: string | null): Promise<Set<string>> {
+  const answer: { managed: boolean | null } = { managed: null };
+  const base = await probe.run(answer, () => rights.permissionsOf(identity, token));
+  if (answer.managed === true) {
+    if (managedUntil.size >= 5000) managedUntil.clear();
+    managedUntil.set(identity.userId, Date.now() + DAY);
+  }
+  if (answer.managed === false) managedUntil.delete(identity.userId);
+  if ((managedUntil.get(identity.userId) ?? 0) > Date.now()) return base;
+  if (identity.role === 'owner' || identity.role === 'admin') return base;
+  const organizationId = identity.organizationId;
+  if (!organizationId) return new Set();
+  return transaction(organizationId, async (db) => {
+    const staff = await findStaffOf(db, identity.userId);
+    if (!staff?.active || !staff.role) return new Set<string>();
+    return permissionsOfRole(staff.role, businessPermissionList, await readRolePermissions(db));
+  });
+}
+
+/**
+ * Runs `work` for this person: every right checked within it is hers. An agent acting for her
+ * runs within her request: it never has more rights than she has (doctrine).
  */
 export async function asPerson<T>(
   identity: KeteIdentity | null,
   work: () => T | Promise<T>,
   token?: string | null,
 ): Promise<T> {
-  const held = identity ? await rights.permissionsOf(identity, token) : new Set<string>();
+  const held = identity ? await permissionsFor(identity, token) : new Set<string>();
   return current.run({ identity, permissions: held }, work);
 }
 
@@ -46,10 +71,12 @@ export function currentIdentity(): KeteIdentity | null {
   return current.getStore()?.identity ?? null;
 }
 
-/**
- * Whether the person of this request holds `permission` in her organization. An agent acting for
- * her runs within her request: it never has more rights than she has (doctrine).
- */
+/** Whether the person of this request holds `permission` in her organization. */
 export function holds(permission: string): boolean {
   return current.getStore()?.permissions.has(permission) ?? false;
+}
+
+/** Everything the person of this request holds: what her screens may show. */
+export function heldPermissions(): string[] {
+  return [...(current.getStore()?.permissions ?? [])].sort();
 }

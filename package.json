@@ -2,7 +2,7 @@
   "name": "@kete/nettio",
   "private": true,
   "type": "module",
-  "description": "nettio: a Kete App.",
+  "description": "Nettio: a laundry knows whether it earns money, and on what. A Kete App.",
   "scripts": {
     "dev": "vite dev --port 3400",
     "build": "vite build",
@@ -11,7 +11,8 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "design:generate": "tsx scripts/design-generate.ts",
     "test": "vitest run",
-    "typecheck": "vite build && tsc --noEmit"
+    "typecheck": "vite build && tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@kete/admin": "npm:@kete-africa/admin@^0.2.1",
@@ -27,9 +28,10 @@
     "@kete/records": "npm:@kete-africa/records@^0.1.1",
     "@kete/sdk": "npm:@kete-africa/sdk@^0.6.0",
     "@kete/tenancy": "npm:@kete-africa/tenancy@^0.1.1",
-    "@kete/views": "npm:@kete-africa/views@^0.2.1",
+    "@kete/views": "npm:@kete-africa/views@^0.2.0",
     "@tanstack/react-router": "^1.170.40",
     "@tanstack/react-start": "^1.168.59",
+    "@xyflow/react": "^12.12.0",
     "pg": "^8.23.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -41,6 +43,7 @@
     "@inlang/paraglide-js": "^2.25.4",
     "@kete/testing": "npm:@kete-africa/testing@^0.1.0",
     "@modelcontextprotocol/client": "2.3.0",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/virtual-file-routes": "^1.162.0",
     "@types/node": "^22.20.4",
@@ -48,6 +51,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
+    "jose": "^6.2.12",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "vite": "^7.3.6",

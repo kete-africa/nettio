@@ -2,13 +2,10 @@ import { AuditLog } from '@kete/admin/ui';
 import { EmptyState } from '@kete/design';
 import { createFileRoute } from '@tanstack/react-router';
 import { fetchJournal } from '@/lib/journal';
-import { AppShell } from '@/lib/shell';
-import { requirePerson } from '@/lib/signed-in';
 import * as m from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 
-export const Route = createFileRoute('/journal')({
-  beforeLoad: ({ location }) => requirePerson(location.href),
+export const Route = createFileRoute('/_app/journal')({
   loader: () => fetchJournal(),
   component: JournalPage,
 });
@@ -17,7 +14,7 @@ function JournalPage() {
   const journal = Route.useLoaderData();
   const format = new Intl.DateTimeFormat(getLocale(), { dateStyle: 'short', timeStyle: 'short' });
   return (
-    <AppShell>
+    <>
       {!journal ? (
         <EmptyState title={m.journal_empty()} />
       ) : (
@@ -44,6 +41,6 @@ function JournalPage() {
           formatDate={(date) => format.format(new Date(date))}
         />
       )}
-    </AppShell>
+    </>
   );
 }

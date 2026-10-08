@@ -1,6 +1,6 @@
 # Business events to the center
 
-A feature announces what happened — `task.created`, `task.completed` — in the same transaction as
+A feature announces what happened — `order.received`, `order.ready` (from specs/002) — in the same transaction as
 the change (`announce`, platform/announce.ts). The worker delivers them every minute to the center
 (Kete Enterprise) with the app's own token: no shared key (kete-core spec 049).
 
