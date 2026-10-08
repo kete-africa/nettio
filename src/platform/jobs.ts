@@ -7,11 +7,13 @@ import {
   type Jobs,
 } from '@kete/jobs';
 import { createMailer, emailSenderFromEnv, type Mailer } from '@kete/notify';
+import { organizationsDue, sendDueStatement } from '@/features/assistant';
 import { deliver } from '@/features/messaging';
 import { getChannels } from './channels';
-import { transaction } from './db';
+import { getPool, transaction } from './db';
 import { env } from './env';
 import { flushCenterEvents, flushEvents } from './events';
+import { sendingPorts } from './statement';
 
 export const DELIVER_MESSAGES = 'deliver-messages';
 
@@ -25,6 +27,32 @@ const deliverMessagesJob = defineJob<{ organizationId: string }>({
     const result = await transaction(organizationId, (db) => deliver(db, getChannels()));
     // A provider that did not answer is tried again; a refusal keeps its reason on the message.
     if (result.failed > 0) console.warn(`[messages] ${result.failed} not delivered`);
+  },
+});
+
+export const SEND_STATEMENTS = 'send-statements';
+
+/**
+ * Every hour: the evening statement of each laundry whose hour has come, to where it decided
+ * (specs/013-statement-sent). One laundry that fails does not hold the others back.
+ */
+const sendStatementsJob = defineJob<Record<string, never>>({
+  name: SEND_STATEMENTS,
+  schedule: '5 * * * *',
+  async handle() {
+    const now = new Date();
+    const due = await organizationsDue(getPool(), {
+      hour: now.getUTCHours(),
+      day: now.toISOString().slice(0, 10),
+    });
+    const ports = await sendingPorts();
+    for (const organizationId of due) {
+      try {
+        await transaction(organizationId, (db) => sendDueStatement(db, ports, now));
+      } catch (error) {
+        console.warn('[statement] not sent for an organization', error instanceof Error ? error.message : '');
+      }
+    }
   },
 });
 
@@ -55,6 +83,7 @@ export function getJobs(work = worksInProcess()): Jobs {
       sendEmailJob(emailSenderFromEnv()),
       relayEventsJob(() => Promise.all([flushEvents(), flushCenterEvents()])),
       deliverMessagesJob,
+      sendStatementsJob,
     ] as never,
     work,
   });

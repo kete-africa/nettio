@@ -3,3 +3,12 @@ export { askNettio, ASSISTANT, SYSTEM, type AskOutcome } from './ask';
 export { assistantCapabilities } from './capabilities';
 export { assistantPermissions } from './policies';
 export { dayStatement, type StatementFacts } from './domain/statement';
+export { statementIsDue, type SendingOutcome } from './domain/sending';
+export {
+  linkStatementChat,
+  organizationOfStatementToken,
+  organizationsDue,
+  statementDeliveryMigrationSql,
+  STATEMENT_TOKEN,
+} from './infrastructure/delivery.tables';
+export { sendDueStatement, sendStatement, statementOf, type SendingPorts } from './sending';

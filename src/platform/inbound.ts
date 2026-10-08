@@ -1,4 +1,6 @@
+import { linkStatementChat, organizationOfStatementToken, STATEMENT_TOKEN } from '@/features/assistant';
 import { deliver, hear, replyWords } from '@/features/messaging';
+import * as m from '@/paraglide/messages.js';
 import { getChannels } from './channels';
 import { getPool, transaction } from './db';
 import { parseUpdate, secretIsValid } from './telegram';
@@ -7,8 +9,23 @@ import { parseNotification, signatureIsValid, verifySubscription } from './whats
 // The webhooks of the messaging channels: each call is authenticated before anything is read,
 // then what a customer wrote is heard, and the answer leaves at once.
 
+/**
+ * The owner opened the link of her evening statement on Telegram: her chat is tied to her
+ * laundry's statement, and she is told so. The link works once.
+ */
+async function statementLinked(sender: string, text: string): Promise<boolean> {
+  const token = /^\/start\s+([A-Za-z0-9_-]{8,64})$/.exec(text.trim())?.[1];
+  if (!token?.startsWith(STATEMENT_TOKEN)) return false;
+  const organizationId = await organizationOfStatementToken(getPool(), token);
+  if (!organizationId) return true;
+  const linked = await transaction(organizationId, (db) => linkStatementChat(db, token, sender));
+  if (linked) await getChannels().telegram?.sendText(sender, m.statement_linked({}, { locale: 'fr' }));
+  return true;
+}
+
 async function heard(channel: 'whatsapp' | 'telegram', messages: { sender: string; text: string }[]) {
   for (const message of messages) {
+    if (channel === 'telegram' && (await statementLinked(message.sender, message.text))) continue;
     const organizations = await hear(
       { channel, ...message },
       { lookup: getPool(), inOrganization: transaction, words: replyWords() },

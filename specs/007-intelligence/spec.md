@@ -62,8 +62,8 @@ copilot reads, and prepares drafts a person validates. Nothing more is needed he
 - **Voice entry of a deposit is built since** `specs/011-dictate` — not proven in a real, noisy
   counter (`docs/product/decisions.md`, « Ce qui n'est pas encore su »). **Photo entry is not
   built.**
-- **The evening statement is not sent by itself**: it is read in the app, by MCP, or shared by
-  hand. Sending it needs the owner's own channel and a schedule per organization.
+- **The evening statement is sent by itself since** `specs/013-statement-sent`: at the hour and to
+  where the owner decided. No channel was exercised live yet.
 - **A first evaluation with the real model exists, and it is small**: `pnpm eval:ask` asks eight
   questions on the demo laundry and checks what each answer must — or must never — do (the
   computed figure, « never measured », no price advice, no action, the person's rights). On

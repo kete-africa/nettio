@@ -1,18 +1,16 @@
 import { defineCapability } from '@kete/capabilities';
 import { z } from 'zod';
-import { readSettings } from '@/features/business';
-import { monthFigures } from '@/features/money';
-import { listSessions } from '@/features/money/infrastructure/money.tables';
-import { dayBounds } from '@/features/orders';
-import { daySummary } from '@/features/orders/infrastructure/orders.tables';
-import { listIncidents } from '@/features/workshop/infrastructure/units';
-import { RuleError } from '@/lib/rule-error';
-import { dayStatement, type StatementFacts } from './domain/statement';
-import { statementWords } from './statement-words';
+import { getChannels, telegramBotName } from '@/platform/channels';
+import { emailIsConnected } from '@/platform/statement';
+import { sendStatementNow, setStatementDelivery } from './commands';
+import { deliveryInput, sendNowInput } from './delivery.record';
+import { readDelivery, statementTokenOf } from './infrastructure/delivery.tables';
+import { statementOf } from './sending';
 
 /**
  * What Nettio says by itself. The day's statement is computed by code and worded with fixed
- * sentences: a copilot reads it as it is, and has nothing to compute.
+ * sentences: a copilot reads it as it is, and has nothing to compute. Where it leaves to in the
+ * evening is the owner's decision: an agent prepares it (level 3), a person decides.
  */
 export const assistantCapabilities = [
   defineCapability({
@@ -26,30 +24,53 @@ export const assistantCapabilities = [
       day: z.iso.date().optional(),
       language: z.enum(['fr', 'en']).default('fr'),
     }),
-    async run(input, { db }) {
-      const settings = await readSettings(db);
-      if (!settings) throw new RuleError('not_set_up');
-      const bounds = dayBounds(input.day);
-      const day = bounds.from.toISOString().slice(0, 10);
-      const summary = await daySummary(db, { ...bounds, dormantDays: settings.dormantDays });
-      const tills = await listSessions(db, { limit: 50 });
-      const figures = await monthFigures(db, day.slice(0, 7));
-      const facts: StatementFacts = {
-        ...summary,
-        belowCost: figures.content.belowCost,
-        openTills: tills.filter((till) => !till.closedAt).length,
-        closedTills: tills
-          .filter((till) => till.closedAt && till.closedAt >= bounds.from && till.closedAt < bounds.to)
-          .map((till) => ({ cashier: till.cashierName, gap: till.gap ?? 0 })),
-        openIncidents: (await listIncidents(db, { openOnly: true })).length,
-        month: figures.result,
-      };
+    run: (input, { db }) => statementOf(db, input),
+  }),
+  defineCapability({
+    name: 'statement_delivery',
+    description:
+      'Whether the laundry’s statement leaves by itself in the evening, at what hour (universal time), where to (e-mail, WhatsApp, Telegram), what its last sending became on each channel, and whether each channel is connected.',
+    permission: 'statement:send',
+    autonomy: 1,
+    classification: 'confidential',
+    input: z.object({}),
+    async run(_input, { db, organizationId }) {
+      const delivery = await readDelivery(db);
+      const channels = getChannels();
+      const bot = telegramBotName();
       return {
-        day,
-        business: settings.businessName,
-        lines: dayStatement(facts, statementWords(input.language)),
-        facts,
+        delivery,
+        connected: {
+          email: emailIsConnected(),
+          whatsapp: channels.whatsapp !== null,
+          telegram: channels.telegram !== null,
+        },
+        // The link the owner opens once, on her own Telegram, to receive the statement there.
+        telegramLink:
+          bot && !delivery.telegramLinked
+            ? `https://t.me/${bot}?start=${await statementTokenOf(db, organizationId)}`
+            : null,
       };
     },
+  }),
+  defineCapability({
+    name: 'statement_set_delivery',
+    description:
+      'Turns the evening statement on or off, and sets its hour (0–23, universal time), its language, and where it leaves to: an e-mail address, a WhatsApp number. Whoever receives it reads the laundry’s money.',
+    permission: 'statement:send',
+    autonomy: 3,
+    input: deliveryInput,
+    command: setStatementDelivery,
+    draft: { recordType: 'statement_delivery' },
+  }),
+  defineCapability({
+    name: 'statement_send_now',
+    description:
+      'Sends today’s statement now to where the laundry decided, to check that it arrives. Returns what it became on each channel.',
+    permission: 'statement:send',
+    autonomy: 3,
+    input: sendNowInput,
+    command: sendStatementNow,
+    draft: { recordType: 'statement_sending' },
   }),
 ];
