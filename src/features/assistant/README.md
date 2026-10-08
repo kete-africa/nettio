@@ -48,7 +48,15 @@ Every capability of Nettio is an MCP tool at `/mcp`, with the rights of the pers
 a copilot reads, and prepares drafts that a person validates (level 3) or confirms in Nettio
 (level 4). No extra code here.
 
+## Evaluating the real model
+
+`pnpm eval:ask` (after `pnpm demo` created the demo laundry) asks « Demander » eight questions with
+the model of the environment, and checks each answer in code: it carries the figure the code
+computed, says « never measured » rather than guessing, advises no price, acts on nothing, and
+never reaches what the person may not open. A small smoke test — to grow with the pilot's real
+questions.
+
 ## Not built
 
-Voice and photo entry of a deposit; the evening statement sent by itself; answers evaluated with a
-real model. See the spec's « Known limits ».
+Voice and photo entry of a deposit; the evening statement sent by itself. See the spec's « Known
+limits ».

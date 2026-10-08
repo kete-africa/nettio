@@ -12,7 +12,14 @@ import { fetchResult } from '@/features/money/functions';
 import { MonthNav } from '@/features/money/ui/MonthNav';
 import { confidenceTones, confidenceWords } from '@/features/money/ui/words';
 import { Note } from '@/lib/fields';
-import { formatMoney, formatMonth, formatNumber, formatPercent, formatSigned } from '@/lib/format';
+import {
+  currentMonth,
+  formatMoney,
+  formatMonth,
+  formatNumber,
+  formatPercent,
+  formatSigned,
+} from '@/lib/format';
 import * as m from '@/paraglide/messages.js';
 
 const search = z.object({
@@ -72,6 +79,12 @@ function ResultPage() {
           hint={m.result_left({ left: formatMoney(result.left) })}
         />
       </KpiGrid>
+
+      {view.month === currentMonth() && (
+        <div className="mt-4">
+          <Note>{m.result_month_running()}</Note>
+        </div>
+      )}
 
       <PageSection title={m.result_break_even()}>
         <p className="max-w-3xl text-body">
