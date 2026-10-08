@@ -9,7 +9,7 @@ import {
   RowList,
   Tag,
 } from '@kete/design';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { fetchStatement } from '@/features/assistant/functions';
 import { fetchCatalog } from '@/features/catalog/functions';
 import { fetchToday } from '@/features/orders/functions';
@@ -146,6 +146,14 @@ function TodayPage() {
               >
                 {m.statement_share()}
               </a>
+              {can(me, 'statement:send') && (
+                <Link
+                  to="/pressing/releve"
+                  className="inline-flex h-(--control-height) items-center font-semibold text-fg-link underline"
+                >
+                  {m.statement_receive()}
+                </Link>
+              )}
             </div>
           </div>
         </PageSection>

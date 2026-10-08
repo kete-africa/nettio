@@ -5,6 +5,9 @@ import { getModel } from '@/platform/ai';
 import { holds } from '@/platform/rights';
 import { perform, signedIn } from '@/platform/screen';
 import { askNettio, type AskOutcome } from './ask';
+import { deliveryInput } from './delivery.record';
+import type { SendingOutcome } from './domain/sending';
+import type { StatementDelivery } from './infrastructure/delivery.tables';
 
 export interface Statement {
   day: string;
@@ -46,3 +49,27 @@ export const askQuestion = createServerFn({ method: 'POST' })
       );
     });
   });
+
+export interface DeliveryView {
+  delivery: StatementDelivery;
+  connected: { email: boolean; whatsapp: boolean; telegram: boolean };
+  telegramLink: string | null;
+}
+
+/** Where the evening statement leaves to, for whoever decides it; null otherwise. */
+export const fetchDelivery = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<DeliveryView | null> => {
+    const read = await perform<DeliveryView>('statement_delivery', {});
+    return read.ok ? read.output : null;
+  },
+);
+
+export const saveDelivery = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => deliveryInput.parse(input))
+  .handler(({ data }) =>
+    perform<{ enabled: boolean; hour: number; destinations: string[] }>('statement_set_delivery', data),
+  );
+
+export const sendStatementNow = createServerFn({ method: 'POST' }).handler(() =>
+  perform<{ outcome: SendingOutcome[] }>('statement_send_now', {}),
+);

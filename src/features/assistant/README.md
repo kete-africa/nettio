@@ -56,7 +56,20 @@ computed, says « never measured » rather than guessing, advises no price, acts
 never reaches what the person may not open. A small smoke test — to grow with the pilot's real
 questions.
 
+## The statement sent by itself
+
+`sending.ts` (specs/013-statement-sent, `docs/flows/the-evening-statement.md`): `statementOf`
+computes the statement — for the screen, a copilot and the evening's sending alike — and
+`sendStatement` sends it to where the laundry decided, on each channel it gave: e-mail, WhatsApp,
+Telegram, behind ports (`SendingPorts`; the adapters live in `src/platform`). A job finds every
+hour the laundries whose hour has come, by identifier only, and `sendDueStatement` takes the day
+once. `domain/sending.ts` holds the rules, pure; `infrastructure/delivery.tables.ts` the one line
+per laundry and its row-level security.
+
+What leaves the organization here: the statement's sentences — the laundry's money — to the
+addresses its owner gave, through the mail and messaging providers of the deployment.
+
 ## Not built
 
-Voice and photo entry of a deposit; the evening statement sent by itself. See the spec's « Known
-limits ».
+Photo entry of a deposit (voice entry lives in the orders feature, specs/011-dictate). See the
+specs' « Known limits ».

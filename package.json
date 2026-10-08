@@ -33,6 +33,7 @@
     "@kete/sdk": "npm:@kete-africa/sdk@^0.6.0",
     "@kete/tenancy": "npm:@kete-africa/tenancy@^0.1.1",
     "@kete/views": "npm:@kete-africa/views@^0.2.0",
+    "@react-email/components": "^1.0.12",
     "@tanstack/react-router": "^1.170.40",
     "@tanstack/react-start": "^1.168.59",
     "@xyflow/react": "^12.12.0",

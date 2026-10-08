@@ -3,6 +3,7 @@ import { commandsDelegationMigrationSql, commandsMigrationSql } from '@kete/comm
 import { draftsMigrationSql } from '@kete/drafts';
 import { feedbackMigrationSql } from '@kete/feedback';
 import { outboxMigrationSql } from '@kete/sdk';
+import { statementDeliveryMigrationSql } from '@/features/assistant';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
@@ -74,4 +75,6 @@ export const migrations: Migration[] = [
         `alter table ${schema}.messages alter column created_at set default clock_timestamp();`,
       ].join('\n'),
   },
+  // The evening statement sent by itself (specs/013-statement-sent): where it leaves to.
+  { name: '0012_statement_delivery', sql: (context) => statementDeliveryMigrationSql(context) },
 ];
