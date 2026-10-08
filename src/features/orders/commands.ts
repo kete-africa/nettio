@@ -3,6 +3,8 @@ import type { SqlExecutor } from '@kete/tenancy';
 import { findStaffOf, listSites, plantOf, readSettings, receives } from '@/features/business';
 import { priceOf, readCatalog } from '@/features/catalog';
 import { customerAt, findCustomer } from '@/features/customers';
+// Messages are queued through the outbox's own file: the door of messaging is not needed here.
+import { queueOrderMessage } from '@/features/messaging/infrastructure/outbox';
 import { attachPayment, checkCashOut, flagBelowCost, guardRail, tillFor } from '@/features/money';
 // The door of the workshop depends on this feature: its units are opened through its tables.
 import { openUnits } from '@/features/workshop/domain/work';
@@ -10,6 +12,7 @@ import { createUnits, unfinishedUnits } from '@/features/workshop/infrastructure
 import { personBehind, signer } from '@/lib/actor';
 import { RuleError } from '@/lib/rule-error';
 import { announce } from '@/platform/announce';
+import { askDelivery } from '@/platform/channels';
 import { holds } from '@/platform/rights';
 import {
   cancel,
@@ -247,6 +250,10 @@ export const receiveOrder = defineCommand({
         actor,
       );
     }
+    // The receipt, when the laundry turned it on: its words, this deposit's figures.
+    if (await queueOrderMessage(db, organizationId, { orderId, kind: 'receipt' })) {
+      askDelivery(organizationId);
+    }
     await announce(db, {
       type: 'order.received',
       organization: organizationId,
@@ -287,6 +294,9 @@ export const markOrderReady = defineCommand({
       detail: input.location ? { location: input.location } : {},
       actor: signer(actor),
     });
+    if (await queueOrderMessage(db, organizationId, { orderId: order.orderId, kind: 'ready' })) {
+      askDelivery(organizationId);
+    }
     await announce(db, {
       type: 'order.ready',
       organization: organizationId,

@@ -3,6 +3,7 @@ import { definePermissions } from '@kete/capabilities';
 import { businessPermissions } from '@/features/business/policies';
 import { catalogPermissions } from '@/features/catalog/policies';
 import { customerPermissions } from '@/features/customers/policies';
+import { messagingPermissions } from '@/features/messaging/policies';
 import { moneyPermissions } from '@/features/money/policies';
 import { orderPermissions } from '@/features/orders/policies';
 
@@ -17,6 +18,7 @@ export const businessPermissionList = [
   ...customerPermissions,
   ...orderPermissions,
   ...moneyPermissions,
+  ...messagingPermissions,
 ];
 
 export const permissions = definePermissions(businessPermissionList);

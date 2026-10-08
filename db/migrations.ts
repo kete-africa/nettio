@@ -5,6 +5,7 @@ import { outboxMigrationSql } from '@kete/sdk';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
+import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
 import { workshopMigrationSql } from '@/features/workshop';
@@ -54,4 +55,6 @@ export const migrations: Migration[] = [
   { name: '0007_money', sql: (context) => moneyMigrationSql(context) },
   // The workshop (specs/005-workshop): work units, their steps, incidents.
   { name: '0008_workshop', sql: (context) => workshopMigrationSql(context) },
+  // The customer's messaging (specs/006-messaging): templates, messages, the senders' lookup.
+  { name: '0009_messaging', sql: (context) => messagingMigrationSql(context) },
 ];

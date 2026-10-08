@@ -2,6 +2,7 @@ import { Button, EmptyState } from '@kete/design';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
+import { fetchTelegramLink } from '@/features/messaging/functions';
 import { fetchOrder } from '@/features/orders/functions';
 import { receiptMessage } from '@/features/orders/ui/receipt';
 import { statusWords } from '@/features/orders/ui/words';
@@ -14,7 +15,14 @@ import * as m from '@/paraglide/messages.js';
 // only the ticket goes to the printer.
 export const Route = createFileRoute('/depots/$orderId/recu')({
   beforeLoad: ({ location }) => requirePerson(location.href),
-  loader: ({ params }) => fetchOrder({ data: { orderId: params.orderId } }),
+  loader: async ({ params }) => {
+    const order = await fetchOrder({ data: { orderId: params.orderId } });
+    return {
+      order,
+      // The link that ties the customer's Telegram chat, once the laundry's bot is connected.
+      telegramLink: order ? await fetchTelegramLink({ data: { customerId: order.customerId } }) : null,
+    };
+  },
   component: ReceiptPage,
 });
 
@@ -23,7 +31,7 @@ const linkClass =
 
 function ReceiptPage() {
   const { me } = Route.useRouteContext();
-  const order = Route.useLoaderData();
+  const { order, telegramLink } = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
   if (!order) return <EmptyState title={m.error_not_found()} />;
   const businessName = me.business?.businessName ?? m.app_name();
@@ -91,6 +99,15 @@ function ReceiptPage() {
         >
           {m.receipt_open_telegram()}
         </a>
+        {telegramLink && (
+          <p className="rounded-control border border-line bg-surface px-3 py-2 text-body-sm">
+            <span className="block font-semibold">{m.receipt_telegram_link()}</span>
+            <a className="break-all text-link underline" href={telegramLink}>
+              {telegramLink}
+            </a>
+            <span className="block text-fg-muted">{m.receipt_telegram_link_hint()}</span>
+          </p>
+        )}
         <Button
           variant="secondary"
           onClick={() =>

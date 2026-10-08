@@ -77,6 +77,7 @@ const sections: Section[] = [
       },
       { to: '/pressing/points', icon: 'flag', label: m.nav_sites, permission: 'business:read' },
       { to: '/pressing/equipe', icon: 'people', label: m.nav_team, permission: 'staff:manage' },
+      { to: '/pressing/messages', icon: 'send', label: m.nav_messages, permission: 'messages:read' },
       {
         to: '/pressing/reglages',
         icon: 'tool',
