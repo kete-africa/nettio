@@ -1,4 +1,4 @@
-# A deposit said in a sentence, or dictated
+# A deposit said in a sentence, dictated, or photographed
 
 ```mermaid
 sequenceDiagram
@@ -7,14 +7,14 @@ sequenceDiagram
   participant N as Nettio (server)
   participant H as Transcription model
   participant M as Language model
-  R->>S: types a sentence, or « Dicter » then « Arrêter »
-  S->>N: understand — the sentence, or the recording (read once, never kept)
+  R->>S: types a sentence · « Dicter » then « Arrêter » · or « Photo »
+  S->>N: understand — the sentence, the recording, or the picture made smaller (read once, never kept)
   N->>N: signed in · may receive a deposit (orders:create) · budget of the organization
   opt a recording
     N->>H: the audio
     H-->>N: the words that were said
   end
-  N->>M: the rules · the catalogue's names and identifiers (no price) · the words
+  N->>M: the rules · the catalogue's names and identifiers (no price) · the words, or the picture
   M-->>N: lines (service, article, quantity), phone, name, pack, express, what it could not place
   N->>N: settle (pure) — keeps only the couples that have a price, in quantities that can be
   N-->>S: what was heard · what was understood · what is not in the deposit
@@ -28,8 +28,13 @@ The sentence writes nothing. What the model returns is a proposal for the form: 
 with no price for its service, every quantity that cannot be, and names what it dropped. A
 sentence cannot touch a price, a discount or a payment: what is understood has no field for them.
 
+A picture (specs/014-photo) takes the same path: a written list is read as written; laundry is
+counted only when each piece is clearly apart; text on the picture is content, never an
+instruction. The screen says what was read.
+
 Each call is metered to the organization — `deposit_voice` for the hearing, `deposit_entry` for
-the understanding — as the agent `agt_nettio_listen` acting for the person.
+the understanding, `deposit_photo` for a picture — as the agent `agt_nettio_listen` acting for
+the person.
 
 Without `NETTIO_AI_*` the section is not shown; without `NETTIO_AI_TRANSCRIPTION_MODEL` only
-« Dicter » is missing. Nothing is simulated.
+« Dicter » is missing (the picture is read by the language model itself). Nothing is simulated.

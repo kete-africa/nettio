@@ -768,8 +768,8 @@
   "source_messages": "Messages to customers",
   "sign_in_not_registered": "Sign-in is not available: this Nettio is not registered at the Compte Kete yet. A Kete operator must register it, then set its identifier on this deployment.",
   "result_month_running": "The month is not over: the fixed charges of the whole month are already counted, and spread over the pieces treated so far only. The result and the complete costs will improve as deposits come in.",
-  "dictate_title": "Say the deposit",
-  "dictate_hint": "Write or dictate as you would say it: “4 shirts and 2 trousers for 90 12 34 56, Business pack”. Nettio fills the deposit; you check and you save.",
+  "dictate_title": "Say or photograph the deposit",
+  "dictate_hint": "Write or dictate as you would say it: “4 shirts and 2 trousers for 90 12 34 56, Business pack”. Or photograph the customer’s list, or the laundry laid out piece by piece. Nettio fills the deposit; you check and you save.",
   "dictate_sentence": "The deposit, in a sentence",
   "dictate_understand": "Fill the deposit",
   "dictate_thinking": "Nettio is listening…",
@@ -822,5 +822,9 @@
   "delivery_never": "No statement has left by itself yet.",
   "delivery_status_sent": "Sent",
   "delivery_status_failed": "Refused",
-  "delivery_status_not_connected": "Channel not connected"
+  "delivery_status_not_connected": "Channel not connected",
+  "dictate_photo": "Photo",
+  "dictate_seen": "Nettio read on the picture: “{seen}”. Check the deposit below before saving.",
+  "dictate_nothing_seen": "Nettio found nothing of a deposit on this picture. Photograph a written list, or the laundry laid out piece by piece, close and well lit.",
+  "dictate_photo_unreadable": "The picture could not be read. Take it again, or enter the deposit with the buttons."
 }

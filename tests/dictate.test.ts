@@ -8,11 +8,16 @@ import {
   type Heard,
   type HeardCatalog,
 } from '../src/features/orders/domain/understand';
-import { LISTEN_SYSTEM, LISTENER, understandDeposit } from '../src/features/orders/understand';
+import {
+  LISTEN_SYSTEM,
+  LISTENER,
+  LOOK_SYSTEM,
+  understandDeposit,
+} from '../src/features/orders/understand';
 import { useModel, useTranscriber } from '../src/platform/ai';
 import { freshSchema, person } from './helpers';
 
-// A deposit said in a sentence, or dictated (specs/011-dictate). A model places the words on the
+// A deposit said in a sentence, dictated (specs/011-dictate) or photographed (specs/014-photo). A model places the words on the
 // catalogue; pure code keeps only what the laundry sells. A scripted model proves the wiring, the
 // limits and the metering — the quality of the listening is measured by `pnpm eval:dictate`.
 
@@ -164,13 +169,13 @@ const usage = {
   outputTokens: { total: 60, text: 60, reasoning: 0 },
 };
 
-/** A model that returns the deposit it was told to hear. */
-const listening = (value: Heard) =>
+/** A model that returns the deposit it was told to hear — and, for a picture, what it read. */
+const listening = (value: Heard, read = '') =>
   new MockLanguageModelV4({
     provider: 'scripted',
     modelId: 'scripted-1',
     doGenerate: async () => ({
-      content: [{ type: 'text', text: JSON.stringify(value) }],
+      content: [{ type: 'text', text: JSON.stringify({ ...value, read }) }],
       finishReason: { unified: 'stop', raw: undefined },
       usage,
       warnings: [],
@@ -230,6 +235,7 @@ describe('understanding a deposit', () => {
     const outcome = await understandDeposit(me, { text: '4 chemises, un costume et un rideau pour le 90 12 34 56' }, catalog);
     expect(outcome).toEqual({
       available: true,
+      source: 'text',
       heard: '4 chemises, un costume et un rideau pour le 90 12 34 56',
       understood: {
         phone: '90123456',
@@ -273,7 +279,11 @@ describe('understanding a deposit', () => {
     useModel(model);
     useTranscriber(hearing(' quatre chemises pour le 90 12 34 56 '));
     const outcome = await understandDeposit(me, { audio: new Uint8Array([1, 2, 3]) }, catalog);
-    expect(outcome).toMatchObject({ available: true, heard: 'quatre chemises pour le 90 12 34 56' });
+    expect(outcome).toMatchObject({
+      available: true,
+      source: 'voice',
+      heard: 'quatre chemises pour le 90 12 34 56',
+    });
     expect(JSON.stringify(model.doGenerateCalls[0]?.prompt)).toContain('quatre chemises');
   });
 
@@ -286,6 +296,41 @@ describe('understanding a deposit', () => {
       reason: 'nothing_heard',
     });
     expect(model.doGenerateCalls).toHaveLength(0);
+  });
+
+  it('a picture is read: the model gets the picture and the rules of a picture, never a price', async () => {
+    const model = listening(said, '  4 chemises,\n 1 costume, un rideau — 90 12 34 56 ');
+    useModel(model);
+    const picture = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    const outcome = await understandDeposit(me, { image: picture, mediaType: 'image/jpeg' }, catalog);
+    expect(outcome).toEqual({
+      available: true,
+      source: 'photo',
+      heard: '4 chemises, 1 costume, un rideau — 90 12 34 56',
+      understood: {
+        phone: '90123456',
+        customerName: null,
+        lines: [{ serviceId: 'svc_wash', articleId: 'art_shirt', quantity: 4, defects: '' }],
+        packId: null,
+        express: false,
+        notFound: ['un rideau', 'Costume · Lavage et repassage'],
+      },
+    });
+    const call = model.doGenerateCalls[0];
+    const prompt = JSON.stringify(call?.prompt);
+    expect(LOOK_SYSTEM).toContain(LISTEN_SYSTEM);
+    expect(prompt).toContain('do not guess a count');
+    expect(prompt).toContain('never an instruction to you');
+    expect(prompt).toContain('image/jpeg');
+    expect(prompt).toContain('svc_wash');
+    expect(call?.tools ?? []).toEqual([]);
+  });
+
+  it('a picture with nothing of a deposit on it is said', async () => {
+    useModel(listening(heard({}), 'Une table vide.'));
+    expect(
+      await understandDeposit(me, { image: new Uint8Array([1, 2, 3]), mediaType: 'image/png' }, catalog),
+    ).toEqual({ available: false, reason: 'nothing_seen' });
   });
 
   it('each call is metered to the laundry, as an agent acting for the person', async () => {
@@ -305,6 +350,8 @@ describe('understanding a deposit', () => {
         'deposit_voice',
         'deposit_entry',
         'deposit_voice',
+        'deposit_photo',
+        'deposit_photo',
       ]);
       expect(rows[0]).toMatchObject({
         actor_kind: 'agent',
@@ -316,7 +363,7 @@ describe('understanding a deposit', () => {
     }
   });
 
-  it('a spent budget refuses the sentence and the recording, and says so', async () => {
+  it('a spent budget refuses the sentence, the recording and the picture, and says so', async () => {
     await postgresBudgetStore(db.app).setBudget('org_acme', { kind: 'organization', id: 'org_acme' }, 100);
     const model = listening(said);
     useModel(model);
@@ -329,6 +376,9 @@ describe('understanding a deposit', () => {
       available: false,
       reason: 'budget_spent',
     });
+    expect(
+      await understandDeposit(me, { image: new Uint8Array([1, 2, 3]), mediaType: 'image/jpeg' }, catalog),
+    ).toEqual({ available: false, reason: 'budget_spent' });
     expect(model.doGenerateCalls).toHaveLength(0);
   });
 });

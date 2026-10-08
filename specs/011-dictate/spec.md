@@ -71,4 +71,4 @@ wrong hearing is seen before anything is saved. The recording is read once and n
 - The dictation button was not exercised in a browser test (a browser test has no microphone);
   the server path it calls is the one tested.
 - A quantity that is said is taken as said, up to 500: the person reads the form before saving.
-- Photo entry — reading a handwritten ticket — is not built.
+- Photo entry — reading a written list — came with `specs/014-photo`.
