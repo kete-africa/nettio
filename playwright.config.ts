@@ -30,7 +30,8 @@ export default defineConfig({
     launchOptions: process.env.KETE_CHROMIUM ? { executablePath: process.env.KETE_CHROMIUM } : {},
   },
   webServer: {
-    command: `pnpm db:migrate && pnpm build && pnpm exec srvx serve --entry dist/server/server.js --static ${fileURLToPath(new URL('./dist/client', import.meta.url))} --prod --port ${PORT}`,
+    // The build first: it generates the messages the migrations' code imports.
+    command: `pnpm build && pnpm db:migrate && pnpm exec srvx serve --entry dist/server/server.js --static ${fileURLToPath(new URL('./dist/client', import.meta.url))} --prod --port ${PORT}`,
     port: PORT,
     env: {
       DATABASE_URL: process.env.KETE_TEST_APP_URL ?? '',

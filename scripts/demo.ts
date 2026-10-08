@@ -252,13 +252,14 @@ async function seed(): Promise<void> {
 
 const who = role === 'owner' ? afi : people[role];
 
-say('Migrations sur la branche de test…');
-run('pnpm db:migrate');
-await seed();
+// The build first: it generates the messages the app's code imports (a fresh clone has none).
 if (!process.argv.includes('--fresh') || !existsSync(`${root}dist/server/server.js`)) {
   say('Construction de l’app…');
   run('pnpm build');
 }
+say('Migrations sur la branche de test…');
+run('pnpm db:migrate');
+await seed();
 
 say(`Démarrage sur http://localhost:${PORT}…`);
 const server = spawn(
