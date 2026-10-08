@@ -1,6 +1,8 @@
 import { createCapabilityRegistry, createDatasetRegistry } from '@kete/capabilities';
 import { businessCapabilities } from '@/features/business';
 import { catalogCapabilities } from '@/features/catalog';
+import { customerCapabilities } from '@/features/customers';
+import { orderCapabilities } from '@/features/orders';
 import { transaction } from './db';
 import { holds } from './rights';
 
@@ -8,10 +10,13 @@ import { holds } from './rights';
  * Every gesture of the app, the same for its screens, its MCP endpoint and its agents: same
  * rights, same journal, same autonomy rules (@kete/capabilities).
  */
-export const registry = createCapabilityRegistry([...businessCapabilities, ...catalogCapabilities], {
-  authorize: async (_caller, permission) => holds(permission),
-  transaction,
-});
+export const registry = createCapabilityRegistry(
+  [...businessCapabilities, ...catalogCapabilities, ...customerCapabilities, ...orderCapabilities],
+  {
+    authorize: async (_caller, permission) => holds(permission),
+    transaction,
+  },
+);
 
 /**
  * What the app exposes to dashboards, the assistant and other apps (kete-core spec 045): data sets

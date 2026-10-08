@@ -31,10 +31,23 @@ export async function signedIn() {
  * broken rule comes back as its code, never as a crash; the screen's own dialog has already
  * confirmed what cannot be undone.
  */
-export async function perform<T = unknown>(name: string, input: unknown): Promise<Outcome<T>> {
+export async function perform<T = unknown>(
+  name: string,
+  input: unknown,
+  /** The gesture's key: sent twice — a double tap, a retry — it runs once. */
+  idempotencyKey?: string,
+): Promise<Outcome<T>> {
   const { caller, as } = await signedIn();
   try {
-    const result = await as(() => registry.invoke({ ...caller, name, input, confirmed: true }));
+    const result = await as(() =>
+      registry.invoke({
+        ...caller,
+        name,
+        input,
+        confirmed: true,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+      }),
+    );
     if (result.status === 'done') return { ok: true, output: result.output as T };
     if (result.status === 'refused') return { ok: false, code: result.reason, facts: {} };
     return { ok: false, code: 'not_possible', facts: {} };

@@ -8,6 +8,11 @@ export const routes = rootRoute('__root.tsx', [
   layout('app.tsx', [
     route('/demarrage', 'start.tsx'),
     route('/aujourdhui', 'today.tsx'),
+    route('/depots', 'orders/index.tsx'),
+    route('/depots/nouveau', 'orders/new.tsx'),
+    route('/depots/$orderId', 'orders/$orderId.tsx'),
+    route('/clients', 'customers/index.tsx'),
+    route('/clients/$customerId', 'customers/$customerId.tsx'),
     route('/pressing/schema', 'business/diagram.tsx'),
     route('/pressing/catalogue', 'business/catalog.tsx'),
     route('/pressing/points', 'business/sites.tsx'),
@@ -16,6 +21,8 @@ export const routes = rootRoute('__root.tsx', [
     route('/verification/$draftId', 'review/$draftId.tsx'),
     route('/journal', 'journal.tsx'),
   ]),
+  // The receipt stands outside the frame: only the ticket goes to the printer.
+  route('/depots/$orderId/recu', 'orders/receipt.tsx'),
   route('/auth/connexion', 'auth/sign-in.ts'),
   route('/auth/callback', 'auth/callback.ts'),
   route('/auth/sortie', 'auth/sign-out.ts'),

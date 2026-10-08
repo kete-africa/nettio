@@ -56,6 +56,8 @@ export const settingsInput = z.object({
   laborIsVariable: z.boolean(),
   laborMinuteCost: z.number().min(0).max(100_000),
   dormantDays: z.number().int().min(1).max(365),
+  /** The country prefix a local phone number takes: 228 for Togo. */
+  phonePrefix: z.string().regex(/^[0-9]{1,4}$/).default('228'),
 });
 
 export const siteInput = z.object({
@@ -99,6 +101,7 @@ export interface Settings {
   laborIsVariable: boolean;
   laborMinuteCost: number;
   dormantDays: number;
+  phonePrefix: string;
 }
 
 export interface Site {

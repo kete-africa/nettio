@@ -4,6 +4,8 @@ import { feedbackMigrationSql } from '@kete/feedback';
 import { outboxMigrationSql } from '@kete/sdk';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
+import { customersMigrationSql } from '@/features/customers';
+import { ordersMigrationSql } from '@/features/orders';
 
 export interface MigrationContext {
   schema: string;
@@ -43,4 +45,7 @@ export const migrations: Migration[] = [
   { name: '0003_business', sql: (context) => businessMigrationSql(context) },
   // Its catalogue: articles, steps, services and routes, prices, packs.
   { name: '0004_catalog', sql: (context) => catalogMigrationSql(context) },
+  // The counter (specs/002-counter): customers, deposits with their real content, payments.
+  { name: '0005_customers', sql: (context) => customersMigrationSql(context) },
+  { name: '0006_orders', sql: (context) => ordersMigrationSql(context) },
 ];
