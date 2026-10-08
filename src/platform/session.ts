@@ -18,12 +18,21 @@ export function getSignIn(): KeteSignIn {
   return signIn;
 }
 
-export function personOf(request: Request): Promise<KeteIdentity | null> {
+/**
+ * Whether this deployment is registered at the Compte Kete (an operator's gesture). Until it is,
+ * nobody is signed in and the sign-in address says so in clear — never a bare error.
+ */
+export const signInIsConfigured = (): boolean =>
+  Boolean(process.env.KETE_CLIENT_ID && process.env.KETE_CLIENT_SECRET);
+
+export async function personOf(request: Request): Promise<KeteIdentity | null> {
+  if (!signInIsConfigured()) return null;
   return getSignIn().session(request);
 }
 
 /** The person's own token, kept on the server; never sent to the browser. */
-export function tokenOf(request: Request): Promise<string | null> {
+export async function tokenOf(request: Request): Promise<string | null> {
+  if (!signInIsConfigured()) return null;
   return getSignIn().accessToken(request);
 }
 
