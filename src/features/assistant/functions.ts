@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { getLocale } from '@/paraglide/runtime.js';
-import { getModel } from '@/platform/ai';
+import { transcribe, NoTranscriptGeneratedError } from 'ai';
+import { getBudgets, getModel, getTranscriber } from '@/platform/ai';
 import { holds } from '@/platform/rights';
 import { perform, signedIn } from '@/platform/screen';
-import { askNettio, type AskOutcome } from './ask';
+import { askNettio, ASSISTANT, type AskOutcome } from './ask';
 import { deliveryInput } from './delivery.record';
 import type { SendingOutcome } from './domain/sending';
 import type { StatementDelivery } from './infrastructure/delivery.tables';
@@ -26,7 +27,11 @@ export const fetchStatement = createServerFn({ method: 'GET' }).handler(async ()
 /** Whether « Demander » can answer here: a model is connected, and the person may ask. */
 export const fetchAsking = createServerFn({ method: 'GET' }).handler(async () => {
   const { as } = await signedIn();
-  return as(() => ({ allowed: holds('assistant:ask'), connected: getModel() !== null }));
+  return as(() => ({
+    allowed: holds('assistant:ask'),
+    connected: getModel() !== null,
+    voice: getModel() !== null && getTranscriber() !== null,
+  }));
 });
 
 export const askQuestion = createServerFn({ method: 'POST' })
@@ -73,3 +78,42 @@ export const saveDelivery = createServerFn({ method: 'POST' })
 export const sendStatementNow = createServerFn({ method: 'POST' }).handler(() =>
   perform<{ outcome: SendingOutcome[] }>('statement_send_now', {}),
 );
+
+/**
+ * A question that was spoken: heard once, never kept, and given back as words for the person to
+ * see before they are sent. Metered to the organization.
+ */
+export const transcribeQuestion = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => z.object({ audio: z.string().min(100).max(4_200_000) }).parse(input))
+  .handler(async ({ data }): Promise<{ text: string }> => {
+    const { identity, caller, as } = await signedIn();
+    return as(async () => {
+      const transcriber = getTranscriber();
+      if (!holds('assistant:ask') || !transcriber) return { text: '' };
+      const context = {
+        organizationId: caller.organizationId,
+        actor: {
+          kind: 'agent' as const,
+          id: ASSISTANT,
+          channel: 'chat' as const,
+          onBehalfOf: { kind: 'person' as const, id: identity.userId },
+        },
+        purpose: 'ask_voice',
+        model: `${transcriber.provider}:${transcriber.modelId}`,
+      };
+      const store = getBudgets();
+      await store.check(context);
+      let text = '';
+      try {
+        const heard = await transcribe({
+          model: transcriber,
+          audio: new Uint8Array(Buffer.from(data.audio, 'base64')),
+        });
+        text = heard.text.trim().slice(0, 500);
+      } catch (error) {
+        if (!NoTranscriptGeneratedError.isInstance(error)) throw error;
+      }
+      await store.record(context, { inputTokens: 0, outputTokens: 0, modelCalls: 1 });
+      return { text };
+    });
+  });

@@ -27,8 +27,17 @@ test('the owner reads the day’s statement; « Demander » says it is not conne
   await shot(page, '27-statement');
   expect(await sideways(page)).toBe(0);
 
+  // The assistant is one touch from every screen: here, from the day.
+  await page.getByRole('button', { name: 'Assistant', exact: true }).click();
+  const panel = page.getByRole('dialog');
+  await expect(panel.getByRole('heading', { name: 'Assistant Nettio' })).toBeVisible();
+  await expect(panel.getByText('« Demander » n’est pas branché')).toBeVisible();
+  await shot(page, '36-assistant-panel');
+  await panel.getByRole('button', { name: 'Fermer l’assistant' }).click();
+  await expect(panel).toBeHidden();
+
   await page.goto('/demander');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Demander');
-  await expect(page.getByText('« Demander » n’est pas branché')).toBeVisible();
+  await expect(page.getByRole('main').getByText('« Demander » n’est pas branché')).toBeVisible();
   await shot(page, '28-ask');
 });
