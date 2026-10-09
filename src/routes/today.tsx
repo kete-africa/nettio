@@ -12,7 +12,8 @@ import {
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { fetchStatement } from '@/features/assistant/functions';
 import { fetchCatalog } from '@/features/catalog/functions';
-import { fetchToday } from '@/features/orders/functions';
+import { fetchOrders, fetchToday } from '@/features/orders/functions';
+import { CounterSearch } from '@/features/orders/ui/CounterSearch';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
 import { formatDay, formatMoney, formatNumber } from '@/lib/format';
 import { can } from '@/lib/signed-in';
@@ -26,13 +27,15 @@ export const Route = createFileRoute('/_app/aujourdhui')({
     today: await fetchToday(),
     // The day's statement, for whoever reads the money (specs/007-intelligence).
     statement: await fetchStatement(),
+    // What is ready and waits for its customer: the counter's next gestures.
+    ready: await fetchOrders({ data: { stage: 'ready' } }),
   }),
   component: TodayPage,
 });
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today, statement } = Route.useLoaderData();
+  const { catalog, today, statement, ready } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -82,6 +85,7 @@ function TodayPage() {
           ) : undefined
         }
       />
+      {can(me, 'orders:read') && <CounterSearch />}
       {summary && (
         <KpiGrid label={m.today_figures()}>
           <KpiTile
@@ -107,7 +111,34 @@ function TodayPage() {
           />
         </KpiGrid>
       )}
-      <PageSection first={!summary} title={m.today_to_do()}>
+      {ready && can(me, 'payments:collect') && (
+        <PageSection first={!summary} title={m.today_to_hand_over()}>
+          {ready.length === 0 ? (
+            <p className="text-fg-muted">{m.today_to_hand_over_none()}</p>
+          ) : (
+            <RowList label={m.today_to_hand_over()}>
+              {ready.slice(0, 6).map((order) => (
+                <Row
+                  key={order.orderId}
+                  onClick={() =>
+                    void navigate({ to: '/depots/$orderId', params: { orderId: order.orderId } })
+                  }
+                  title={`${order.number} · ${order.customerName}`}
+                  meta={<Tag tone={statusTones[order.status]}>{statusWords[order.status]()}</Tag>}
+                  end={
+                    <span className="text-right font-number">
+                      {order.total - order.paid > 0
+                        ? m.order_balance_of({ amount: formatMoney(order.total - order.paid) })
+                        : m.order_paid_in_full()}
+                    </span>
+                  }
+                />
+              ))}
+            </RowList>
+          )}
+        </PageSection>
+      )}
+      <PageSection first={!summary && !(ready && can(me, 'payments:collect'))} title={m.today_to_do()}>
         {toDo.length === 0 ? (
           <p className="text-fg-muted">{m.today_nothing_title()}</p>
         ) : (
