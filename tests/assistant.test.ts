@@ -12,6 +12,7 @@ import {
   type AssistantEvent,
   type StatementFacts,
 } from '../src/features/assistant';
+import { alertsOf, type Alert } from '../src/features/assistant/domain/alerts';
 import { statementWords } from '../src/features/assistant/statement-words';
 import type { Site } from '../src/features/business';
 import type { Catalog } from '../src/features/catalog';
@@ -393,5 +394,98 @@ describe('the answer as it is written', () => {
       { type: 'text', delta: 'aucun dépôt.' },
       { type: 'done' },
     ]);
+  });
+});
+
+describe('what deserves a look, a pure function', () => {
+  it('says only what is not fine, what is already wrong first', () => {
+    expect(
+      alertsOf({
+        late: 3,
+        dueSoon: 2,
+        dormant: 1,
+        discountsOverCeiling: 1,
+        tillGaps: [-500, 0, 200],
+        belowCost: 4,
+        openIncidents: 1,
+      }),
+    ).toEqual([
+      { kind: 'late', count: 3, amount: 0 },
+      { kind: 'till_gap', count: 2, amount: -300 },
+      { kind: 'discount_over_ceiling', count: 1, amount: 0 },
+      { kind: 'below_cost', count: 4, amount: 0 },
+      { kind: 'incident', count: 1, amount: 0 },
+      { kind: 'due_soon', count: 2, amount: 0 },
+      { kind: 'dormant', count: 1, amount: 0 },
+    ]);
+  });
+
+  it('a quiet day has nothing to signal; a till that falls right is not an alert', () => {
+    expect(alertsOf({ late: 0, dueSoon: 0, dormant: 0, tillGaps: [0, 0], belowCost: 0, openIncidents: 0 })).toEqual([]);
+    expect(alertsOf({})).toEqual([]);
+  });
+});
+
+describe('the alerts of a real day', () => {
+  let db: TestSchema;
+  const afi = person('usr_afi', 'owner');
+  const mawuli = person('usr_mawuli', 'member'); // counter
+
+  beforeAll(async () => {
+    db = await freshSchema();
+    await done(afi, 'business_set_up', {
+      businessName: 'Pressing Afi',
+      profile: 'starting',
+      staffing: 'solo',
+      siteName: 'Agoè',
+      siteCode: 'A',
+    });
+    const site = (await done<{ sites: Site[] }>(afi, 'business_overview', {})).sites[0] as Site;
+    const read = await done<Catalog>(afi, 'catalog_read', {});
+    const line = {
+      serviceId: read.services.find((s) => s.name === 'Lavage et repassage')?.serviceId,
+      articleId: read.articles.find((a) => a.name === 'Chemise')?.articleId,
+      quantity: 4,
+    };
+    await done(afi, 'catalog_set_price', { ...line, quantity: undefined, amount: 500 });
+    // An express deposit is promised within the day; one with a discount above the ceiling (10 %).
+    await done(afi, 'orders_receive', {
+      siteId: site.siteId,
+      phone: '90 12 34 56',
+      customerName: 'Mme Adjovi',
+      lines: [line],
+      express: true,
+    });
+    await done(afi, 'orders_receive', {
+      siteId: site.siteId,
+      phone: '90 12 34 57',
+      customerName: 'M. Kossi',
+      lines: [line],
+      discount: 400,
+      discountReason: 'client fidèle',
+    });
+    // A till closed 500 short.
+    await done(afi, 'cash_open', { siteId: site.siteId, openingFloat: 5_000 });
+    const [till] = await done<CashSession[]>(afi, 'cash_sessions', {});
+    await done(afi, 'cash_close', { sessionId: till?.sessionId, counted: 4_500 });
+    await hire(mawuli, 'counter');
+  }, 240_000);
+
+  afterAll(async () => {
+    await db.drop();
+  });
+
+  it('the owner reads them all: the till’s gap, the discount, what is due soon', async () => {
+    const { alerts } = await done<{ alerts: Alert[] }>(afi, 'alerts_read', {});
+    expect(alerts).toEqual([
+      { kind: 'till_gap', count: 1, amount: -500 },
+      { kind: 'discount_over_ceiling', count: 1, amount: 0 },
+      { kind: 'due_soon', count: 1, amount: 0 },
+    ]);
+  });
+
+  it('who does not read the money is not told of the till’s gap', async () => {
+    const { alerts } = await done<{ alerts: Alert[] }>(mawuli, 'alerts_read', {});
+    expect(alerts.map((alert) => alert.kind)).toEqual(['discount_over_ceiling', 'due_soon']);
   });
 });

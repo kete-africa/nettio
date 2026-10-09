@@ -1,9 +1,19 @@
 import { defineCapability } from '@kete/capabilities';
 import { z } from 'zod';
+import { readSettings } from '@/features/business';
+import { monthFigures } from '@/features/money';
+import { listSessions } from '@/features/money/infrastructure/money.tables';
+import { dayBounds } from '@/features/orders';
+import { daySummary } from '@/features/orders/infrastructure/orders.tables';
+import { listIncidents } from '@/features/workshop/infrastructure/units';
+import { RuleError } from '@/lib/rule-error';
 import { getChannels, telegramBotName } from '@/platform/channels';
+import { holds } from '@/platform/rights';
 import { emailIsConnected } from '@/platform/statement';
 import { sendStatementNow, setStatementDelivery } from './commands';
 import { deliveryInput, sendNowInput } from './delivery.record';
+import { alertsOf, type AlertFacts } from './domain/alerts';
+import { orderWarnings } from './infrastructure/alerts';
 import { readDelivery, statementTokenOf } from './infrastructure/delivery.tables';
 import { statementOf } from './sending';
 
@@ -25,6 +35,38 @@ export const assistantCapabilities = [
       language: z.enum(['fr', 'en']).default('fr'),
     }),
     run: (input, { db }) => statementOf(db, input),
+  }),
+  defineCapability({
+    name: 'alerts_read',
+    description:
+      'What deserves a look today, computed by code: deposits late or due within 24 hours, ready deposits that sleep, tills closed today with a gap, today’s discounts above the laundry’s ceiling, deposits of the month sold under their variable cost, open workshop incidents. Only what the person may read; an empty list means nothing to signal.',
+    permission: 'orders:read',
+    autonomy: 1,
+    input: z.object({}),
+    async run(_input, { db }) {
+      const settings = await readSettings(db);
+      if (!settings) throw new RuleError('not_set_up');
+      const bounds = dayBounds();
+      const summary = await daySummary(db, { ...bounds, dormantDays: settings.dormantDays });
+      const warnings = await orderWarnings(db, { ...bounds, ceilingPercent: settings.discountCeilingPercent });
+      const facts: AlertFacts = {
+        late: summary.late,
+        dormant: summary.dormant,
+        dueSoon: warnings.dueSoon,
+        discountsOverCeiling: warnings.discountsOverCeiling,
+        openIncidents: (await listIncidents(db, { openOnly: true })).length,
+      };
+      // The money's alerts are for who reads the money.
+      if (holds('money:read')) {
+        const tills = await listSessions(db, { limit: 50 });
+        facts.tillGaps = tills
+          .filter((till) => till.closedAt && till.closedAt >= bounds.from && till.closedAt < bounds.to)
+          .map((till) => till.gap ?? 0);
+        const day = bounds.from.toISOString().slice(0, 10);
+        facts.belowCost = (await monthFigures(db, day.slice(0, 7))).content.belowCost;
+      }
+      return { alerts: alertsOf(facts) };
+    },
   }),
   defineCapability({
     name: 'statement_delivery',
