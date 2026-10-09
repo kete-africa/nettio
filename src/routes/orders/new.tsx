@@ -1,7 +1,6 @@
 import {
   Button,
   Chip,
-  ChipGroup,
   EmptyState,
   Icon,
   PageHeader,
@@ -64,6 +63,7 @@ function NewOrderPage() {
   const [error, setError] = useState<string | null>(null);
   // A deposit said in a sentence, or dictated (specs/011-dictate): it fills this form, no more.
   const [sentence, setSentence] = useState('');
+  const [writing, setWriting] = useState(false);
   const [listening, setListening] = useState<'idle' | 'recording' | 'thinking'>('idle');
   const [heard, setHeard] = useState<{ said: string; photo: boolean; notFound: string[] } | null>(null);
   const picture = useRef<HTMLInputElement | null>(null);
@@ -120,6 +120,7 @@ function NewOrderPage() {
       {
         id,
         label: article ? `${article.name} · ${of.name}` : of.name,
+        piece: article ? article.name : null,
         priced: {
           serviceId: lineService,
           articleId: lineArticle || null,
@@ -344,387 +345,497 @@ function NewOrderPage() {
   const packs = catalog.packs.filter((p) =>
     catalog.services.some((s) => packAdmits(p, s)),
   );
+  // The basket, service by service: one deposit holds several services at once.
+  const groups = sold
+    .map((entry) => ({
+      service: entry,
+      lines: lines
+        .map((line, index) => ({ line, index }))
+        .filter(({ line }) => line.priced.serviceId === entry.serviceId),
+    }))
+    .filter((group) => group.lines.length > 0);
+  /** What a service already holds in this deposit, said on its chip: pieces, or kilos. */
+  const held = (entry: (typeof sold)[number]): string | null => {
+    const own = lines.filter((line) => line.priced.serviceId === entry.serviceId);
+    if (own.length === 0) return null;
+    const sum = own.reduce((total, line) => total + line.priced.quantity, 0);
+    return entry.pricing === 'per_kg' ? `${formatNumber(sum, 3)} kg` : formatNumber(sum);
+  };
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col max-[760px]:pb-24">
       <PageHeader title={m.counter_title()} />
-      {counter.sites.length > 1 && (
-        <SelectField
-          className="mb-6"
-          label={m.counter_site()}
-          value={siteId}
-          onChange={(event) => setSiteId(event.target.value)}
-          options={counter.sites.map((site) => ({
-            value: site.siteId,
-            label: `${site.name} (${site.code})`,
-          }))}
-        />
-      )}
-
-      {counter.dictation.text && (
-        <section className="mb-8 rounded-box border border-line bg-surface p-4">
-          <h2 className="mb-1 font-heading text-title font-semibold">{m.dictate_title()}</h2>
-          <p className="mb-3 text-body-sm text-fg-muted">{m.dictate_hint()}</p>
-          <TextAreaField
-            label={m.dictate_sentence()}
-            value={sentence}
-            rows={2}
-            maxLength={1500}
-            disabled={listening !== 'idle'}
-            onChange={setSentence}
-          />
-          <div className="mt-3 flex flex-wrap justify-end gap-3">
-            {counter.dictation.photo && (
-              <>
-                <input
-                  ref={picture}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="sr-only"
-                  aria-label={m.dictate_photo()}
-                  tabIndex={-1}
-                  onChange={(event) => {
-                    void look(event.target.files?.[0]);
-                    event.target.value = '';
-                  }}
-                />
-                <Button
-                  variant="secondary"
-                  disabled={listening !== 'idle'}
-                  onClick={() => picture.current?.click()}
-                >
-                  <Icon name="file" />
-                  {m.dictate_photo()}
-                </Button>
-              </>
-            )}
-            {counter.dictation.voice && (
-              <Button variant="secondary" disabled={listening === 'thinking'} onClick={() => void record()}>
-                <Icon name={listening === 'recording' ? 'stop' : 'mic'} />
-                {listening === 'recording' ? m.dictate_stop() : m.dictate_record()}
-              </Button>
-            )}
-            <Button
-              disabled={listening !== 'idle' || sentence.trim().length < 2}
-              onClick={() => void grasp({ text: sentence })}
-            >
-              {listening === 'thinking' ? m.dictate_thinking() : m.dictate_understand()}
-            </Button>
-          </div>
-          <div className="mt-3 flex flex-col gap-2" aria-live="polite">
-            {heard && (
-              <Note>
-                {heard.photo
-                  ? m.dictate_seen({ seen: heard.said })
-                  : m.dictate_understood({ said: heard.said })}
-              </Note>
-            )}
-            {heard && heard.notFound.length > 0 && (
-              <ErrorNote>{m.dictate_not_found({ items: heard.notFound.join(' · ') })}</ErrorNote>
-            )}
-            <ErrorNote>{dictationError}</ErrorNote>
-          </div>
-        </section>
-      )}
-
-      <PageSection first title={m.counter_customer()}>
-        <div className="flex flex-col gap-3">
-          <TextField
-            label={m.customer_phone()}
-            type="tel"
-            inputMode="tel"
-            autoComplete="off"
-            value={phone}
-            {...(phoneError ? { error: phoneError } : {})}
-            onChange={(event) => setPhone(event.target.value)}
-          />
-          {found?.customer && (
-            <p className="rounded-control bg-surface-selected px-3 py-2">
-              <span className="font-semibold">{found.customer.name}</span>
-              {found.customer.preferences && (
-                <span className="block text-body-sm text-fg-muted">
-                  {found.customer.preferences}
-                </span>
-              )}
-            </p>
-          )}
-          {found && !found.customer && (
-            <TextField
-              label={m.customer_name()}
-              hint={m.counter_new_customer()}
-              value={name}
-              maxLength={120}
-              onChange={(event) => setName(event.target.value)}
+      <div className="grid gap-x-10 min-[1000px]:grid-cols-[minmax(0,1fr)_380px] min-[1000px]:items-start">
+        <div className="min-w-0">
+          {counter.sites.length > 1 && (
+            <SelectField
+              className="mb-6"
+              label={m.counter_site()}
+              value={siteId}
+              onChange={(event) => setSiteId(event.target.value)}
+              options={counter.sites.map((site) => ({
+                value: site.siteId,
+                label: `${site.name} (${site.code})`,
+              }))}
             />
           )}
-        </div>
-      </PageSection>
 
-      <PageSection title={m.counter_content()}>
-        <ChipGroup label={m.field_service()}>
-          {sold.map((entry) => (
-            <Chip
-              key={entry.serviceId}
-              pressed={entry.serviceId === service?.serviceId}
-              onClick={() => setServiceId(entry.serviceId)}
-            >
-              {entry.name}
-            </Chip>
-          ))}
-        </ChipGroup>
-        {service?.pricing === 'per_kg' ? (
-          <TextField
-            className="mt-4 max-w-60"
-            label={m.counter_kilos()}
-            hint={m.counter_kilo_price({
-              price: formatMoney(priceOf(catalog.prices, service.serviceId, null) ?? 0),
-            })}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step={0.1}
-            value={quantities[`${service.serviceId}|`] ? String(quantities[`${service.serviceId}|`]) : ''}
-            onChange={(event) =>
-              setQuantities((current) => ({
-                ...current,
-                [`${service.serviceId}|`]: Math.max(0, Number(event.target.value) || 0),
-              }))
-            }
-          />
-        ) : (
-          <ul className="mt-4 grid grid-cols-2 gap-3 min-[761px]:grid-cols-4">
-            {catalog.articles
-              .filter((article) =>
-                service ? priceOf(catalog.prices, service.serviceId, article.articleId) !== undefined : false,
-              )
-              .map((article) => {
-                const id = `${service?.serviceId}|${article.articleId}`;
-                const quantity = quantities[id] ?? 0;
-                return (
-                  <li
-                    key={id}
-                    className={cx(
-                      'flex flex-col gap-2 rounded-box border p-3',
-                      quantity > 0 ? 'border-line-selected bg-surface-selected' : 'border-line bg-surface',
-                    )}
+          <PageSection first title={m.counter_customer()}>
+            <div className="flex flex-col gap-3">
+              <TextField
+                label={m.customer_phone()}
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                value={phone}
+                {...(phoneError ? { error: phoneError } : {})}
+                onChange={(event) => setPhone(event.target.value)}
+              />
+              {found?.customer && (
+                <p className="rounded-control bg-surface-selected px-3 py-2">
+                  <span className="font-semibold">{found.customer.name}</span>
+                  {found.customer.preferences && (
+                    <span className="block text-body-sm text-fg-muted">
+                      {found.customer.preferences}
+                    </span>
+                  )}
+                </p>
+              )}
+              {found && !found.customer && (
+                <TextField
+                  label={m.customer_name()}
+                  hint={m.counter_new_customer()}
+                  value={name}
+                  maxLength={120}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              )}
+            </div>
+          </PageSection>
+
+          <PageSection title={m.counter_content()}>
+            {counter.dictation.text && (
+              <div className="mb-5">
+                <div className="flex flex-wrap gap-2">
+                  {counter.dictation.voice && (
+                    <Button
+                      variant="secondary"
+                      disabled={listening === 'thinking'}
+                      onClick={() => void record()}
+                    >
+                      <Icon name={listening === 'recording' ? 'stop' : 'mic'} />
+                      {listening === 'recording' ? m.dictate_stop() : m.dictate_record()}
+                    </Button>
+                  )}
+                  {counter.dictation.photo && (
+                    <>
+                      <input
+                        ref={picture}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="sr-only"
+                        aria-label={m.dictate_photo()}
+                        tabIndex={-1}
+                        onChange={(event) => {
+                          void look(event.target.files?.[0]);
+                          event.target.value = '';
+                        }}
+                      />
+                      <Button
+                        variant="secondary"
+                        disabled={listening !== 'idle'}
+                        onClick={() => picture.current?.click()}
+                      >
+                        <Icon name="file" />
+                        {m.dictate_photo()}
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    variant="secondary"
+                    aria-expanded={writing}
+                    disabled={listening !== 'idle'}
+                    onClick={() => setWriting((open) => !open)}
                   >
-                    <span className="truncate font-semibold">{article.name}</span>
-                    <span className="font-number text-body-sm text-fg-muted">
-                      {formatMoney(priceOf(catalog.prices, service?.serviceId ?? '', article.articleId) ?? 0)}
-                    </span>
-                    <span className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        aria-label={m.counter_less({ name: article.name })}
-                        disabled={quantity === 0}
-                        onClick={() => step(id, -1)}
-                        className="size-11 rounded-control border border-line-control bg-surface-control text-title disabled:opacity-40"
+                    {m.dictate_write()}
+                  </Button>
+                </div>
+                {writing && (
+                  <div className="mt-3 flex flex-col gap-3">
+                    <TextAreaField
+                      label={m.dictate_sentence()}
+                      hint={m.dictate_example()}
+                      value={sentence}
+                      rows={2}
+                      maxLength={1500}
+                      disabled={listening !== 'idle'}
+                      onChange={setSentence}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        variant="secondary"
+                        disabled={listening !== 'idle' || sentence.trim().length < 2}
+                        onClick={() => void grasp({ text: sentence })}
                       >
-                        −
-                      </button>
-                      <span className="font-number text-title" aria-live="polite">
-                        {quantity}
+                        {m.dictate_understand()}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-3 flex flex-col gap-2" aria-live="polite">
+                  {listening === 'thinking' && <Note>{m.dictate_thinking()}</Note>}
+                  {heard && (
+                    <Note>
+                      {heard.photo
+                        ? m.dictate_seen({ seen: heard.said })
+                        : m.dictate_understood({ said: heard.said })}
+                    </Note>
+                  )}
+                  {heard && heard.notFound.length > 0 && (
+                    <ErrorNote>{m.dictate_not_found({ items: heard.notFound.join(' · ') })}</ErrorNote>
+                  )}
+                  <ErrorNote>{dictationError}</ErrorNote>
+                </div>
+              </div>
+            )}
+
+            {/*
+              One row that scrolls sideways, never wraps: a chip that grew with its count would push
+              the articles down, under the finger that is adding pieces.
+            */}
+            <div
+              role="group"
+              aria-label={m.field_service()}
+              className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+            >
+              {sold.map((entry) => {
+                const inside = held(entry);
+                return (
+                  <Chip
+                    key={entry.serviceId}
+                    className="shrink-0 whitespace-nowrap"
+                    pressed={entry.serviceId === service?.serviceId}
+                    onClick={() => setServiceId(entry.serviceId)}
+                  >
+                    {entry.name}{' '}
+                    {inside && (
+                      <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-fg px-1.5 font-number text-[11px] font-semibold text-canvas tabular-nums">
+                        {inside}
                       </span>
-                      <button
-                        type="button"
-                        aria-label={m.counter_more({ name: article.name })}
-                        onClick={() => step(id, 1)}
-                        className="size-11 rounded-control bg-action text-title text-on-action"
-                      >
-                        +
-                      </button>
-                    </span>
-                  </li>
+                    )}
+                  </Chip>
                 );
               })}
-          </ul>
-        )}
-      </PageSection>
-
-      {lines.length > 0 && price && (
-        <PageSection title={m.counter_summary()}>
-          <ul className="divide-y divide-line rounded-box border border-line bg-surface">
-            {lines.map((line, index) => (
-              <li key={line.id} className="flex flex-col gap-2 px-4 py-3">
-                <span className="flex items-baseline justify-between gap-3">
-                  <span className="min-w-0">
-                    <span className="font-number font-semibold">
-                      {formatNumber(line.priced.quantity, 3)}
-                      {line.priced.pricing === 'per_kg' ? ' kg' : ' ×'}
-                    </span>{' '}
-                    {line.label}
-                  </span>
-                  <span className="font-number whitespace-nowrap">
-                    {formatMoney(price.lines[index]?.amount ?? 0)}
-                  </span>
-                </span>
-                {pack && (price.lines[index]?.covered ?? 0) > 0 && (
-                  <span className="text-body-sm text-fg-muted">
-                    {m.counter_line_covered({
-                      covered: formatNumber(price.lines[index]?.covered ?? 0, 3),
-                      due: formatMoney(price.lines[index]?.due ?? 0),
-                    })}
-                  </span>
-                )}
-                <input
-                  aria-label={m.counter_defects_for({ name: line.label })}
-                  placeholder={m.counter_defects()}
-                  maxLength={300}
-                  value={defects[line.id] ?? ''}
-                  onChange={(event) =>
-                    setDefects((current) => ({ ...current, [line.id]: event.target.value }))
-                  }
-                  className="h-9 rounded-control border border-line bg-surface-control px-3 text-body-sm text-fg"
-                />
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-5 flex flex-col gap-4">
-            {packs.length > 0 && (
-              <SelectField
-                label={m.counter_pack()}
-                value={packId}
-                onChange={(event) => setPackId(event.target.value)}
-                options={[
-                  { value: '', label: m.counter_no_pack() },
-                  ...packs.map((p) => ({
-                    value: p.packId,
-                    label: `${p.name} — ${formatMoney(p.price)}`,
-                  })),
-                ]}
-                {...(pack
-                  ? {
-                      hint:
-                        pack.mode === 'pieces'
-                          ? m.counter_pack_used_pieces({
-                              used: formatNumber(price.packUsed),
-                              quota: formatNumber(pack.quota),
-                            })
-                          : m.counter_pack_used_kilos({
-                              used: formatNumber(price.packUsed, 3),
-                              quota: formatNumber(pack.quota, 3),
-                            }),
-                    }
-                  : {})}
-              />
-            )}
-            <CheckField
-              label={m.counter_express()}
-              hint={
-                settings.expressPercent > 0
-                  ? m.counter_express_hint({ percent: settings.expressPercent })
-                  : m.counter_express_free()
-              }
-              checked={express}
-              onChange={setExpress}
-            />
-            <TextField
-              label={m.counter_discount()}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={discount}
-              onChange={(event) => setDiscount(event.target.value)}
-            />
-            {price.discount > 0 && (
+            </div>
+            {service?.pricing === 'per_kg' ? (
               <TextField
-                label={m.counter_discount_reason()}
-                value={reason}
-                maxLength={300}
-                onChange={(event) => setReason(event.target.value)}
+                className="mt-4 max-w-60"
+                label={m.counter_kilos()}
+                hint={m.counter_kilo_price({
+                  price: formatMoney(priceOf(catalog.prices, service.serviceId, null) ?? 0),
+                })}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step={0.1}
+                value={quantities[`${service.serviceId}|`] ? String(quantities[`${service.serviceId}|`]) : ''}
+                onChange={(event) =>
+                  setQuantities((current) => ({
+                    ...current,
+                    [`${service.serviceId}|`]: Math.max(0, Number(event.target.value) || 0),
+                  }))
+                }
               />
-            )}
-            {overCeiling && (
-              <Note>
-                {counter.mayExceedDiscount
-                  ? m.counter_discount_above_yours({ ceiling: settings.discountCeilingPercent })
-                  : m.counter_discount_above({ ceiling: settings.discountCeilingPercent })}
-              </Note>
-            )}
-            <TextField
-              label={m.counter_note()}
-              value={note}
-              maxLength={500}
-              onChange={(event) => setNote(event.target.value)}
-            />
-          </div>
-
-          <dl className="mt-6 flex flex-col gap-1.5 rounded-box border border-line-strong bg-surface p-4">
-            {pack && (
-              <>
-                <Line label={pack.name} value={formatMoney(price.packPrice)} />
-                {price.supplement > 0 && (
-                  <Line label={m.counter_supplement()} value={formatMoney(price.supplement)} />
-                )}
-              </>
-            )}
-            {price.express > 0 && <Line label={m.counter_express()} value={formatMoney(price.express)} />}
-            {price.discount > 0 && (
-              <Line label={m.counter_discount()} value={`− ${formatMoney(price.discount)}`} />
-            )}
-            <div className="flex items-baseline justify-between gap-3 text-title font-semibold">
-              <dt>{m.order_total()}</dt>
-              <dd className="font-number">{formatMoney(price.total)}</dd>
-            </div>
-            <Line label={m.order_promised()} value={formatDayTime(promised)} />
-          </dl>
-
-          {guard?.below && (
-            <div className="mt-4">
-              <Note>
-                {guard.variableCost === null
-                  ? m.counter_below_cost()
-                  : m.counter_below_cost_amount({ cost: formatMoney(guard.variableCost) })}
-              </Note>
-            </div>
-          )}
-          {paying && (
-            <div className="mt-5">
-              <MoneyFields
-                amount={amount}
-                method={method}
-                hint={m.counter_pay_hint({ total: formatMoney(price.total) })}
-                onAmount={setAmount}
-                onMethod={setMethod}
-              />
-            </div>
-          )}
-          <div className="mt-4">
-            <ErrorNote>{error}</ErrorNote>
-          </div>
-          <div className="mt-5 flex flex-wrap justify-end gap-3">
-            {paying ? (
-              <>
-                <Button variant="secondary" disabled={busy} onClick={() => setPaying(false)}>
-                  {m.action_cancel()}
-                </Button>
-                <Button disabled={busy || !ready} onClick={() => void submit(true)}>
-                  {m.counter_save_and_cash()}
-                </Button>
-              </>
             ) : (
-              <>
-                <Button variant="secondary" disabled={busy || !ready} onClick={() => void submit(false)}>
-                  {m.action_save()}
-                </Button>
-                {counter.mayCollect && price.total > 0 && (
-                  <Button
-                    disabled={busy || !ready}
-                    onClick={() => {
-                      setAmount(String(price?.total ?? ''));
-                      setPaying(true);
-                    }}
-                  >
-                    {m.action_cash()}
-                  </Button>
-                )}
-              </>
+              <ul className="mt-4 grid grid-cols-2 gap-3 min-[761px]:grid-cols-3 min-[1300px]:grid-cols-4">
+                {catalog.articles
+                  .filter((article) =>
+                    service ? priceOf(catalog.prices, service.serviceId, article.articleId) !== undefined : false,
+                  )
+                  .map((article) => {
+                    const id = `${service?.serviceId}|${article.articleId}`;
+                    const quantity = quantities[id] ?? 0;
+                    return (
+                      <li
+                        key={id}
+                        className={cx(
+                          'flex flex-col gap-2 rounded-box border p-3',
+                          quantity > 0 ? 'border-line-selected bg-surface-selected' : 'border-line bg-surface',
+                        )}
+                      >
+                        <span className="truncate font-semibold">{article.name}</span>
+                        <span className="font-number text-body-sm text-fg-muted">
+                          {formatMoney(priceOf(catalog.prices, service?.serviceId ?? '', article.articleId) ?? 0)}
+                        </span>
+                        <span className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            aria-label={m.counter_less({ name: article.name })}
+                            disabled={quantity === 0}
+                            onClick={() => step(id, -1)}
+                            className="size-11 rounded-control border border-line-control bg-surface-control text-title disabled:opacity-40"
+                          >
+                            −
+                          </button>
+                          <span className="font-number text-title" aria-live="polite">
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={m.counter_more({ name: article.name })}
+                            onClick={() => step(id, 1)}
+                            className="size-11 rounded-control bg-action text-title text-on-action"
+                          >
+                            +
+                          </button>
+                        </span>
+                      </li>
+                    );
+                  })}
+              </ul>
             )}
-          </div>
-        </PageSection>
-      )}
+          </PageSection>
+        </div>
+
+        {/* The basket: always in sight on a wide screen, one touch away on a phone. */}
+        <section
+          id="panier"
+          aria-labelledby="panier-title"
+          className="mt-10 scroll-mt-4 rounded-box border border-line-strong bg-surface p-4 min-[1000px]:sticky min-[1000px]:top-6 min-[1000px]:mt-0"
+        >
+          <h2 id="panier-title" className="font-heading text-title font-semibold">
+            {groups.length > 0 ? m.basket_title_count({ services: groups.length }) : m.basket_title()}
+          </h2>
+          {lines.length === 0 || !price ? (
+            <p className="mt-2 text-fg-muted">{m.basket_empty()}</p>
+          ) : (
+            <>
+              <div className="mt-3 flex flex-col gap-4">
+                {groups.map((group) => (
+                  <div key={group.service.serviceId}>
+                    <h3 className="text-body-sm font-semibold text-fg-muted">{group.service.name}</h3>
+                    <ul className="mt-1 divide-y divide-line">
+                      {group.lines.map(({ line, index }) => (
+                        <li key={line.id} className="flex flex-col gap-2 py-2.5">
+                          <span className="flex items-baseline justify-between gap-3">
+                            <span className="min-w-0">
+                              <span className="font-number font-semibold">
+                                {formatNumber(line.priced.quantity, 3)}
+                                {line.priced.pricing === 'per_kg' ? ' kg' : ' ×'}
+                              </span>{' '}
+                              {line.piece ?? m.basket_by_weight()}
+                            </span>
+                            <span className="flex items-baseline gap-3">
+                              <span className="font-number whitespace-nowrap">
+                                {formatMoney(price.lines[index]?.amount ?? 0)}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label={m.basket_remove({ name: line.label })}
+                                onClick={() =>
+                                  setQuantities((current) => ({ ...current, [line.id]: 0 }))
+                                }
+                                className="-m-2 p-2 text-fg-muted hover:text-fg"
+                              >
+                                <Icon name="close" size={16} />
+                              </button>
+                            </span>
+                          </span>
+                          {pack && (price.lines[index]?.covered ?? 0) > 0 && (
+                            <span className="text-body-sm text-fg-muted">
+                              {m.counter_line_covered({
+                                covered: formatNumber(price.lines[index]?.covered ?? 0, 3),
+                                due: formatMoney(price.lines[index]?.due ?? 0),
+                              })}
+                            </span>
+                          )}
+                          <input
+                            aria-label={m.counter_defects_for({ name: line.label })}
+                            placeholder={m.counter_defects()}
+                            maxLength={300}
+                            value={defects[line.id] ?? ''}
+                            onChange={(event) =>
+                              setDefects((current) => ({ ...current, [line.id]: event.target.value }))
+                            }
+                            className="h-9 rounded-control border border-line bg-surface-control px-3 text-body-sm text-fg"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-4 border-t border-line pt-4">
+                {packs.length > 0 && (
+                  <SelectField
+                    label={m.counter_pack()}
+                    value={packId}
+                    onChange={(event) => setPackId(event.target.value)}
+                    options={[
+                      { value: '', label: m.counter_no_pack() },
+                      ...packs.map((p) => ({
+                        value: p.packId,
+                        label: `${p.name} — ${formatMoney(p.price)}`,
+                      })),
+                    ]}
+                    {...(pack
+                      ? {
+                          hint:
+                            pack.mode === 'pieces'
+                              ? m.counter_pack_used_pieces({
+                                  used: formatNumber(price.packUsed),
+                                  quota: formatNumber(pack.quota),
+                                })
+                              : m.counter_pack_used_kilos({
+                                  used: formatNumber(price.packUsed, 3),
+                                  quota: formatNumber(pack.quota, 3),
+                                }),
+                        }
+                      : {})}
+                  />
+                )}
+                <CheckField
+                  label={m.counter_express()}
+                  hint={
+                    settings.expressPercent > 0
+                      ? m.counter_express_hint({ percent: settings.expressPercent })
+                      : m.counter_express_free()
+                  }
+                  checked={express}
+                  onChange={setExpress}
+                />
+                <TextField
+                  label={m.counter_discount()}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={discount}
+                  onChange={(event) => setDiscount(event.target.value)}
+                />
+                {price.discount > 0 && (
+                  <TextField
+                    label={m.counter_discount_reason()}
+                    value={reason}
+                    maxLength={300}
+                    onChange={(event) => setReason(event.target.value)}
+                  />
+                )}
+                {overCeiling && (
+                  <Note>
+                    {counter.mayExceedDiscount
+                      ? m.counter_discount_above_yours({ ceiling: settings.discountCeilingPercent })
+                      : m.counter_discount_above({ ceiling: settings.discountCeilingPercent })}
+                  </Note>
+                )}
+                <TextField
+                  label={m.counter_note()}
+                  value={note}
+                  maxLength={500}
+                  onChange={(event) => setNote(event.target.value)}
+                />
+              </div>
+
+              <dl className="mt-5 flex flex-col gap-1.5 border-t border-line pt-4">
+                {pack && (
+                  <>
+                    <Line label={pack.name} value={formatMoney(price.packPrice)} />
+                    {price.supplement > 0 && (
+                      <Line label={m.counter_supplement()} value={formatMoney(price.supplement)} />
+                    )}
+                  </>
+                )}
+                {price.express > 0 && <Line label={m.counter_express()} value={formatMoney(price.express)} />}
+                {price.discount > 0 && (
+                  <Line label={m.counter_discount()} value={`− ${formatMoney(price.discount)}`} />
+                )}
+                <div className="flex items-baseline justify-between gap-3 font-semibold">
+                  <dt className="text-title">{m.order_total()}</dt>
+                  <dd className="font-number text-[28px] leading-tight">{formatMoney(price.total)}</dd>
+                </div>
+                <Line label={m.order_promised()} value={formatDayTime(promised)} />
+              </dl>
+
+              {guard?.below && (
+                <div className="mt-4">
+                  <Note>
+                    {guard.variableCost === null
+                      ? m.counter_below_cost()
+                      : m.counter_below_cost_amount({ cost: formatMoney(guard.variableCost) })}
+                  </Note>
+                </div>
+              )}
+              {!found && phone.trim() === '' && (
+                <p className="mt-4 text-body-sm text-fg-muted">{m.basket_needs_customer()}</p>
+              )}
+              {found && !found.customer && name.trim() === '' && (
+                <p className="mt-4 text-body-sm text-fg-muted">{m.basket_needs_name()}</p>
+              )}
+              {paying && (
+                <div className="mt-5">
+                  <MoneyFields
+                    amount={amount}
+                    method={method}
+                    hint={m.counter_pay_hint({ total: formatMoney(price.total) })}
+                    onAmount={setAmount}
+                    onMethod={setMethod}
+                  />
+                </div>
+              )}
+              <div className="mt-4">
+                <ErrorNote>{error}</ErrorNote>
+              </div>
+              <div className="mt-4 flex flex-col gap-3">
+                {paying ? (
+                  <>
+                    <Button disabled={busy || !ready} onClick={() => void submit(true)}>
+                      {m.counter_save_and_cash()}
+                    </Button>
+                    <Button variant="secondary" disabled={busy} onClick={() => setPaying(false)}>
+                      {m.action_cancel()}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {counter.mayCollect && price.total > 0 && (
+                      <Button
+                        disabled={busy || !ready}
+                        onClick={() => {
+                          setAmount(String(price?.total ?? ''));
+                          setPaying(true);
+                        }}
+                      >
+                        {m.action_cash()}
+                      </Button>
+                    )}
+                    <Button variant="secondary" disabled={busy || !ready} onClick={() => void submit(false)}>
+                      {m.action_save()}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+
+      {/*
+        On a phone the basket follows the thumb: what it holds and its total, one touch from it.
+        It is there from the start, empty: a bar that appeared under a finger adding pieces would
+        take the next touch.
+      */}
+      <a
+        href="#panier"
+        className="fixed inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] z-10 hidden items-center justify-between gap-3 rounded-box bg-fg px-4 py-3 text-canvas shadow-[0_6px_20px_#0004] max-[760px]:flex"
+      >
+        <span className="font-semibold">
+          {groups.length > 0 ? m.basket_bar({ services: groups.length }) : m.basket_bar_empty()}
+        </span>
+        {lines.length > 0 && price && (
+          <span className="font-number text-title font-semibold">{formatMoney(price.total)}</span>
+        )}
+      </a>
     </div>
   );
 }
