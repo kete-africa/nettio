@@ -978,5 +978,18 @@
   "alert_incident_meta": "À résoudre à l’atelier",
   "explain_figures": "Expliquer ces chiffres",
   "explain_question_day": "Explique les chiffres de ma journée : d’où vient chacun, et ce qui mérite un regard.",
-  "explain_question_result": "Explique le résultat du mois {month} : comment il est calculé, avec ses chiffres."
+  "explain_question_result": "Explique le résultat du mois {month} : comment il est calculé, avec ses chiffres.",
+  "ask_link_title": "Demander par WhatsApp ou Telegram",
+  "ask_link_hint": "Reliez votre propre messagerie : vous poserez vos questions de là, avec vos droits. Par message, Nettio ne fait que lire — un geste se confirme dans l’application. Écrivez « stop » pour délier.",
+  "ask_link_not_connected": "Ni WhatsApp ni Telegram ne sont branchés sur ce Nettio : les questions se posent ici.",
+  "ask_link_telegram_tied": "Telegram relié",
+  "ask_link_telegram_free": "Telegram non relié",
+  "ask_link_whatsapp_tied": "WhatsApp relié",
+  "ask_link_whatsapp_free": "WhatsApp non relié",
+  "ask_link_telegram_open": "Relier mon Telegram",
+  "ask_link_whatsapp_how": "Pour relier WhatsApp : envoyez ce code, tel quel, au numéro WhatsApp du pressing, depuis votre téléphone.",
+  "ask_link_copy": "Copier le code",
+  "ask_link_untie": "Délier ma messagerie",
+  "ask_link_tied": "C’est noté : posez vos questions ici, Nettio répond avec vos droits. Écrivez « stop » pour délier.",
+  "ask_link_untied": "C’est délié : Nettio ne répondra plus ici."
 }

@@ -10,11 +10,13 @@ import { RuleError } from '@/lib/rule-error';
 import { getChannels, telegramBotName } from '@/platform/channels';
 import { holds } from '@/platform/rights';
 import { emailIsConnected } from '@/platform/statement';
-import { sendStatementNow, setStatementDelivery } from './commands';
+import { sendStatementNow, setStatementDelivery, untieMyMessaging } from './commands';
 import { deliveryInput, sendNowInput } from './delivery.record';
 import { alertsOf, type AlertFacts } from './domain/alerts';
 import { orderWarnings } from './infrastructure/alerts';
 import { readDelivery, statementTokenOf } from './infrastructure/delivery.tables';
+import { messagingTokenOf, readMessagingLink } from './infrastructure/messaging-link.tables';
+import { personBehind } from '@/lib/actor';
 import { statementOf } from './sending';
 
 /**
@@ -67,6 +69,35 @@ export const assistantCapabilities = [
       }
       return { alerts: alertsOf(facts) };
     },
+  }),
+  defineCapability({
+    name: 'assistant_messaging',
+    description:
+      'Whether the person tied her own WhatsApp or Telegram to ask Nettio from there, the token she sends to tie it, and whether each channel is connected.',
+    permission: 'assistant:ask',
+    autonomy: 1,
+    input: z.object({}),
+    async run(_input, { db, organizationId, actor }) {
+      const me = personBehind(actor);
+      const channels = getChannels();
+      const bot = telegramBotName();
+      const token = await messagingTokenOf(db, organizationId, me);
+      return {
+        link: await readMessagingLink(db, me),
+        token,
+        telegramLink: bot ? `https://t.me/${bot}?start=${token}` : null,
+        connected: { whatsapp: channels.whatsapp !== null, telegram: channels.telegram !== null },
+      };
+    },
+  }),
+  defineCapability({
+    name: 'assistant_untie_messaging',
+    description: 'Forgets the WhatsApp and the Telegram the person tied to ask Nettio from there.',
+    permission: 'assistant:ask',
+    autonomy: 3,
+    input: z.object({}),
+    command: untieMyMessaging,
+    draft: { recordType: 'messaging_link' },
   }),
   defineCapability({
     name: 'statement_delivery',

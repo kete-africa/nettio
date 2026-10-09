@@ -124,3 +124,22 @@ export const fetchAlerts = createServerFn({ method: 'GET' }).handler(async (): P
   const read = await perform<{ alerts: Alert[] }>('alerts_read', {});
   return read.ok ? read.output.alerts : [];
 });
+
+export interface MessagingView {
+  link: { telegram: boolean; whatsapp: boolean };
+  token: string;
+  telegramLink: string | null;
+  connected: { whatsapp: boolean; telegram: boolean };
+}
+
+/** The person's own messaging link to the assistant; null when she may not ask. */
+export const fetchMessagingLink = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<MessagingView | null> => {
+    const read = await perform<MessagingView>('assistant_messaging', {});
+    return read.ok ? read.output : null;
+  },
+);
+
+export const untieMessagingLink = createServerFn({ method: 'POST' }).handler(() =>
+  perform<{ untied: boolean }>('assistant_untie_messaging', {}),
+);

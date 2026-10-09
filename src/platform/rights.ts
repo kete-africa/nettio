@@ -67,6 +67,39 @@ export async function asPerson<T>(
   return current.run({ identity, permissions: held }, work);
 }
 
+/**
+ * Runs `work` with what a person of the team holds by her business role, for a path that has no
+ * session — a message she sent from her own WhatsApp or Telegram (specs/023-ask-by-messaging).
+ * Null when she holds nothing: retired, or without a role.
+ */
+export async function asStaff<T>(
+  person: { organizationId: string; userId: string },
+  work: (may: (permission: string) => boolean) => Promise<T>,
+): Promise<T | null> {
+  const held = await transaction(person.organizationId, async (db) => {
+    const staff = await findStaffOf(db, person.userId);
+    if (!staff?.active || !staff.role) return null;
+    return {
+      name: staff.name,
+      permissions: permissionsOfRole(staff.role, businessPermissionList, await readRolePermissions(db)),
+    };
+  });
+  if (!held) return null;
+  const identity: KeteIdentity = {
+    userId: person.userId,
+    email: '',
+    name: held.name,
+    organizationId: person.organizationId,
+    role: 'member',
+    apps: {},
+    twoFactor: false,
+    expiresAt: new Date(Date.now() + 60_000),
+  };
+  return current.run({ identity, permissions: held.permissions }, () =>
+    work((permission) => held.permissions.has(permission)),
+  );
+}
+
 export function currentIdentity(): KeteIdentity | null {
   return current.getStore()?.identity ?? null;
 }

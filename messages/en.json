@@ -978,5 +978,18 @@
   "alert_incident_meta": "To resolve in the workshop",
   "explain_figures": "Explain these figures",
   "explain_question_day": "Explain my day’s figures: where each one comes from, and what deserves a look.",
-  "explain_question_result": "Explain the result of month {month}: how it is computed, with its figures."
+  "explain_question_result": "Explain the result of month {month}: how it is computed, with its figures.",
+  "ask_link_title": "Ask by WhatsApp or Telegram",
+  "ask_link_hint": "Tie your own messaging: you will ask your questions from there, with your rights. By message, Nettio only reads — a gesture is confirmed in the application. Write “stop” to untie.",
+  "ask_link_not_connected": "Neither WhatsApp nor Telegram is connected on this Nettio: questions are asked here.",
+  "ask_link_telegram_tied": "Telegram tied",
+  "ask_link_telegram_free": "Telegram not tied",
+  "ask_link_whatsapp_tied": "WhatsApp tied",
+  "ask_link_whatsapp_free": "WhatsApp not tied",
+  "ask_link_telegram_open": "Tie my Telegram",
+  "ask_link_whatsapp_how": "To tie WhatsApp: send this code, as it is, to the laundry’s WhatsApp number, from your phone.",
+  "ask_link_copy": "Copy the code",
+  "ask_link_untie": "Untie my messaging",
+  "ask_link_tied": "Noted: ask your questions here, Nettio answers with your rights. Write “stop” to untie.",
+  "ask_link_untied": "Untied: Nettio will no longer answer here."
 }
