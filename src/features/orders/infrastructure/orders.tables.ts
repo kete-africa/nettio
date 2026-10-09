@@ -378,6 +378,7 @@ type OrderRow = SummaryRow & {
   subtotal: number;
   supplement: number;
   express_amount: number;
+  storage_amount: number;
   discount: number;
   discount_reason: string;
   note: string;
@@ -393,8 +394,8 @@ export async function findOrder(
 ): Promise<Order | null> {
   const { rows } = await db.query<OrderRow>(
     `select ${summaryColumns}, c.phone as customer_phone, o.pack_id, o.pack_name, o.pack_price,
-            o.subtotal, o.supplement, o.express_amount, o.discount, o.discount_reason, o.note,
-            o.location, o.cancel_reason, o.ready_at, o.collected_at
+            o.subtotal, o.supplement, o.express_amount, o.storage_amount, o.discount, o.discount_reason,
+            o.note, o.location, o.cancel_reason, o.ready_at, o.collected_at
        from orders o join customers c using (customer_id)
       where ${'orderId' in ref ? 'o.order_id = $1' : 'upper(o.number) = upper($1)'}`,
     ['orderId' in ref ? ref.orderId : ref.number],
@@ -453,6 +454,7 @@ export async function findOrder(
     subtotal: row.subtotal,
     supplement: row.supplement,
     expressAmount: row.express_amount,
+    storageAmount: row.storage_amount,
     discount: row.discount,
     discountReason: row.discount_reason,
     note: row.note,

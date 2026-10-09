@@ -8,6 +8,7 @@ import { deliver, hear, replyWords } from '@/features/messaging';
 import * as m from '@/paraglide/messages.js';
 import { getChannels } from './channels';
 import { getPool, transaction } from './db';
+import { decisionHeard } from './decisions';
 import { asStaff } from './rights';
 import { parseUpdate, secretIsValid } from './telegram';
 import { parseNotification, signatureIsValid, verifySubscription } from './whatsapp';
@@ -34,6 +35,8 @@ async function heard(channel: 'whatsapp' | 'telegram', messages: { sender: strin
     if (channel === 'telegram' && (await statementLinked(message.sender, message.text))) continue;
     // WhatsApp names a phone by its digits; Telegram, a chat.
     const sender = channel === 'whatsapp' ? message.sender.replace(/\D/g, '') : message.sender;
+    // A manager's « OUI 12 » on a request that waits for her (specs/025-manager).
+    if (await decisionHeard({ channel, sender, text: message.text })) continue;
     const fromTeam = await heardFromStaff(
       { channel, sender, text: message.text },
       {

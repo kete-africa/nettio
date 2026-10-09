@@ -44,6 +44,8 @@ export interface InvoicedOrder {
   packName: string | null;
   packPrice: number;
   expressAmount: number;
+  /** The storage fees charged on a deposit that slept (specs/025-manager). */
+  storageAmount: number;
   discount: number;
   items: {
     serviceName: string;
@@ -59,7 +61,7 @@ export interface InvoicedOrder {
 export interface InvoiceLine {
   orderId: string | null;
   /** What the line is about: a piece, a pack, express, a discount — or a whole deposit. */
-  kind: 'item' | 'pack' | 'express' | 'discount' | 'order';
+  kind: 'item' | 'pack' | 'express' | 'storage' | 'discount' | 'order';
   /** The deposit's number, for a line of a grouped invoice. */
   orderNumber: string;
   /** Pieces or kilos; 0 for a line that is not a quantity of something. */
@@ -119,6 +121,9 @@ export function linesOf(orders: InvoicedOrder[]): InvoiceLine[] {
   }
   if (order.expressAmount > 0) {
     lines.push({ ...base, kind: 'express', label: '', amount: order.expressAmount });
+  }
+  if (order.storageAmount > 0) {
+    lines.push({ ...base, kind: 'storage', label: '', amount: order.storageAmount });
   }
   if (order.discount > 0) {
     lines.push({ ...base, kind: 'discount', label: '', amount: -order.discount });

@@ -14,6 +14,7 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
 import { InvoiceLink } from '@/features/invoices/ui/InvoiceLink';
+import { OrderAsk } from '@/features/manager/ui/OrderAsk';
 import type { PaymentMethod } from '@/features/orders';
 import {
   cancelOrder,
@@ -257,6 +258,7 @@ function OrderPage() {
           )}
           {order.supplement > 0 && <Money label={m.counter_supplement()} value={formatMoney(order.supplement)} />}
           {order.expressAmount > 0 && <Money label={m.counter_express()} value={formatMoney(order.expressAmount)} />}
+          {order.storageAmount > 0 && <Money label={m.invoice_line_storage()} value={formatMoney(order.storageAmount)} />}
           {order.discount > 0 && (
             <Money
               label={`${m.counter_discount()} — ${order.discountReason}`}
@@ -314,6 +316,12 @@ function OrderPage() {
           )}
         </div>
       </PageSection>
+
+      <OrderAsk
+        orderId={order.orderId}
+        mayAsk={order.status !== 'cancelled' && can(me, 'approvals:request')}
+        mayComplain={can(me, 'complaints:open')}
+      />
 
       <PageSection title={m.order_history()}>
         <ol className="flex flex-col gap-2">

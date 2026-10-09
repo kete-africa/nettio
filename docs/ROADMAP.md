@@ -82,6 +82,7 @@ messaging, complaints, piece-rate pay, salary advances.
 |---|---|
 | `015-team-pay` | Each person's work counted from the steps she validated, the owner's piece rates, advances and pay handed |
 | `024-presence` | Each person clocks in and out herself; the owner sees who is at work, and the hours |
+| `025-manager` | The usual week and who is late; what a clerk asks a manager for — a discount, a cancellation, a refund — granted on a screen or by « OUI 12 » on WhatsApp or Telegram; complaints; unclaimed deposits (storage fee, warning, release); a shared device switched with a personal code; each role's post on « Aujourd'hui » |
 
 **Proof**: a site runs a full week without the owner on site.
 
@@ -133,7 +134,7 @@ accounting, Europe (VAT, certified till, card).
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 — Kete Intelligence at every station | in part (`007`, `011`, `013`, `014`, `020`, `022`): the day's statement — read, and sent by itself —, the assistant on every screen (it prepares, never does), a deposit said, dictated or photographed, the alerts of the day, every capability open to copilots. « Demander » by WhatsApp or Telegram is built on recorded exchanges (`023`): no channel is connected yet | no |
-| 6 — the team | in part (`015-team-pay`, `024-presence`): work and pay by the piece, advances, clocking in and out. Not built: schedules, person switch on a shared device, validations from messaging, complaints, unclaimed deposits | no |
+| 6 — the team | yes (`015-team-pay`, `024-presence`, `025-manager`) — approvals by message run on recorded exchanges: no channel is connected yet | no |
 | 7 — customers, companies and delivery | in part (`019-invoices`): invoices and credit notes, the customer's account. Not built: price grids, subscriptions, prepaid credit, quotes, contracts, delivery | no |
 | 8 to 10 | planned | no |
 

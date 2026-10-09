@@ -1,5 +1,6 @@
 import { createKeteSignIn, type KeteIdentity, type KeteSignIn } from '@kete/auth';
 import type { Actor } from '@kete/commands';
+import { actingOn } from './acting';
 import { env } from './env';
 
 let signIn: KeteSignIn | undefined;
@@ -25,14 +26,29 @@ export function getSignIn(): KeteSignIn {
 export const signInIsConfigured = (): boolean =>
   Boolean(process.env.KETE_CLIENT_ID && process.env.KETE_CLIENT_SECRET);
 
-export async function personOf(request: Request): Promise<KeteIdentity | null> {
+/** Who signed this device in with her Compte Kete. */
+export async function deviceOwnerOf(request: Request): Promise<KeteIdentity | null> {
   if (!signInIsConfigured()) return null;
   return getSignIn().session(request);
 }
 
-/** The person's own token, kept on the server; never sent to the browser. */
+/**
+ * The person acting: who signed the device in, or — on a shared device — the person of the same
+ * laundry who took over with her own code (specs/025-manager).
+ */
+export async function personOf(request: Request): Promise<KeteIdentity | null> {
+  const device = await deviceOwnerOf(request);
+  if (!device) return null;
+  return (await actingOn(request, device)) ?? device;
+}
+
+/**
+ * The person's own token, kept on the server; never sent to the browser. Someone acting on
+ * another's session has none: the device owner's token never speaks for her.
+ */
 export async function tokenOf(request: Request): Promise<string | null> {
-  if (!signInIsConfigured()) return null;
+  const device = await deviceOwnerOf(request);
+  if (!device || (await actingOn(request, device))) return null;
   return getSignIn().accessToken(request);
 }
 

@@ -106,6 +106,20 @@ export async function peopleOfAddress(
   return rows.map((row) => ({ organizationId: row.organization_id, userId: row.user_id }));
 }
 
+/** Where these people of the team read their messages: the addresses each one tied herself. */
+export async function addressesOf(
+  db: SqlExecutor,
+  userIds: string[],
+): Promise<{ userId: string; telegram: string | null; whatsapp: string | null }[]> {
+  if (userIds.length === 0) return [];
+  const { rows } = await db.query<{ user_id: string; telegram_chat_id: string | null; whatsapp_phone: string | null }>(
+    `select user_id, telegram_chat_id, whatsapp_phone from staff_messaging
+      where user_id = any($1::text[]) and (telegram_chat_id is not null or whatsapp_phone is not null)`,
+    [userIds],
+  );
+  return rows.map((row) => ({ userId: row.user_id, telegram: row.telegram_chat_id, whatsapp: row.whatsapp_phone }));
+}
+
 /** Ties the address that sent the token to the person it was shown to. */
 export async function tieAddress(
   db: SqlExecutor,

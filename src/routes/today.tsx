@@ -14,11 +14,14 @@ import { fetchAlerts, fetchStatement } from '@/features/assistant/functions';
 import { ExplainButton } from '@/features/assistant/ui/Assistant';
 import { alertWords } from '@/features/assistant/ui/words';
 import { fetchCatalog } from '@/features/catalog/functions';
+import { fetchManager } from '@/features/manager/functions';
+import { fetchSessions } from '@/features/money/functions';
 import { fetchOrders, fetchToday } from '@/features/orders/functions';
 import { CounterSearch } from '@/features/orders/ui/CounterSearch';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
 import { fetchMyPresence } from '@/features/team/functions';
 import { ClockStrip } from '@/features/team/ui/ClockStrip';
+import { fetchQueue } from '@/features/workshop/functions';
 import { formatDay, formatMoney, formatNumber } from '@/lib/format';
 import { can } from '@/lib/signed-in';
 import * as m from '@/paraglide/messages.js';
@@ -26,22 +29,30 @@ import * as m from '@/paraglide/messages.js';
 // « Aujourd'hui » answers one question: where does my day stand. The day's figures, what waits,
 // what is late — each one computed by code, with its unit.
 export const Route = createFileRoute('/_app/aujourdhui')({
-  loader: async () => ({
-    catalog: await fetchCatalog(),
-    today: await fetchToday(),
-    // The day's statement, for whoever reads the money (specs/007-intelligence).
-    statement: await fetchStatement(),
-    alerts: await fetchAlerts(),
-    presence: await fetchMyPresence(),
-    // What is ready and waits for its customer: the counter's next gestures.
-    ready: await fetchOrders({ data: { stage: 'ready' } }),
-  }),
+  // Read together: a day is many small questions, none waits for another.
+  loader: async () => {
+    const [catalog, today, statement, alerts, presence, ready, queue, sessions, manager] = await Promise.all([
+      fetchCatalog(),
+      fetchToday(),
+      // The day's statement, for whoever reads the money (specs/007-intelligence).
+      fetchStatement(),
+      fetchAlerts(),
+      fetchMyPresence(),
+      // What is ready and waits for its customer: the counter's next gestures.
+      fetchOrders({ data: { stage: 'ready' } }),
+      // Each one's own post (specs/025-manager): the workshop's queue, her till, what a manager owes.
+      fetchQueue(),
+      fetchSessions(),
+      fetchManager(),
+    ]);
+    return { catalog, today, statement, alerts, presence, ready, queue, sessions, manager };
+  },
   component: TodayPage,
 });
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today, statement, ready, alerts, presence } = Route.useLoaderData();
+  const { catalog, today, statement, ready, alerts, presence, queue, sessions, manager } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -69,6 +80,30 @@ function TodayPage() {
       : []),
     // What deserves a look, computed by code (specs/022-alerts).
     ...alerts.map(alertWords),
+    // What waits for a manager (specs/025-manager).
+    ...managerToDo(manager),
+  ];
+  const myTill = sessions?.find((session) => session.cashierId === me.userId && !session.closedAt);
+  // Her own post: what her role does first.
+  const post = [
+    ...(queue
+      ? [
+          {
+            href: '/atelier',
+            title: m.today_post_workshop({ count: queue.queue.waiting }),
+            meta: queue.queue.late > 0 ? m.today_post_workshop_late({ count: queue.queue.late }) : undefined,
+          },
+        ]
+      : []),
+    ...(sessions && can(me, 'cash:operate')
+      ? [
+          {
+            href: '/argent/caisse',
+            title: myTill ? m.today_post_till_open({ amount: formatMoney(myTill.expected) }) : m.today_post_till_closed(),
+            meta: undefined,
+          },
+        ]
+      : []),
   ];
   return (
     <>
@@ -135,7 +170,19 @@ function TodayPage() {
           )}
         </PageSection>
       )}
-      <PageSection first={!summary && !(ready && can(me, 'payments:collect'))} title={m.today_to_do()}>
+      {post.length > 0 && (
+        <PageSection first={!summary && !(ready && can(me, 'payments:collect'))} title={m.today_post()}>
+          <RowList label={m.today_post()}>
+            {post.map((item) => (
+              <Row key={item.href} href={item.href} title={item.title} meta={item.meta} />
+            ))}
+          </RowList>
+        </PageSection>
+      )}
+      <PageSection
+        first={!summary && !(ready && can(me, 'payments:collect')) && post.length === 0}
+        title={m.today_to_do()}
+      >
         {toDo.length === 0 ? (
           <p className="text-fg-muted">{m.today_nothing_title()}</p>
         ) : (
@@ -232,4 +279,33 @@ function TodayPage() {
       )}
     </>
   );
+}
+
+/** What waits for a manager, each line leading to her board. */
+function managerToDo(view: Awaited<ReturnType<typeof fetchManager>>): { href: string; title: string; meta: string | undefined }[] {
+  const href = '/pressing/gerant';
+  const pending = view.approvals?.mayDecide
+    ? view.approvals.approvals.filter((approval) => approval.status === 'pending')
+    : [];
+  const open = (view.complaints ?? []).filter((complaint) => complaint.status === 'open');
+  const late = (view.schedule?.people ?? []).filter((person) => person.late !== null);
+  const toWarn = (view.unclaimed?.deposits ?? []).filter((deposit) => !deposit.noticedAt);
+  const toRelease = (view.unclaimed?.deposits ?? []).filter((deposit) => deposit.mayRelease);
+  return [
+    ...(pending.length > 0
+      ? [{ href, title: m.today_approvals({ count: pending.length }), meta: pending.map((a) => a.orderNumber).join(' · ') }]
+      : []),
+    ...(open.length > 0
+      ? [{ href, title: m.today_complaints({ count: open.length }), meta: open.map((c) => c.orderNumber).join(' · ') }]
+      : []),
+    ...(late.length > 0
+      ? [{ href, title: m.today_people_late({ count: late.length }), meta: late.map((p) => p.name).join(' · ') }]
+      : []),
+    ...(toWarn.length > 0
+      ? [{ href, title: m.today_unclaimed({ count: toWarn.length }), meta: toWarn.map((d) => d.number).join(' · ') }]
+      : []),
+    ...(toRelease.length > 0
+      ? [{ href, title: m.today_releasable({ count: toRelease.length }), meta: toRelease.map((d) => d.number).join(' · ') }]
+      : []),
+  ];
 }

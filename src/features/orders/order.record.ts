@@ -129,6 +129,8 @@ export interface Order extends OrderSummary {
   subtotal: number;
   supplement: number;
   expressAmount: number;
+  /** The storage fees charged since it sleeps at the laundry (specs/025-manager). */
+  storageAmount: number;
   discount: number;
   discountReason: string;
   note: string;
