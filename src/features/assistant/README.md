@@ -14,33 +14,28 @@ What Nettio says by itself, and what it answers (specs/007-intelligence;
 tills, the workshop and the month's result; the sentences are fixed words from the catalogue. A
 copilot reads it through MCP and quotes it as it is.
 
-## « Demander »
+## « Demander » — the assistant
 
-```mermaid
-sequenceDiagram
-  participant P as Person
-  participant N as Nettio (askNettio)
-  participant M as Model
-  participant R as Readings (level 1 capabilities)
-  P->>N: « Combien j'ai gagné ce mois-ci ? »
-  N->>N: budget of her organization checked
-  N->>M: the question + the readings SHE may open (never one that changes anything)
-  M->>R: money_result — as the assistant, acting for her, under her rights
-  R-->>M: figures computed by code
-  M-->>N: two or three sentences
-  N-->>P: the answer, and where it comes from · usage recorded
-```
+One touch from every screen (specs/020-assistant, `docs/flows/asking-nettio.md`): a panel with a
+conversation kept while the person moves in the app, an answer written as it comes, its sources
+as links, and the gestures it prepared.
 
 - **The model never computes**: every figure comes from a reading (constitution II). The system
-  prompt (`ask.ts`) says it, and the model is given nothing else to compute from.
-- **The person's rights, never more**: `registry.tools(caller)` only returns what she may open; a
-  cashier's question cannot reach the result. Only level 1 is kept: nothing that changes anything
-  is offered, not even as a draft.
-- **Never the database**: the model receives the question and what the readings returned.
+  prompt (`ask.ts`) says it, and the model is given nothing else to compute from. It is told
+  today's date with each question.
+- **The person's rights, never more**: `registry.tools(caller)` only returns what she may use; a
+  cashier's question cannot reach the result.
+- **It prepares, it never does**: called by an agent, a level 3 or 4 capability answers with a
+  draft; the person verifies and confirms it at `/verification/$draftId`. Level 2 gestures, which
+  act at once, are not offered — nor what sets a price or a rate (`NEVER_OFFERED`).
+- **Never the database**: the model receives the conversation and what its tools returned.
+- **Streamed**: `converse` yields `text`, `reading`, `prepared`, `unavailable`, `done`;
+  `/api/assistant` sends them one JSON line each, within the person's rights for the whole stream.
+  `askNettio` answers in one piece, for tests, the evaluation and — later — messaging.
 - **Metered**: each call's usage is recorded per organization (`kete_ai_usage`); a monthly budget,
   when the operator set one, is enforced before the call.
 - **Not connected, said**: without `NETTIO_AI_PROVIDER`, `NETTIO_AI_MODEL` and `NETTIO_AI_API_KEY`,
-  « Demander » says so. Nothing is simulated.
+  the panel says so. Nothing is simulated.
 
 ## Copilots
 
@@ -71,5 +66,5 @@ addresses its owner gave, through the mail and messaging providers of the deploy
 
 ## Not built
 
-« Demander » by messaging. (Voice and photo entry of a deposit live in the orders feature,
+« Demander » by messaging; a conversation kept beyond the browser tab. (Voice and photo entry of a deposit live in the orders feature,
 specs/011-dictate and 014-photo.) See the specs' « Known limits ».
