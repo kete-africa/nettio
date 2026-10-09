@@ -8,6 +8,7 @@ import {
 } from '@kete/design';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { z } from 'zod';
+import { ExplainButton } from '@/features/assistant/ui/Assistant';
 import { fetchResult } from '@/features/money/functions';
 import { MonthNav } from '@/features/money/ui/MonthNav';
 import { confidenceTones, confidenceWords } from '@/features/money/ui/words';
@@ -79,6 +80,9 @@ function ResultPage() {
           hint={m.result_left({ left: formatMoney(result.left) })}
         />
       </KpiGrid>
+      <ExplainButton question={m.explain_question_result({ month: view.month })}>
+        {m.explain_figures()}
+      </ExplainButton>
 
       {view.month === currentMonth() && (
         <div className="mt-4">

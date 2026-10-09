@@ -7,6 +7,7 @@ import { holds } from '@/platform/rights';
 import { perform, signedIn } from '@/platform/screen';
 import { askNettio, ASSISTANT, type AskOutcome } from './ask';
 import { deliveryInput } from './delivery.record';
+import type { Alert } from './domain/alerts';
 import type { SendingOutcome } from './domain/sending';
 import type { StatementDelivery } from './infrastructure/delivery.tables';
 
@@ -117,3 +118,9 @@ export const transcribeQuestion = createServerFn({ method: 'POST' })
       return { text };
     });
   });
+
+/** What deserves a look today, for whoever reads the deposits; empty otherwise. */
+export const fetchAlerts = createServerFn({ method: 'GET' }).handler(async (): Promise<Alert[]> => {
+  const read = await perform<{ alerts: Alert[] }>('alerts_read', {});
+  return read.ok ? read.output.alerts : [];
+});

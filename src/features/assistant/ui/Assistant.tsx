@@ -59,6 +59,15 @@ interface AssistantState {
 
 const Context = createContext<AssistantState | null>(null);
 
+/** What the person holds, given by the page or by the frame around it. */
+const Held = createContext<string[]>([]);
+export const HeldPermissions = Held.Provider;
+function useHeld(given?: string[]): string[] {
+  const fromFrame = useContext(Held);
+  return given ?? fromFrame;
+}
+
+
 const failures: Record<string, () => string> = {
   not_connected: m.ask_not_connected_body,
   budget_spent: m.ask_budget_spent,
@@ -181,6 +190,29 @@ function useAssistant(): AssistantState {
   const state = useContext(Context);
   if (!state) throw new Error('The assistant is used outside its provider.');
   return state;
+}
+
+/**
+ * « Expliquer ces chiffres » under a screen's figures: opens the assistant on that question. Not
+ * shown to who may not ask.
+ */
+export function ExplainButton({ question, children }: { question: string; children: ReactNode }) {
+  const state = useContext(Context);
+  const held = useContext(Held);
+  if (!state || !held.includes('assistant:ask')) return null;
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-2 py-2 text-body-sm text-link underline"
+      onClick={() => {
+        state.setOpen(true);
+        state.ask(question);
+      }}
+    >
+      <Icon name="sparkle" size={16} />
+      {children}
+    </button>
+  );
 }
 
 /** The button that opens the assistant, in the frame of every screen. */
@@ -383,10 +415,3 @@ export function AssistantThread({
   );
 }
 
-/** What the person holds, given by the page or by the frame around it. */
-const Held = createContext<string[]>([]);
-export const HeldPermissions = Held.Provider;
-function useHeld(given?: string[]): string[] {
-  const fromFrame = useContext(Held);
-  return given ?? fromFrame;
-}

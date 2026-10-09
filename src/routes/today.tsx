@@ -10,7 +10,9 @@ import {
   Tag,
 } from '@kete/design';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { fetchStatement } from '@/features/assistant/functions';
+import { fetchAlerts, fetchStatement } from '@/features/assistant/functions';
+import { ExplainButton } from '@/features/assistant/ui/Assistant';
+import { alertWords } from '@/features/assistant/ui/words';
 import { fetchCatalog } from '@/features/catalog/functions';
 import { fetchOrders, fetchToday } from '@/features/orders/functions';
 import { CounterSearch } from '@/features/orders/ui/CounterSearch';
@@ -27,6 +29,7 @@ export const Route = createFileRoute('/_app/aujourdhui')({
     today: await fetchToday(),
     // The day's statement, for whoever reads the money (specs/007-intelligence).
     statement: await fetchStatement(),
+    alerts: await fetchAlerts(),
     // What is ready and waits for its customer: the counter's next gestures.
     ready: await fetchOrders({ data: { stage: 'ready' } }),
   }),
@@ -35,7 +38,7 @@ export const Route = createFileRoute('/_app/aujourdhui')({
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today, statement, ready } = Route.useLoaderData();
+  const { catalog, today, statement, ready, alerts } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -61,18 +64,8 @@ function TodayPage() {
           },
         ]
       : []),
-    ...(summary && summary.late > 0
-      ? [{ href: '/depots?etape=open', title: m.today_late({ count: summary.late }), meta: m.today_late_meta() }]
-      : []),
-    ...(summary && summary.dormant > 0
-      ? [
-          {
-            href: '/depots?etape=ready',
-            title: m.today_dormant({ count: summary.dormant }),
-            meta: m.today_dormant_meta(),
-          },
-        ]
-      : []),
+    // What deserves a look, computed by code (specs/022-alerts).
+    ...alerts.map(alertWords),
   ];
   return (
     <>
@@ -158,6 +151,7 @@ function TodayPage() {
               ))}
             </ul>
             <p className="mt-3 text-body-sm text-fg-muted">{m.statement_how()}</p>
+            <ExplainButton question={m.explain_question_day()}>{m.explain_figures()}</ExplainButton>
             <div className="mt-3 flex flex-wrap gap-3">
               <Button
                 variant="secondary"

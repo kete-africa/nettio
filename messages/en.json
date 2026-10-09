@@ -965,5 +965,18 @@
   "today_workshop": "Workshop",
   "today_workshop_open": "Open the workshop queue",
   "today_till": "My till",
-  "today_till_open": "Open the till"
+  "today_till_open": "Open the till",
+  "alert_due_soon": "{count} deposit(s) promised within 24 hours, not ready yet",
+  "alert_due_soon_meta": "To take first in the workshop",
+  "alert_till_gap": "{count} till(s) closed today with a gap: {gap}",
+  "alert_till_gap_meta": "See the till’s detail",
+  "alert_discount": "{count} deposit(s) of today with a discount above your ceiling",
+  "alert_discount_meta": "Each discount has its reason on the deposit’s page",
+  "alert_below_cost": "{count} deposit(s) of this month went under their variable cost",
+  "alert_below_cost_meta": "See the month’s result",
+  "alert_incident": "{count} workshop incident(s) still open",
+  "alert_incident_meta": "To resolve in the workshop",
+  "explain_figures": "Explain these figures",
+  "explain_question_day": "Explain my day’s figures: where each one comes from, and what deserves a look.",
+  "explain_question_result": "Explain the result of month {month}: how it is computed, with its figures."
 }

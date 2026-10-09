@@ -965,5 +965,18 @@
   "today_workshop": "Atelier",
   "today_workshop_open": "Ouvrir la file de l’atelier",
   "today_till": "Ma caisse",
-  "today_till_open": "Ouvrir la caisse"
+  "today_till_open": "Ouvrir la caisse",
+  "alert_due_soon": "{count} dépôt(s) promis dans les 24 heures, pas encore prêt(s)",
+  "alert_due_soon_meta": "À passer en priorité à l’atelier",
+  "alert_till_gap": "{count} caisse(s) clôturée(s) aujourd’hui avec un écart : {gap}",
+  "alert_till_gap_meta": "Voir le détail de la caisse",
+  "alert_discount": "{count} dépôt(s) d’aujourd’hui avec une remise au-dessus de votre plafond",
+  "alert_discount_meta": "Chaque remise a sa raison sur la fiche du dépôt",
+  "alert_below_cost": "{count} dépôt(s) de ce mois partis sous leur coût variable",
+  "alert_below_cost_meta": "Voir le résultat du mois",
+  "alert_incident": "{count} incident(s) d’atelier encore ouvert(s)",
+  "alert_incident_meta": "À résoudre à l’atelier",
+  "explain_figures": "Expliquer ces chiffres",
+  "explain_question_day": "Explique les chiffres de ma journée : d’où vient chacun, et ce qui mérite un regard.",
+  "explain_question_result": "Explique le résultat du mois {month} : comment il est calculé, avec ses chiffres."
 }

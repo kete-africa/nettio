@@ -1,4 +1,6 @@
+import { formatSigned } from '@/lib/format';
 import * as m from '@/paraglide/messages.js';
+import type { Alert, AlertKind } from '../domain/alerts';
 
 /** Where an answer comes from, in the person's words: the reading the model called. */
 export const sourceWords: Record<string, () => string> = {
@@ -69,4 +71,42 @@ export function suggestionsFor(permissions: string[], pathname: string): string[
   const here = allowed.filter((topic) => pathname.startsWith(topic.near));
   const rest = allowed.filter((topic) => !here.includes(topic));
   return [...here, ...rest].flatMap((topic) => topic.questions.map((question) => question())).slice(0, 4);
+}
+
+/** An alert as the day's screen says it, and the screen where it is dealt with. */
+export function alertWords(alert: Alert): { title: string; meta: string; href: string } {
+  const said: Record<AlertKind, () => { title: string; meta: string; href: string }> = {
+    late: () => ({ title: m.today_late({ count: alert.count }), meta: m.today_late_meta(), href: '/depots?etape=open' }),
+    due_soon: () => ({
+      title: m.alert_due_soon({ count: alert.count }),
+      meta: m.alert_due_soon_meta(),
+      href: '/atelier',
+    }),
+    dormant: () => ({
+      title: m.today_dormant({ count: alert.count }),
+      meta: m.today_dormant_meta(),
+      href: '/depots?etape=ready',
+    }),
+    till_gap: () => ({
+      title: m.alert_till_gap({ count: alert.count, gap: formatSigned(alert.amount) }),
+      meta: m.alert_till_gap_meta(),
+      href: '/argent/caisse',
+    }),
+    discount_over_ceiling: () => ({
+      title: m.alert_discount({ count: alert.count }),
+      meta: m.alert_discount_meta(),
+      href: '/depots',
+    }),
+    below_cost: () => ({
+      title: m.alert_below_cost({ count: alert.count }),
+      meta: m.alert_below_cost_meta(),
+      href: '/argent/resultat',
+    }),
+    incident: () => ({
+      title: m.alert_incident({ count: alert.count }),
+      meta: m.alert_incident_meta(),
+      href: '/atelier',
+    }),
+  };
+  return said[alert.kind]();
 }
