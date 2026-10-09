@@ -953,5 +953,17 @@
   "ask_suggestion_workshop": "What waits in the workshop?",
   "ask_suggestion_invoices": "Which invoices are due?",
   "source_invoices": "Invoices",
-  "source_team_work": "Work and pay"
+  "source_team_work": "Work and pay",
+  "search_label": "Search a deposit",
+  "search_placeholder": "Phone, deposit number or name",
+  "search_searching": "Searching…",
+  "search_nothing": "No deposit for “{text}”.",
+  "search_results": "Deposits found",
+  "today_to_hand_over": "To hand over",
+  "today_to_hand_over_none": "No ready deposit waits for its customer.",
+  "action_hand_over_and_cash": "Hand over and cash {amount}",
+  "today_workshop": "Workshop",
+  "today_workshop_open": "Open the workshop queue",
+  "today_till": "My till",
+  "today_till_open": "Open the till"
 }

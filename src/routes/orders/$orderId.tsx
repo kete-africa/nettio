@@ -151,7 +151,11 @@ function OrderPage() {
         actions={
           <>
             {order.status === 'ready' && can(me, 'payments:collect') && (
-              <Button onClick={() => start('collect')}>{m.action_hand_over()}</Button>
+              <Button onClick={() => start('collect')}>
+                {balance > 0
+                  ? m.action_hand_over_and_cash({ amount: formatMoney(balance) })
+                  : m.action_hand_over()}
+              </Button>
             )}
             {open && !workLeft && can(me, 'workshop:operate') && (
               <Button onClick={() => start('ready')}>{m.action_mark_ready()}</Button>

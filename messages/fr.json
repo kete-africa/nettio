@@ -953,5 +953,17 @@
   "ask_suggestion_workshop": "Qu’est-ce qui attend à l’atelier ?",
   "ask_suggestion_invoices": "Quelles factures sont à payer ?",
   "source_invoices": "Factures",
-  "source_team_work": "Travail et paie"
+  "source_team_work": "Travail et paie",
+  "search_label": "Chercher un dépôt",
+  "search_placeholder": "Téléphone, n° de dépôt ou nom",
+  "search_searching": "Recherche…",
+  "search_nothing": "Aucun dépôt pour « {text} ».",
+  "search_results": "Dépôts trouvés",
+  "today_to_hand_over": "À remettre",
+  "today_to_hand_over_none": "Aucun dépôt prêt n’attend son client.",
+  "action_hand_over_and_cash": "Remettre et encaisser {amount}",
+  "today_workshop": "Atelier",
+  "today_workshop_open": "Ouvrir la file de l’atelier",
+  "today_till": "Ma caisse",
+  "today_till_open": "Ouvrir la caisse"
 }
