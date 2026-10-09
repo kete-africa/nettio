@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate, type LinkProps } from '@tanstack/react-
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Me } from '@/features/business/functions';
 import { AssistantLauncher, AssistantProvider, HeldPermissions } from '@/features/assistant/ui/Assistant';
+import { PersonSwitch } from '@/features/manager/ui/PersonSwitch';
 import * as m from '@/paraglide/messages.js';
 import { can } from './signed-in';
 
@@ -81,6 +82,7 @@ const sections: Section[] = [
       { to: '/pressing/points', icon: 'flag', label: m.nav_sites, permission: 'business:read' },
       { to: '/pressing/equipe', icon: 'people', label: m.nav_team, permission: 'staff:manage' },
       { to: '/pressing/travail', icon: 'chart', label: m.nav_work, permission: 'pay:read' },
+      { to: '/pressing/gerant', icon: 'flag', label: m.nav_manager, permission: 'approvals:request' },
       { to: '/pressing/messages', icon: 'send', label: m.nav_messages, permission: 'messages:read' },
       { to: '/pressing/releve', icon: 'clock', label: m.nav_statement, permission: 'statement:send' },
       {
@@ -163,6 +165,10 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
       footer={
         <div className="flex flex-col gap-3">
           <p className="truncate text-body-sm text-fg-muted">{me.name}</p>
+          {me.onDeviceOf && (
+            <p className="text-body-sm text-fg-muted">{m.switch_on_device_of({ name: me.onDeviceOf })}</p>
+          )}
+          {me.business && <PersonSwitch />}
           <ThemeChoice
             label={m.theme_label()}
             value={theme}

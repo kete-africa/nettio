@@ -2,7 +2,7 @@
 export { askNettio, ASSISTANT, converse, SYSTEM, type AskOutcome, type AssistantEvent, type Turn } from './ask';
 export { heardFromStaff, type AskWords } from './by-messaging';
 export { assistantCapabilities } from './capabilities';
-export { messagingLinkMigrationSql } from './infrastructure/messaging-link.tables';
+export { addressesOf, messagingLinkMigrationSql, peopleOfAddress } from './infrastructure/messaging-link.tables';
 export { assistantPermissions } from './policies';
 export { dayStatement, type StatementFacts } from './domain/statement';
 export { statementIsDue, type SendingOutcome } from './domain/sending';

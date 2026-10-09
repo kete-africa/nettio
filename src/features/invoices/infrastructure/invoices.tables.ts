@@ -186,13 +186,14 @@ type OrderRow = {
   pack_name: string | null;
   pack_price: number;
   express_amount: number;
+  storage_amount: number;
   discount: number;
   created_at: Date;
   invoice_id: string | null;
 };
 
 const ORDER_COLUMNS = `o.order_id, o.number, o.customer_id, o.status, o.total, o.paid, o.pack_name,
-  o.pack_price, o.express_amount, o.discount, o.created_at, l.invoice_id`;
+  o.pack_price, o.express_amount, o.storage_amount, o.discount, o.created_at, l.invoice_id`;
 
 async function withItems(db: SqlExecutor, rows: OrderRow[]): Promise<BillableOrder[]> {
   if (rows.length === 0) return [];
@@ -219,6 +220,7 @@ async function withItems(db: SqlExecutor, rows: OrderRow[]): Promise<BillableOrd
     packName: row.pack_name,
     packPrice: row.pack_price,
     expressAmount: row.express_amount,
+    storageAmount: row.storage_amount,
     discount: row.discount,
     createdAt: row.created_at,
     invoiceId: row.invoice_id,

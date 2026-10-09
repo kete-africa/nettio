@@ -11,6 +11,7 @@ import { organizationsDue, sendDueStatement } from '@/features/assistant';
 import { deliver } from '@/features/messaging';
 import { getChannels } from './channels';
 import { getPool, transaction } from './db';
+import { tellDecidersOf } from './decisions';
 import { env } from './env';
 import { flushCenterEvents, flushEvents } from './events';
 import { sendingPorts } from './statement';
@@ -27,6 +28,8 @@ const deliverMessagesJob = defineJob<{ organizationId: string }>({
     const result = await transaction(organizationId, (db) => deliver(db, getChannels()));
     // A provider that did not answer is tried again; a refusal keeps its reason on the message.
     if (result.failed > 0) console.warn(`[messages] ${result.failed} not delivered`);
+    // And what waits for a manager's decision is said to those who decide (specs/025-manager).
+    await transaction(organizationId, (db) => tellDecidersOf(db));
   },
 });
 

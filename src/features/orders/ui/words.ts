@@ -44,4 +44,9 @@ export const eventWords: Record<string, () => string> = {
   collected: m.order_event_collected,
   cancelled: m.order_event_cancelled,
   refunded: m.order_event_refunded,
+  discount: m.order_event_discount,
+  complaint: m.order_event_complaint,
+  storage_fee: m.order_event_storage_fee,
+  abandon_notice: m.order_event_abandon_notice,
+  released: m.order_event_released,
 };

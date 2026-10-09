@@ -5,7 +5,7 @@ import { transaction } from '@/platform/db';
 import { businessPermissionList } from '@/platform/permissions';
 import { asPerson, heldPermissions } from '@/platform/rights';
 import { perform } from '@/platform/screen';
-import { personOf, tokenOf } from '@/platform/session';
+import { deviceOwnerOf, personOf, tokenOf } from '@/platform/session';
 import {
   rolePermissionsInput,
   settingsInput,
@@ -28,6 +28,8 @@ export interface Me {
   /** Her business role; null while she waits for the owner to give her one. */
   role: BusinessRole | null;
   permissions: string[];
+  /** On a shared device she took over with her code: who signed it in (specs/025-manager). */
+  onDeviceOf: string | null;
   /** Null while the laundry is not set up. */
   business: Pick<Settings, 'businessName' | 'profile' | 'staffing'> | null;
 }
@@ -48,6 +50,7 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
       organizationId: null,
       role: null,
       permissions: [],
+      onDeviceOf: null,
       business: null,
     };
   }
@@ -60,6 +63,7 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
     }
     return { staff, settings: await readSettings(db) };
   });
+  const device = await deviceOwnerOf(request);
   return asPerson(
     identity,
     () => ({
@@ -68,6 +72,7 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
       organizationId,
       role: staff?.active ? staff.role : null,
       permissions: heldPermissions(),
+      onDeviceOf: device && device.userId !== identity.userId ? device.name : null,
       business: settings
         ? {
             businessName: settings.businessName,

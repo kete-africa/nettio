@@ -20,6 +20,7 @@ export const invoiceStatusTones: Record<InvoiceStatus, TagTone> = {
 export function lineWords(line: InvoiceLine): string {
   if (line.kind === 'pack') return m.invoice_line_pack({ pack: line.label });
   if (line.kind === 'express') return m.counter_express();
+  if (line.kind === 'storage') return m.invoice_line_storage();
   if (line.kind === 'discount') return m.counter_discount();
   if (line.kind === 'order') return `${line.orderNumber} · ${line.label}`;
   const quantity =

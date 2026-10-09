@@ -70,6 +70,16 @@ const sentences: Record<string, () => string> = {
   unit_finished: m.error_unit_finished,
   step_not_on_route: m.error_step_not_on_route,
   step_not_before: m.error_step_not_on_route,
+  shift_invalid: m.error_shift_invalid,
+  already_decided: m.error_already_decided,
+  no_storage_fee: m.error_no_storage_fee,
+  already_noticed: m.error_already_noticed,
+  release_too_early: m.error_release_too_early,
+  code_invalid: m.error_code_invalid,
+  code_too_simple: m.error_code_too_simple,
+  code_wrong: m.error_code_wrong,
+  code_locked: m.error_code_locked,
+  quick_switch_off: m.error_quick_switch_off,
 };
 
 /** The sentence a screen shows for a gesture that did not go through. */

@@ -27,6 +27,7 @@ const order = (over: Partial<InvoicedOrder>): InvoicedOrder => ({
   packName: null,
   packPrice: 0,
   expressAmount: 0,
+  storageAmount: 0,
   discount: 0,
   items: [],
   ...over,

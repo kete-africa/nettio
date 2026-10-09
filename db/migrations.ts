@@ -8,6 +8,7 @@ import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
 import { invoicesMigrationSql } from '@/features/invoices';
+import { managerMigrationSql } from '@/features/manager';
 import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
@@ -87,4 +88,17 @@ export const migrations: Migration[] = [
   { name: '0015_staff_messaging', sql: (context) => messagingLinkMigrationSql(context) },
   // Who is at work (specs/024-presence): each person clocks in and out herself.
   { name: '0016_presence', sql: (context) => presenceMigrationSql(context) },
+  // What lets a site run without its owner (specs/025-manager): schedules, approvals, complaints,
+  // unclaimed deposits, personal codes — and a storage fee says its name on an invoice.
+  {
+    name: '0017_manager',
+    sql: (context) =>
+      [
+        managerMigrationSql(context),
+        `alter table ${context.schema}.orders add column storage_amount integer not null default 0 check (storage_amount >= 0);`,
+        `alter table ${context.schema}.invoice_lines drop constraint invoice_lines_kind_check;`,
+        `alter table ${context.schema}.invoice_lines add constraint invoice_lines_kind_check
+           check (kind in ('item', 'pack', 'express', 'discount', 'order', 'storage'));`,
+      ].join('\n'),
+  },
 ];
