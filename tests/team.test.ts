@@ -5,6 +5,7 @@ import type { Catalog } from '../src/features/catalog';
 import type { CashSession } from '../src/features/money';
 import type { TeamWork } from '../src/features/team/capabilities';
 import { monthPeriod, payOf, type PersonPay, type WorkLine } from '../src/features/team/domain/pay';
+import { hoursAndMinutes, minutesWithin, presenceOf, type PersonPresence } from '../src/features/team/domain/presence';
 import type { WorkUnit } from '../src/features/workshop';
 import { registry } from '../src/platform/registry';
 import { asPerson } from '../src/platform/rights';
@@ -268,6 +269,121 @@ describe('the team’s work and pay', () => {
         await client.query(
           `insert into ${db.schema}.piece_rates (organization_id, step_id, amount)
            values ('${organizationId}', 'stp_any', 25)`,
+        );
+      },
+    });
+  }, 180_000);
+});
+
+describe('who is at work, a pure function', () => {
+  const at = (time: string) => new Date(`2026-10-09T${time}:00Z`);
+  const day = { from: at('00:00'), to: new Date('2026-10-10T00:00:00Z') };
+  const month = { from: new Date('2026-10-01T00:00:00Z'), to: new Date('2026-11-01T00:00:00Z') };
+
+  it('counts the minutes of a stretch inside a window; an open one runs up to now', () => {
+    const morning = { userId: 'u', startedAt: at('07:30'), endedAt: at('12:00') };
+    expect(minutesWithin(morning, day, at('18:00'))).toBe(270);
+    expect(minutesWithin({ ...morning, endedAt: null }, day, at('09:00'))).toBe(90);
+    // A stretch begun the day before counts from midnight; one of another day counts for nothing.
+    const night = { userId: 'u', startedAt: new Date('2026-10-08T22:00:00Z'), endedAt: at('02:00') };
+    expect(minutesWithin(night, day, at('18:00'))).toBe(120);
+    expect(minutesWithin(night, { from: at('06:00'), to: at('12:00') }, at('18:00'))).toBe(0);
+  });
+
+  it('says who is in, since when, and each one’s day and month — those at work first', () => {
+    const presence = presenceOf({
+      people: [
+        { userId: 'usr_ama', name: 'Ama' },
+        { userId: 'usr_yao', name: 'Yao' },
+        { userId: 'usr_kofi', name: 'Kofi' },
+      ],
+      periods: [
+        { userId: 'usr_yao', startedAt: at('07:30'), endedAt: null },
+        { userId: 'usr_ama', startedAt: at('08:00'), endedAt: at('12:00') },
+        { userId: 'usr_ama', startedAt: new Date('2026-10-02T08:00:00Z'), endedAt: new Date('2026-10-02T16:00:00Z') },
+      ],
+      day,
+      month,
+      now: at('10:00'),
+    });
+    expect(presence).toEqual([
+      { userId: 'usr_yao', name: 'Yao', present: true, since: at('07:30'), dayMinutes: 150, monthMinutes: 150 },
+      { userId: 'usr_ama', name: 'Ama', present: false, since: null, dayMinutes: 240, monthMinutes: 720 },
+      // Who did not clock in is there too, at zero: the owner sees who did not come.
+      { userId: 'usr_kofi', name: 'Kofi', present: false, since: null, dayMinutes: 0, monthMinutes: 0 },
+    ]);
+    expect(hoursAndMinutes(425)).toEqual({ hours: 7, minutes: 5 });
+  });
+});
+
+describe('clocking in and out', () => {
+  let db: TestSchema;
+  const afi = person('usr_afi', 'owner');
+  const yao = person('usr_yao', 'member'); // workshop
+  const essi = person('usr_essi', 'member'); // cashier
+  const mine = (who: typeof afi) => done<{ mine: PersonPresence | null }>(who, 'my_presence', {});
+
+  beforeAll(async () => {
+    db = await freshSchema();
+    await done(afi, 'business_set_up', {
+      businessName: 'Pressing Afi',
+      profile: 'starting',
+      staffing: 'team',
+      siteName: 'Agoè',
+      siteCode: 'A',
+    });
+    await hire(afi, 'owner');
+    await hire(yao, 'workshop');
+    await hire(essi, 'cashier');
+  }, 180_000);
+
+  afterAll(async () => {
+    await db.drop();
+  });
+
+  it('a person says she starts, once; then that she is done, once', async () => {
+    expect((await mine(yao)).mine).toMatchObject({ present: false, since: null, dayMinutes: 0 });
+    expect(await done(yao, 'presence_clock_in', {})).toEqual({ present: true });
+    expect(await act(yao, 'presence_clock_in', {})).toEqual({ ok: false, code: 'already_clocked_in' });
+    const now = (await mine(yao)).mine;
+    expect(now).toMatchObject({ present: true });
+    expect(now?.since).toBeInstanceOf(Date);
+    expect(await done<{ present: boolean; minutes: number }>(yao, 'presence_clock_out', {})).toMatchObject({
+      present: false,
+    });
+    expect(await act(yao, 'presence_clock_out', {})).toEqual({ ok: false, code: 'not_clocked_in' });
+    expect(await act(yao, 'presence_clock_in', { siteId: 'sit_unknown' })).toEqual({ ok: false, code: 'not_found' });
+  }, 120_000);
+
+  it('the owner sees who is at work; who does not manage sees only herself', async () => {
+    await done(essi, 'presence_clock_in', {});
+    const { people } = await done<{ people: PersonPresence[] }>(afi, 'team_presence', {});
+    expect(people.map((entry) => [entry.name, entry.present])).toEqual([
+      ['usr_essi', true],
+      ['usr_afi', false],
+      ['usr_yao', false],
+    ]);
+    expect(await act(yao, 'team_presence', {})).toEqual({ ok: false, code: 'not_allowed' });
+    expect((await mine(essi)).mine).toMatchObject({ userId: 'usr_essi', present: true });
+  }, 120_000);
+
+  it('an agent only prepares a clocking: the person says it herself', async () => {
+    const prepared = await asPerson(afi, () =>
+      registry.invoke({ ...agentFor(afi), name: 'presence_clock_in', input: {} }),
+    );
+    expect(prepared).toMatchObject({ status: 'draft' });
+    expect((await mine(afi)).mine).toMatchObject({ present: false });
+  });
+
+  it('one laundry’s clockings are never another’s', async () => {
+    await assertOrganizationIsolation({
+      app: db.app,
+      table: 'clockings',
+      organizations: ['org_x', 'org_y'],
+      insert: async (client, organizationId) => {
+        await client.query(
+          `insert into ${db.schema}.clockings (clocking_id, organization_id, user_id)
+           values ('clk_${organizationId}', '${organizationId}', 'usr_x')`,
         );
       },
     });

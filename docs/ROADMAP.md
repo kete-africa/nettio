@@ -68,6 +68,7 @@ never becomes « ready » with a piece missing.
 | `020-assistant` | The assistant, one touch from every screen: a conversation, the answer as it is written, its sources as links, gestures it prepares and the person confirms |
 | `021-counter-home` | The counter in two gestures: one search, then a deposit handed over and cashed |
 | `022-alerts` | What deserves a look today, computed by code; « Expliquer ces chiffres » |
+| `023-ask-by-messaging` | Asking Nettio from one's own WhatsApp or Telegram, with one's rights, readings only |
 
 **Proof**: the owner reads his evening statement without opening the app, and asks one question a
 week.
@@ -80,6 +81,7 @@ messaging, complaints, piece-rate pay, salary advances.
 | Spec | What |
 |---|---|
 | `015-team-pay` | Each person's work counted from the steps she validated, the owner's piece rates, advances and pay handed |
+| `024-presence` | Each person clocks in and out herself; the owner sees who is at work, and the hours |
 
 **Proof**: a site runs a full week without the owner on site.
 
@@ -131,7 +133,7 @@ accounting, Europe (VAT, certified till, card).
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 — Kete Intelligence at every station | in part (`007`, `011`, `013`, `014`, `020`, `022`): the day's statement — read, and sent by itself —, the assistant on every screen (it prepares, never does), a deposit said, dictated or photographed, the alerts of the day, every capability open to copilots. « Demander » by WhatsApp or Telegram is built on recorded exchanges (`023`): no channel is connected yet | no |
-| 6 — the team | in part (`015-team-pay`): work and pay by the piece, advances. Not built: schedules, clocking, person switch, validations from messaging, complaints | no |
+| 6 — the team | in part (`015-team-pay`, `024-presence`): work and pay by the piece, advances, clocking in and out. Not built: schedules, person switch on a shared device, validations from messaging, complaints, unclaimed deposits | no |
 | 7 — customers, companies and delivery | in part (`019-invoices`): invoices and credit notes, the customer's account. Not built: price grids, subscriptions, prepaid credit, quotes, contracts, delivery | no |
 | 8 to 10 | planned | no |
 

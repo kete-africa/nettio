@@ -991,5 +991,22 @@
   "ask_link_copy": "Copier le code",
   "ask_link_untie": "Délier ma messagerie",
   "ask_link_tied": "C’est noté : posez vos questions ici, Nettio répond avec vos droits. Écrivez « stop » pour délier.",
-  "ask_link_untied": "C’est délié : Nettio ne répondra plus ici."
+  "ask_link_untied": "C’est délié : Nettio ne répondra plus ici.",
+  "perm_presence_clock": "Pointer",
+  "perm_presence_clock_body": "Dire soi-même quand on commence et quand on a fini.",
+  "perm_presence_read": "Voir qui est présent",
+  "perm_presence_read_body": "Lire qui est au travail, depuis quand, et les heures de chacun.",
+  "error_already_clocked_in": "Vous avez déjà pointé votre arrivée. Pointez votre départ quand vous avez fini.",
+  "error_not_clocked_in": "Vous n’avez pas pointé votre arrivée : il n’y a pas de départ à pointer.",
+  "clock_in": "Je commence",
+  "clock_out": "J’ai fini",
+  "clock_in_since": "Au travail depuis {time}",
+  "clock_out_now": "Vous n’avez pas pointé",
+  "clock_today": "Aujourd’hui : {duration}",
+  "presence_title": "Présence",
+  "presence_in": "au travail",
+  "presence_out": "absent(e)",
+  "presence_duration": "{hours} h {minutes} min",
+  "presence_figures": "aujourd’hui {day} · ce mois {month}",
+  "presence_how": "Chacun pointe lui-même son arrivée et son départ, depuis « Aujourd’hui ». Nettio ne corrige rien : un oubli se voit, il ne s’invente pas."
 }

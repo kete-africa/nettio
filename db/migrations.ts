@@ -11,7 +11,7 @@ import { invoicesMigrationSql } from '@/features/invoices';
 import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
-import { teamMigrationSql } from '@/features/team';
+import { presenceMigrationSql, teamMigrationSql } from '@/features/team';
 import { workshopMigrationSql } from '@/features/workshop';
 
 export interface MigrationContext {
@@ -85,4 +85,6 @@ export const migrations: Migration[] = [
   { name: '0014_invoices', sql: (context) => invoicesMigrationSql(context) },
   // Asking Nettio from one's own WhatsApp or Telegram (specs/023-ask-by-messaging).
   { name: '0015_staff_messaging', sql: (context) => messagingLinkMigrationSql(context) },
+  // Who is at work (specs/024-presence): each person clocks in and out herself.
+  { name: '0016_presence', sql: (context) => presenceMigrationSql(context) },
 ];

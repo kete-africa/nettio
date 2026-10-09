@@ -2,7 +2,8 @@ import { createServerFn } from '@tanstack/react-start';
 import { perform } from '@/platform/screen';
 import type { TeamWork } from './capabilities';
 import type { PersonPay } from './domain/pay';
-import { rateInput, workInput } from './team.record';
+import type { PersonPresence } from './domain/presence';
+import { clockInInput, rateInput, workInput } from './team.record';
 
 /** The work and the pay of the team for a month, for whoever reads it; null otherwise. */
 export const fetchTeamWork = createServerFn({ method: 'GET' })
@@ -31,3 +32,27 @@ export const saveRate = createServerFn({ method: 'POST' })
   .handler(({ data }) =>
     perform<{ stepId: string; amount: number | null }>('team_set_rate', data),
   );
+
+/** The person's own presence; null when she does not clock. */
+export const fetchMyPresence = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<PersonPresence | null> => {
+    const read = await perform<{ mine: PersonPresence | null }>('my_presence', {});
+    return read.ok ? read.output.mine : null;
+  },
+);
+
+/** The team's presence today, for whoever reads it; null otherwise. */
+export const fetchTeamPresence = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<PersonPresence[] | null> => {
+    const read = await perform<{ people: PersonPresence[] }>('team_presence', {});
+    return read.ok ? read.output.people : null;
+  },
+);
+
+export const clockIn = createServerFn({ method: 'POST' })
+  .validator((input: unknown) => clockInInput.parse(input ?? {}))
+  .handler(({ data }) => perform<{ present: boolean }>('presence_clock_in', data));
+
+export const clockOut = createServerFn({ method: 'POST' }).handler(() =>
+  perform<{ present: boolean; minutes: number }>('presence_clock_out', {}),
+);

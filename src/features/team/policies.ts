@@ -1,4 +1,5 @@
 import type { BusinessPermission } from '@/features/business';
+import { businessRoles } from '@/features/business/business.record';
 import * as m from '@/paraglide/messages.js';
 import { words } from '@/platform/words';
 
@@ -7,6 +8,20 @@ import { words } from '@/platform/words';
  * her own work with the workshop's right — nobody else's.
  */
 export const teamPermissions: BusinessPermission[] = [
+  {
+    name: 'presence:clock',
+    label: words(m.perm_presence_clock),
+    description: words(m.perm_presence_clock_body),
+    roles: ['owner', 'admin'],
+    staff: businessRoles,
+  },
+  {
+    name: 'presence:read',
+    label: words(m.perm_presence_read),
+    description: words(m.perm_presence_read_body),
+    roles: ['owner', 'admin'],
+    staff: ['owner', 'manager'],
+  },
   {
     name: 'pay:read',
     label: words(m.perm_pay_read),
