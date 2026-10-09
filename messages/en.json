@@ -991,5 +991,22 @@
   "ask_link_copy": "Copy the code",
   "ask_link_untie": "Untie my messaging",
   "ask_link_tied": "Noted: ask your questions here, Nettio answers with your rights. Write “stop” to untie.",
-  "ask_link_untied": "Untied: Nettio will no longer answer here."
+  "ask_link_untied": "Untied: Nettio will no longer answer here.",
+  "perm_presence_clock": "Clock in and out",
+  "perm_presence_clock_body": "Say oneself when one starts and when one is done.",
+  "perm_presence_read": "See who is at work",
+  "perm_presence_read_body": "Read who is at work, since when, and each person’s hours.",
+  "error_already_clocked_in": "You already clocked in. Clock out when you are done.",
+  "error_not_clocked_in": "You did not clock in: there is nothing to clock out of.",
+  "clock_in": "I start",
+  "clock_out": "I am done",
+  "clock_in_since": "At work since {time}",
+  "clock_out_now": "You have not clocked in",
+  "clock_today": "Today: {duration}",
+  "presence_title": "Presence",
+  "presence_in": "at work",
+  "presence_out": "away",
+  "presence_duration": "{hours} h {minutes} min",
+  "presence_figures": "today {day} · this month {month}",
+  "presence_how": "Each person clocks in and out herself, from “Today”. Nettio corrects nothing: an omission shows, it is not made up."
 }

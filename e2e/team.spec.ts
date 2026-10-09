@@ -7,6 +7,8 @@ import { freshOrganization, shot, sideways, signIn } from './session';
 const organizationId = freshOrganization('team');
 const afi = { userId: `usr_afi_${organizationId}`, name: 'Afi', organizationId, role: 'owner' as const };
 
+test.describe.configure({ mode: 'serial' });
+
 test('the owner sets what a piece is paid at a step', async ({ page, context }) => {
   await signIn(context, afi);
   await page.goto('/demarrage');
@@ -38,4 +40,23 @@ test('the owner sets what a piece is paid at a step', async ({ page, context }) 
   await expect(page.getByLabel('Lavage', { exact: true })).toHaveValue('');
   await shot(page, '30-work-and-pay');
   expect(await sideways(page)).toBe(0);
+});
+
+test('a person clocks in and out from her day; the owner sees who is at work', async ({ page, context }) => {
+  await signIn(context, afi);
+  await page.goto('/aujourdhui');
+  await expect(page.getByText('Vous n’avez pas pointé')).toBeVisible();
+  await page.getByRole('button', { name: 'Je commence' }).click();
+  await expect(page.getByText(/^Au travail depuis /)).toBeVisible();
+
+  await page.goto('/pressing/travail');
+  const presence = page.getByRole('region', { name: 'Présence' });
+  await expect(presence.getByText('Afi')).toBeVisible();
+  await expect(presence.getByText('au travail')).toBeVisible();
+  await shot(page, '42-presence');
+  expect(await sideways(page)).toBe(0);
+
+  await page.goto('/aujourdhui');
+  await page.getByRole('button', { name: 'J’ai fini' }).click();
+  await expect(page.getByText('Vous n’avez pas pointé')).toBeVisible();
 });

@@ -17,6 +17,8 @@ import { fetchCatalog } from '@/features/catalog/functions';
 import { fetchOrders, fetchToday } from '@/features/orders/functions';
 import { CounterSearch } from '@/features/orders/ui/CounterSearch';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
+import { fetchMyPresence } from '@/features/team/functions';
+import { ClockStrip } from '@/features/team/ui/ClockStrip';
 import { formatDay, formatMoney, formatNumber } from '@/lib/format';
 import { can } from '@/lib/signed-in';
 import * as m from '@/paraglide/messages.js';
@@ -30,6 +32,7 @@ export const Route = createFileRoute('/_app/aujourdhui')({
     // The day's statement, for whoever reads the money (specs/007-intelligence).
     statement: await fetchStatement(),
     alerts: await fetchAlerts(),
+    presence: await fetchMyPresence(),
     // What is ready and waits for its customer: the counter's next gestures.
     ready: await fetchOrders({ data: { stage: 'ready' } }),
   }),
@@ -38,7 +41,7 @@ export const Route = createFileRoute('/_app/aujourdhui')({
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today, statement, ready, alerts } = Route.useLoaderData();
+  const { catalog, today, statement, ready, alerts, presence } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -78,6 +81,7 @@ function TodayPage() {
           ) : undefined
         }
       />
+      {presence && <ClockStrip presence={presence} />}
       {can(me, 'orders:read') && <CounterSearch />}
       {summary && (
         <KpiGrid label={m.today_figures()}>

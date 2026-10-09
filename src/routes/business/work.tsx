@@ -2,7 +2,8 @@ import { Button, EmptyState, PageHeader, PageSection, TextField } from '@kete/de
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { z } from 'zod';
-import { fetchTeamWork, saveRate } from '@/features/team/functions';
+import { hoursAndMinutes } from '@/features/team/domain/presence';
+import { fetchTeamPresence, fetchTeamWork, saveRate } from '@/features/team/functions';
 import { errorSentence } from '@/lib/errors';
 import { ErrorNote, Note } from '@/lib/fields';
 import { formatMoney, formatMonth, formatNumber, formatSigned, shiftMonth } from '@/lib/format';
@@ -16,13 +17,16 @@ const search = z.object({ mois: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).opti
 export const Route = createFileRoute('/_app/pressing/travail')({
   validateSearch: (input) => search.parse(input),
   loaderDeps: ({ search: { mois } }) => ({ mois }),
-  loader: ({ deps }) => fetchTeamWork({ data: deps.mois ? { month: deps.mois } : {} }),
+  loader: async ({ deps }) => ({
+    view: await fetchTeamWork({ data: deps.mois ? { month: deps.mois } : {} }),
+    presence: await fetchTeamPresence(),
+  }),
   component: WorkPage,
 });
 
 function WorkPage() {
   const { me } = Route.useRouteContext();
-  const view = Route.useLoaderData();
+  const { view, presence } = Route.useLoaderData();
   const router = useRouter();
   const navigate = useNavigate();
   const [typed, setTyped] = useState<Record<string, string>>({});
@@ -83,7 +87,38 @@ function WorkPage() {
         <ErrorNote>{error}</ErrorNote>
       </div>
 
-      <PageSection first title={m.work_people()}>
+      {presence && (
+        <PageSection first title={m.presence_title()}>
+          <ul className="flex flex-col divide-y divide-line rounded-box border border-line bg-surface">
+            {presence.map((person) => {
+              const day = hoursAndMinutes(person.dayMinutes);
+              const month = hoursAndMinutes(person.monthMinutes);
+              return (
+                <li key={person.userId} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`inline-block size-2 rounded-full ${person.present ? 'bg-state-success' : 'bg-line-strong'}`}
+                      aria-hidden="true"
+                    />
+                    <span className="font-semibold">{person.name}</span>
+                    <span className="text-body-sm text-fg-muted">
+                      {person.present ? m.presence_in() : m.presence_out()}
+                    </span>
+                  </span>
+                  <span className="font-number text-body-sm text-fg-muted">
+                    {m.presence_figures({
+                      day: m.presence_duration(day),
+                      month: m.presence_duration(month),
+                    })}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 max-w-3xl text-body-sm text-fg-muted">{m.presence_how()}</p>
+        </PageSection>
+      )}
+      <PageSection first={!presence} title={m.work_people()}>
         {view.people.length === 0 ? (
           <p className="text-fg-muted">{m.work_nobody()}</p>
         ) : (

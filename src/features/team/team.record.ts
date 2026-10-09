@@ -17,3 +17,13 @@ export const rateInput = z.object({
 });
 
 export const namesInput = z.object({});
+
+export const clockInInput = z.object({
+  /** The site she works at today; none when the laundry has one. */
+  siteId: z.string().min(1).max(64).nullable().default(null),
+});
+export const clockOutInput = z.object({});
+export const presenceInput = z.object({
+  /** YYYY-MM-DD; today by default. */
+  day: z.iso.date().optional(),
+});

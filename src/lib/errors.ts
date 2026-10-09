@@ -9,6 +9,8 @@ const sentences: Record<string, () => string> = {
   not_found: m.error_not_found,
   already_set_up: m.error_already_set_up,
   not_set_up: m.error_not_set_up,
+  already_clocked_in: m.error_already_clocked_in,
+  not_clocked_in: m.error_not_clocked_in,
   invoice_one_customer: m.error_invoice_one_customer,
   already_invoiced: m.error_already_invoiced,
   already_credited: m.error_already_credited,

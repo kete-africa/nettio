@@ -11,6 +11,9 @@ The work of each person in the workshop, and what it earns at the laundry's piec
 - `team_set_rate` — the owner's rate for one piece at a step, or none. Nettio proposes no rate.
 - `team_names` — the team's names, to say who a wage was handed to.
 
+- `presence_clock_in`, `presence_clock_out`, `my_presence`, `team_presence` — each person clocks
+  in and out herself (specs/024-presence); the owner reads who is at work and the hours.
+
 ## Rules
 
 - The work is read from the steps signed in the workshop (`work_events`); only a step a person

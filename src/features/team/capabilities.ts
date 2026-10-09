@@ -3,10 +3,13 @@ import type { SqlExecutor } from '@kete/tenancy';
 import { listStaff } from '@/features/business/infrastructure/business.tables';
 import { readCatalog } from '@/features/catalog';
 import { personBehind } from '@/lib/actor';
-import { setPieceRate } from './commands';
+import { dayBounds } from '@/features/orders';
+import { clockIn, clockOut, setPieceRate } from './commands';
 import { monthPeriod, payOf, type PersonPay } from './domain/pay';
+import { presenceOf, type PersonPresence } from './domain/presence';
+import { periodsWithin } from './infrastructure/presence.tables';
 import { handedTo, readRates, workDone } from './infrastructure/team.tables';
-import { namesInput, rateInput, workInput } from './team.record';
+import { clockInInput, clockOutInput, namesInput, presenceInput, rateInput, workInput } from './team.record';
 
 export interface TeamWork {
   month: string;
@@ -17,6 +20,21 @@ export interface TeamWork {
 }
 
 const thisMonth = () => new Date().toISOString().slice(0, 7);
+
+/** The presence of the team — or of one person — on a day, with the month's minutes. */
+async function presence(db: SqlExecutor, day: string | undefined, userId?: string): Promise<PersonPresence[]> {
+  const bounds = dayBounds(day);
+  const month = monthPeriod(bounds.from.toISOString().slice(0, 7));
+  const window = { from: new Date(`${month.from}T00:00:00Z`), to: new Date(`${month.to}T00:00:00Z`) };
+  const staff = (await listStaff(db)).filter((member) => member.active && (!userId || member.userId === userId));
+  return presenceOf({
+    people: staff.map((member) => ({ userId: member.userId, name: member.name })),
+    periods: await periodsWithin(db, window, userId),
+    day: bounds,
+    month: window,
+    now: new Date(),
+  });
+}
 
 async function teamWork(db: SqlExecutor, month: string, userId?: string): Promise<TeamWork> {
   const period = monthPeriod(month);
@@ -76,6 +94,47 @@ export const teamCapabilities = [
       const mine = all.people.find((person) => person.userId === me) ?? null;
       return { month: all.month, mine };
     },
+  }),
+  defineCapability({
+    name: 'team_presence',
+    description:
+      'Who is at work now, since when, and each person’s minutes at work on a day (today by default) and in its month — as each one clocked in and out herself. People who did not clock in appear at zero.',
+    permission: 'presence:read',
+    autonomy: 1,
+    classification: 'confidential',
+    input: presenceInput,
+    async run(input, { db }) {
+      return { people: await presence(db, input.day) };
+    },
+  }),
+  defineCapability({
+    name: 'my_presence',
+    description: 'Whether the person herself is clocked in, since when, and her minutes today and this month.',
+    permission: 'presence:clock',
+    autonomy: 1,
+    input: presenceInput,
+    async run(input, { db, actor }) {
+      const [mine] = await presence(db, input.day, personBehind(actor));
+      return { mine: mine ?? null };
+    },
+  }),
+  defineCapability({
+    name: 'presence_clock_in',
+    description: 'The person says she starts work now. For herself only.',
+    permission: 'presence:clock',
+    autonomy: 3,
+    input: clockInInput,
+    command: clockIn,
+    draft: { recordType: 'clock_in' },
+  }),
+  defineCapability({
+    name: 'presence_clock_out',
+    description: 'The person says she is done for now.',
+    permission: 'presence:clock',
+    autonomy: 3,
+    input: clockOutInput,
+    command: clockOut,
+    draft: { recordType: 'clock_out' },
   }),
   defineCapability({
     name: 'team_names',
