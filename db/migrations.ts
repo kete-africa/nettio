@@ -3,7 +3,7 @@ import { commandsDelegationMigrationSql, commandsMigrationSql } from '@kete/comm
 import { draftsMigrationSql } from '@kete/drafts';
 import { feedbackMigrationSql } from '@kete/feedback';
 import { outboxMigrationSql } from '@kete/sdk';
-import { statementDeliveryMigrationSql } from '@/features/assistant';
+import { messagingLinkMigrationSql, statementDeliveryMigrationSql } from '@/features/assistant';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
@@ -83,4 +83,6 @@ export const migrations: Migration[] = [
   { name: '0013_team_pay', sql: (context) => teamMigrationSql(context) },
   // Invoices and credit notes (specs/019-invoices): written once, numbered without a gap.
   { name: '0014_invoices', sql: (context) => invoicesMigrationSql(context) },
+  // Asking Nettio from one's own WhatsApp or Telegram (specs/023-ask-by-messaging).
+  { name: '0015_staff_messaging', sql: (context) => messagingLinkMigrationSql(context) },
 ];

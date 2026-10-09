@@ -68,7 +68,7 @@ const NEVER_OFFERED = new Set(['catalog_set_price', 'catalog_save_pack', 'team_s
  */
 async function turnOf(
   person: { userId: string; organizationId: string },
-  input: { question: string; history?: Turn[]; screen?: string | undefined },
+  input: { question: string; history?: Turn[]; screen?: string | undefined; readOnly?: boolean },
 ) {
   const model = getModel();
   if (!model) return null;
@@ -82,7 +82,8 @@ async function turnOf(
     },
   };
   const tools = (await registry.tools(caller)).filter(
-    (tool) => tool.autonomy !== 2 && !NEVER_OFFERED.has(tool.name),
+    (tool) =>
+      (input.readOnly ? tool.autonomy === 1 : tool.autonomy !== 2) && !NEVER_OFFERED.has(tool.name),
   );
   const messages: ModelMessage[] = [
     ...(input.history ?? [])
@@ -131,8 +132,10 @@ export async function askNettio(
   /** Where she is in the app, when she asks from a screen. */
   screen?: string,
   history: Turn[] = [],
+  /** By message: readings only — a prepared gesture could not be confirmed there. */
+  options: { readOnly?: boolean } = {},
 ): Promise<AskOutcome> {
-  const turn = await turnOf(person, { question, history, screen });
+  const turn = await turnOf(person, { question, history, screen, readOnly: options.readOnly === true });
   if (!turn) return { available: false, reason: 'not_connected' };
   try {
     const answer = await ask(turn);

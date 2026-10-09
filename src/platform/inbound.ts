@@ -1,8 +1,14 @@
-import { linkStatementChat, organizationOfStatementToken, STATEMENT_TOKEN } from '@/features/assistant';
+import {
+  heardFromStaff,
+  linkStatementChat,
+  organizationOfStatementToken,
+  STATEMENT_TOKEN,
+} from '@/features/assistant';
 import { deliver, hear, replyWords } from '@/features/messaging';
 import * as m from '@/paraglide/messages.js';
 import { getChannels } from './channels';
 import { getPool, transaction } from './db';
+import { asStaff } from './rights';
 import { parseUpdate, secretIsValid } from './telegram';
 import { parseNotification, signatureIsValid, verifySubscription } from './whatsapp';
 
@@ -26,6 +32,27 @@ async function statementLinked(sender: string, text: string): Promise<boolean> {
 async function heard(channel: 'whatsapp' | 'telegram', messages: { sender: string; text: string }[]) {
   for (const message of messages) {
     if (channel === 'telegram' && (await statementLinked(message.sender, message.text))) continue;
+    // WhatsApp names a phone by its digits; Telegram, a chat.
+    const sender = channel === 'whatsapp' ? message.sender.replace(/\D/g, '') : message.sender;
+    const fromTeam = await heardFromStaff(
+      { channel, sender, text: message.text },
+      {
+        lookup: getPool(),
+        inOrganization: transaction,
+        asStaff,
+        reply: async (text) => {
+          await getChannels()[channel]?.sendText(sender, text);
+        },
+        words: {
+          tied: () => m.ask_link_tied({}, { locale: 'fr' }),
+          untied: () => m.ask_link_untied({}, { locale: 'fr' }),
+          notConnected: () => m.ask_not_connected_body({}, { locale: 'fr' }),
+          budgetSpent: () => m.ask_budget_spent({}, { locale: 'fr' }),
+          notAllowed: () => m.error_not_allowed({}, { locale: 'fr' }),
+        },
+      },
+    );
+    if (fromTeam) continue;
     const organizations = await hear(
       { channel, ...message },
       { lookup: getPool(), inOrganization: transaction, words: replyWords() },

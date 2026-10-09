@@ -6,6 +6,9 @@ import { sendingPorts } from '@/platform/statement';
 import { deliveryInput, sendNowInput } from './delivery.record';
 import { destinationsOf } from './domain/sending';
 import { readDelivery, saveDelivery } from './infrastructure/delivery.tables';
+import { z } from 'zod';
+import { personBehind } from '@/lib/actor';
+import { untieMessaging } from './infrastructure/messaging-link.tables';
 import { sendStatement } from './sending';
 
 /**
@@ -63,4 +66,16 @@ export const sendStatementNow = defineCommand({
   },
   summarize: (_input, output) =>
     `Statement sent now: ${output.outcome.map((o) => `${o.channel} ${o.status}`).join(', ')}`,
+});
+
+/** Forgets the messaging a person tied to ask Nettio from: her own decision, at any time. */
+export const untieMyMessaging = defineCommand({
+  name: 'untie-my-messaging',
+  input: z.object({}),
+  reversibility: { reversible: false },
+  async handler(_input, { db, actor }) {
+    await untieMessaging(db, personBehind(actor));
+    return { untied: true };
+  },
+  summarize: () => 'Messaging untied from the assistant',
 });
