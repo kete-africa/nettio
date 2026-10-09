@@ -79,3 +79,10 @@ model.
 
 What leaves the organization here: the sentence, the recording or the picture, and the catalogue's names, go
 to the model's provider — only when the laundry's Nettio has a model configured.
+
+## The deposit as a basket
+
+« Nouveau dépôt » (specs/018-basket) shows the deposit as a basket: one deposit holds several
+services at once, each service's chip says what it already holds, and the basket — beside the
+articles on a wide screen, one touch away on a phone — lists it service by service with its total.
+Nothing moves under the finger while pieces are added.
