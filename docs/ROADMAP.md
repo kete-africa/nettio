@@ -65,6 +65,9 @@ never becomes « ready » with a piece missing.
 | `011-dictate` | A deposit said in a sentence or dictated: it fills the counter's form, the person checks and saves |
 | `014-photo` | A deposit photographed — the customer's written list, or the laundry laid out: the same path as a sentence |
 | `013-statement-sent` | The evening statement leaves by itself, at the hour and to where the owner decided: e-mail, WhatsApp, Telegram |
+| `020-assistant` | The assistant, one touch from every screen: a conversation, the answer as it is written, its sources as links, gestures it prepares and the person confirms |
+| `021-counter-home` | The counter in two gestures: one search, then a deposit handed over and cashed |
+| `022-alerts` | What deserves a look today, computed by code; « Expliquer ces chiffres » |
 
 **Proof**: the owner reads his evening statement without opening the app, and asks one question a
 week.
@@ -127,7 +130,7 @@ accounting, Europe (VAT, certified till, card).
 | 2 — the deposit and the day's money | yes (`002-counter`, `003-money-day`) | no |
 | 3 — knowing whether I earn | yes (`004-earn`) | no |
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
-| 5 — Kete Intelligence at every station | in part (`007-intelligence`, `011-dictate`, `013-statement-sent`, `014-photo`): the day's statement — read, and sent by itself in the evening —, « Demander », a deposit said in a sentence, dictated or photographed, every capability open to copilots. Not built: « Demander » by messaging | no |
+| 5 — Kete Intelligence at every station | in part (`007`, `011`, `013`, `014`, `020`, `022`): the day's statement — read, and sent by itself —, the assistant on every screen (it prepares, never does), a deposit said, dictated or photographed, the alerts of the day, every capability open to copilots. Not built: « Demander » by WhatsApp or Telegram | no |
 | 6 — the team | in part (`015-team-pay`): work and pay by the piece, advances. Not built: schedules, clocking, person switch, validations from messaging, complaints | no |
 | 7 — customers, companies and delivery | in part (`019-invoices`): invoices and credit notes, the customer's account. Not built: price grids, subscriptions, prepaid credit, quotes, contracts, delivery | no |
 | 8 to 10 | planned | no |
