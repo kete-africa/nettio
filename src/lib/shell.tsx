@@ -14,6 +14,7 @@ import {
 import { Link, useLocation, useNavigate, type LinkProps } from '@tanstack/react-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Me } from '@/features/business/functions';
+import { AssistantLauncher, AssistantProvider, HeldPermissions } from '@/features/assistant/ui/Assistant';
 import * as m from '@/paraglide/messages.js';
 import { can } from './signed-in';
 
@@ -134,6 +135,8 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   // Five places at most under the thumb; the rest is in the menu.
   const phone = me.business ? tabs.filter(open).slice(0, 5) : [];
   return (
+    <HeldPermissions value={me.permissions}>
+    <AssistantProvider>
     <Shell
       brand={me.business?.businessName ?? m.app_name()}
       navLabel={m.nav_label()}
@@ -175,7 +178,9 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
         </div>
       }
       toolbar={
-        <FeedbackButton
+        <span className="flex items-center gap-2">
+          {me.business && can(me, 'assistant:ask') && <AssistantLauncher />}
+          <FeedbackButton
           labels={{
             open: m.feedback_open(),
             title: m.feedback_title(),
@@ -192,7 +197,8 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             error: m.feedback_error(),
           }}
           onSubmit={sendFeedback}
-        />
+          />
+        </span>
       }
       tabBar={
         phone.length > 1 ? (
@@ -214,5 +220,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
     >
       {children}
     </Shell>
+    </AssistantProvider>
+    </HeldPermissions>
   );
 }

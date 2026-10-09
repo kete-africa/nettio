@@ -21,4 +21,52 @@ export const sourceWords: Record<string, () => string> = {
   team_read: m.source_team_read,
   messages_list: m.source_messages,
   messages_settings: m.source_messages,
+  invoices_list: m.source_invoices,
+  invoices_get: m.source_invoices,
+  invoices_account: m.source_invoices,
+  invoices_of_order: m.source_invoices,
+  team_work: m.source_team_work,
+  my_work: m.source_team_work,
+  statement_delivery: m.source_day_statement,
 };
+
+/** The screen where the person reads the same thing herself: a source is one touch away. */
+export const sourcePlaces: Record<string, string> = {
+  money_result: '/argent/resultat',
+  costs_read: '/argent/couts',
+  expenses_list: '/argent/depenses',
+  cash_sessions: '/argent/caisse',
+  day_statement: '/aujourdhui',
+  orders_today: '/aujourdhui',
+  orders_list: '/depots',
+  customers_search: '/clients',
+  workshop_queue: '/atelier',
+  workshop_incidents: '/atelier',
+  catalog_read: '/pressing/catalogue',
+  business_overview: '/pressing/schema',
+  team_read: '/pressing/equipe',
+  messages_list: '/pressing/messages',
+  messages_settings: '/pressing/messages',
+  invoices_list: '/factures',
+  team_work: '/pressing/travail',
+  statement_delivery: '/pressing/releve',
+};
+
+/**
+ * The questions proposed to a person: only what she may read, and first what goes with the screen
+ * she is on. Four at most.
+ */
+export function suggestionsFor(permissions: string[], pathname: string): string[] {
+  const may = (permission: string) => permissions.includes(permission);
+  const topics: { permission: string; near: string; questions: (() => string)[] }[] = [
+    { permission: 'cash:operate', near: '/argent/caisse', questions: [m.ask_suggestion_till] },
+    { permission: 'workshop:operate', near: '/atelier', questions: [m.ask_suggestion_workshop] },
+    { permission: 'invoices:read', near: '/factures', questions: [m.ask_suggestion_invoices] },
+    { permission: 'money:read', near: '/argent', questions: [m.ask_suggestion_month, m.ask_suggestion_packs] },
+    { permission: 'orders:read', near: '/depots', questions: [m.ask_suggestion_late, m.ask_suggestion_today] },
+  ];
+  const allowed = topics.filter((topic) => may(topic.permission));
+  const here = allowed.filter((topic) => pathname.startsWith(topic.near));
+  const rest = allowed.filter((topic) => !here.includes(topic));
+  return [...here, ...rest].flatMap((topic) => topic.questions.map((question) => question())).slice(0, 4);
+}

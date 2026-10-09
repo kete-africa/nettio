@@ -11,7 +11,6 @@ import { getPool } from './db';
 type Model = ReturnType<typeof languageModel>;
 
 let model: Model | null | undefined;
-let store: BudgetStore | undefined;
 
 /**
  * The model that hears, reads and words for Nettio — never computes (constitution II). From the
@@ -66,6 +65,6 @@ export function useTranscriber(next: Transcriber | null | undefined): void {
 
 /** Where each call's usage is recorded, and each organization's monthly budget checked. */
 export function getBudgets(): BudgetStore {
-  store ??= postgresBudgetStore(getPool());
-  return store;
+  // Made on the pool of the moment: tests run each file on its own schema.
+  return postgresBudgetStore(getPool());
 }

@@ -43,6 +43,7 @@ export const routes = rootRoute('__root.tsx', [
   route('/mcp', 'api/mcp.ts'),
   route('/api/v1/$', 'api/v1.ts'),
   route('/api/avis', 'api/feedback.ts'),
+  route('/api/assistant', 'api/assistant.ts'),
   route('/health', 'api/health.ts'),
   route('/.well-known/kete', 'well-known/kete.ts'),
   route('/.well-known/oauth-protected-resource', 'well-known/oauth-protected-resource.ts'),
