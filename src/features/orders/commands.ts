@@ -429,3 +429,18 @@ export const refundPayment = defineCommand({
   },
   summarize: (input, output) => `${input.amount} refunded on deposit ${output.number}`,
 });
+
+/**
+ * Takes money for one deposit from another feature's gesture — an invoice cashed: the same rules
+ * as a payment at the counter (the till for cash, never more than what is due).
+ */
+export async function cashOrder(
+  db: SqlExecutor,
+  organizationId: string,
+  orderId: string,
+  money: { amount: number; method: PaymentMethod },
+  actor: Actor,
+): Promise<number> {
+  const order = await opened(db, orderId);
+  return takePayment(db, organizationId, order, money, actor);
+}

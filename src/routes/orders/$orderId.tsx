@@ -13,6 +13,7 @@ import {
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
+import { InvoiceLink } from '@/features/invoices/ui/InvoiceLink';
 import type { PaymentMethod } from '@/features/orders';
 import {
   cancelOrder,
@@ -172,6 +173,9 @@ function OrderPage() {
             >
               {m.action_receipt()}
             </Link>
+            {order.status !== 'cancelled' && (
+              <InvoiceLink orderId={order.orderId} mayIssue={can(me, 'invoices:issue')} onError={setError} />
+            )}
           </>
         }
       />
