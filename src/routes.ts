@@ -11,6 +11,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/depots', 'orders/index.tsx'),
     route('/depots/nouveau', 'orders/new.tsx'),
     route('/depots/$orderId', 'orders/$orderId.tsx'),
+    route('/factures', 'invoices/index.tsx'),
     route('/clients', 'customers/index.tsx'),
     route('/clients/$customerId', 'customers/$customerId.tsx'),
     route('/atelier', 'workshop/queue.tsx'),
@@ -32,6 +33,8 @@ export const routes = rootRoute('__root.tsx', [
   ]),
   // The receipt stands outside the frame: only the ticket goes to the printer.
   route('/depots/$orderId/recu', 'orders/receipt.tsx'),
+  // An invoice too: only the document goes to the printer.
+  route('/factures/$invoiceId', 'invoices/$invoiceId.tsx'),
   route('/auth/connexion', 'auth/sign-in.ts'),
   route('/auth/callback', 'auth/callback.ts'),
   route('/auth/sortie', 'auth/sign-out.ts'),

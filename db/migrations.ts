@@ -7,6 +7,7 @@ import { statementDeliveryMigrationSql } from '@/features/assistant';
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
+import { invoicesMigrationSql } from '@/features/invoices';
 import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { ordersMigrationSql } from '@/features/orders';
@@ -80,4 +81,6 @@ export const migrations: Migration[] = [
   { name: '0012_statement_delivery', sql: (context) => statementDeliveryMigrationSql(context) },
   // The team's work and pay (specs/015-team-pay): piece rates, and who a wage was handed to.
   { name: '0013_team_pay', sql: (context) => teamMigrationSql(context) },
+  // Invoices and credit notes (specs/019-invoices): written once, numbered without a gap.
+  { name: '0014_invoices', sql: (context) => invoicesMigrationSql(context) },
 ];

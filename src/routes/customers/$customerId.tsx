@@ -16,6 +16,7 @@ import type { Customer, CustomerChannel } from '@/features/customers';
 import { customerChannels } from '@/features/customers/customer.record';
 import { formatPhone } from '@/features/customers/domain/phone';
 import { fetchCustomer, saveCustomer } from '@/features/customers/functions';
+import { CustomerAccount } from '@/features/invoices/ui/CustomerAccount';
 import { fetchOrders } from '@/features/orders/functions';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
 import { errorSentence } from '@/lib/errors';
@@ -130,6 +131,9 @@ function CustomerPage() {
           </RowList>
         )}
       </PageSection>
+      {can(me, 'invoices:read') && (
+        <CustomerAccount customerId={customer.customerId} mayIssue={can(me, 'invoices:issue')} />
+      )}
 
       <Drawer
         open={draft !== null}

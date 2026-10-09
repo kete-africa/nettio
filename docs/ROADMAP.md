@@ -85,6 +85,11 @@ messaging, complaints, piece-rate pay, salary advances.
 Customer price grids, subscriptions, prepaid credit, quotes; company contracts, delivery notes,
 monthly invoices and statements; the courier's round, proof of delivery, fees and zones.
 
+| Spec | What |
+|---|---|
+| `018-basket` | The deposit as a basket: several services in one deposit, always in sight |
+| `019-invoices` | Invoices and credit notes numbered without a gap, on demand or for several deposits of a customer; cashing; the customer's account; mentions and VAT |
+
 **Proof**: one company customer is invoiced a month without re-entry.
 
 ## Phase 8 — Several sites
@@ -124,6 +129,7 @@ accounting, Europe (VAT, certified till, card).
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 — Kete Intelligence at every station | in part (`007-intelligence`, `011-dictate`, `013-statement-sent`, `014-photo`): the day's statement — read, and sent by itself in the evening —, « Demander », a deposit said in a sentence, dictated or photographed, every capability open to copilots. Not built: « Demander » by messaging | no |
 | 6 — the team | in part (`015-team-pay`): work and pay by the piece, advances. Not built: schedules, clocking, person switch, validations from messaging, complaints | no |
-| 7 to 10 | planned | no |
+| 7 — customers, companies and delivery | in part (`019-invoices`): invoices and credit notes, the customer's account. Not built: price grids, subscriptions, prepaid credit, quotes, contracts, delivery | no |
+| 8 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.
