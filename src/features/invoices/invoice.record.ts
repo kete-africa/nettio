@@ -77,6 +77,8 @@ export interface InvoiceSummary {
 
 export interface Invoice extends InvoiceSummary {
   customerPhone: string;
+  /** A company's own mentions — tax number, address —, one per line. */
+  customerMentions: string;
   seller: Seller;
   vatPercent: number;
   net: number;

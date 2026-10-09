@@ -137,7 +137,9 @@ const sessionSelect = `
   select s.session_id, s.site_id, s.cashier_id, st.name as cashier_name, s.opened_at, s.closed_at,
          s.opening_float, s.expected, s.counted, s.gap, s.note,
          coalesce((select sum(amount) from payments p
-                    where p.cash_session_id = s.session_id and p.kind <> 'refund'), 0) as cash_in,
+                    where p.cash_session_id = s.session_id and p.kind <> 'refund'), 0)
+           + coalesce((select sum(c.cashed) from credit_entries c
+                        where c.cash_session_id = s.session_id and c.kind = 'top_up'), 0) as cash_in,
          coalesce((select sum(amount) from payments p
                     where p.cash_session_id = s.session_id and p.kind = 'refund'), 0) as cash_refunds,
          coalesce((select sum(amount) from expenses e
@@ -487,8 +489,11 @@ export async function saveSheet(
 /** Payments minus refunds of a period: what was really cashed. */
 export async function cashedIn(db: SqlExecutor, period: { from: string; to: string }): Promise<number> {
   const { rows } = await db.query<{ cashed: string }>(
-    `select coalesce(sum(case when kind = 'refund' then -amount else amount end), 0) as cashed
-       from payments where created_at >= $1::date and created_at < $2::date`,
+    `select coalesce(sum(case when kind = 'refund' then -amount else amount end), 0)
+            + coalesce((select sum(e.cashed) from credit_entries e
+                         where e.kind = 'top_up' and e.created_at >= $1::date and e.created_at < $2::date), 0)
+              as cashed
+       from payments where created_at >= $1::date and created_at < $2::date and method <> 'credit'`,
     [period.from, period.to],
   );
   return Number(rows[0]?.cashed ?? 0);

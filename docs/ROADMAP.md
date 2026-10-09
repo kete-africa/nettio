@@ -95,6 +95,7 @@ monthly invoices and statements; the courier's round, proof of delivery, fees an
 |---|---|
 | `018-basket` | The deposit as a basket: several services in one deposit, always in sight |
 | `019-invoices` | Invoices and credit notes numbered without a gap, on demand or for several deposits of a customer; cashing; the customer's account; mentions and VAT |
+| `026-accounts` | A price agreed with a customer; credit paid ahead and spent at the counter; subscriptions that recharge it; quotes; a company's mentions, its own delay and its month invoiced in one gesture |
 
 **Proof**: one company customer is invoiced a month without re-entry.
 
@@ -135,7 +136,7 @@ accounting, Europe (VAT, certified till, card).
 | 4 — the workshop and the customer's messaging | yes (`005-workshop`, `006-messaging`) — the channels are not connected to a live sender yet | no |
 | 5 — Kete Intelligence at every station | in part (`007`, `011`, `013`, `014`, `020`, `022`): the day's statement — read, and sent by itself —, the assistant on every screen (it prepares, never does), a deposit said, dictated or photographed, the alerts of the day, every capability open to copilots. « Demander » by WhatsApp or Telegram is built on recorded exchanges (`023`): no channel is connected yet | no |
 | 6 — the team | yes (`015-team-pay`, `024-presence`, `025-manager`) — approvals by message run on recorded exchanges: no channel is connected yet | no |
-| 7 — customers, companies and delivery | in part (`019-invoices`): invoices and credit notes, the customer's account. Not built: price grids, subscriptions, prepaid credit, quotes, contracts, delivery | no |
+| 7 — customers, companies and delivery | in part (`018`, `019`, `026-accounts`): invoices and credit notes, a customer's prices, prepaid credit, subscriptions, quotes, companies invoiced by the month. Not built: delivery | no |
 | 8 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.

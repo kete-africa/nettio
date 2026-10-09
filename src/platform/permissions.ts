@@ -1,5 +1,6 @@
 import { definePermissions } from '@kete/capabilities';
 // The policies are read at their file, not at the features' doors: the doors need this list.
+import { accountPermissions } from '@/features/accounts/policies';
 import { assistantPermissions } from '@/features/assistant/policies';
 import { businessPermissions } from '@/features/business/policies';
 import { catalogPermissions } from '@/features/catalog/policies';
@@ -27,6 +28,7 @@ export const businessPermissionList = [
   ...teamPermissions,
   ...invoicePermissions,
   ...managerPermissions,
+  ...accountPermissions,
 ];
 
 export const permissions = definePermissions(businessPermissionList);

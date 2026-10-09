@@ -1,4 +1,5 @@
 import { createCapabilityRegistry, createDatasetRegistry } from '@kete/capabilities';
+import { accountCapabilities } from '@/features/accounts';
 import { assistantCapabilities } from '@/features/assistant/capabilities';
 import { businessCapabilities } from '@/features/business';
 import { catalogCapabilities } from '@/features/catalog';
@@ -30,6 +31,7 @@ export const registry = createCapabilityRegistry(
     ...teamCapabilities,
     ...invoiceCapabilities,
     ...managerCapabilities,
+    ...accountCapabilities,
   ],
   {
     authorize: async (_caller, permission) => holds(permission),

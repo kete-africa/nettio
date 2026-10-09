@@ -67,6 +67,7 @@ const sections: Section[] = [
       { to: '/argent/resultat', icon: 'chart', label: m.nav_result, permission: 'money:read' },
       { to: '/argent/couts', icon: 'layers', label: m.nav_costs, permission: 'money:read' },
       { to: '/factures', icon: 'file', label: m.nav_invoices, permission: 'invoices:read' },
+      { to: '/devis', icon: 'file', label: m.nav_quotes, permission: 'quotes:read' },
     ],
   },
   {

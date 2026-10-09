@@ -1,6 +1,7 @@
 import { Button, Chip, EmptyState, PageHeader, PageSection, Row, RowList, Tag, TextField } from '@kete/design';
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
+import { MonthRun } from '@/features/accounts/ui/MonthRun';
 import { statusOf, type InvoiceStatus } from '@/features/invoices/domain/invoice';
 import { fetchInvoiceSettings, fetchInvoices, saveInvoiceSettings } from '@/features/invoices/functions';
 import { invoiceStatusTones, invoiceStatusWords } from '@/features/invoices/ui/words';
@@ -90,6 +91,7 @@ function InvoicesPage() {
           ))}
         </RowList>
       )}
+      <MonthRun mayIssue={can(me, 'invoices:issue')} />
       {settings && <Mentions settings={settings} editable={can(me, 'settings:manage')} />}
     </>
   );

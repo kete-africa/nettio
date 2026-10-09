@@ -26,6 +26,7 @@ export const methodWords: Record<PaymentMethod, () => string> = {
   mobile_money: m.method_mobile_money,
   card: m.method_card,
   transfer: m.method_transfer,
+  credit: m.method_credit,
 };
 
 export const kindWords: Record<PaymentKind, () => string> = {

@@ -7,6 +7,7 @@ import { messagingLinkMigrationSql, statementDeliveryMigrationSql } from '@/feat
 import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
+import { accountsMigrationSql } from '@/features/accounts';
 import { invoicesMigrationSql } from '@/features/invoices';
 import { managerMigrationSql } from '@/features/manager';
 import { messagingMigrationSql } from '@/features/messaging';
@@ -101,4 +102,7 @@ export const migrations: Migration[] = [
            check (kind in ('item', 'pack', 'express', 'discount', 'order', 'storage'));`,
       ].join('\n'),
   },
+  // A customer's account (specs/026-accounts): terms, her own prices, prepaid credit,
+  // subscriptions, quotes — and a deposit may be paid with her credit.
+  { name: '0018_accounts', sql: (context) => accountsMigrationSql(context) },
 ];

@@ -1,5 +1,6 @@
 import { defineCommand } from '@kete/commands';
 import { readSettings } from '@/features/business';
+import { readTerms } from '@/features/accounts/infrastructure/accounts.tables';
 import { findCustomer } from '@/features/customers';
 import { cashOrder } from '@/features/orders/commands';
 import { personBehind } from '@/lib/actor';
@@ -45,6 +46,8 @@ export const issueInvoice = defineCommand({
     const customer = await findCustomer(db, first.customerId);
     if (!customer) throw new RuleError('not_found');
     const settings = await readInvoiceSettings(db);
+    // What the laundry agreed with this customer (specs/026-accounts): its mentions, its delay.
+    const terms = await readTerms(db, customer.customerId);
     const issuedOn = today();
     const seq = await takeNumber(db, organizationId, 'invoice', Number(issuedOn.slice(0, 4)));
     const number = numberOf('invoice', Number(issuedOn.slice(0, 4)), seq);
@@ -57,8 +60,9 @@ export const issueInvoice = defineCommand({
         kind: 'invoice',
         number,
         customerId: customer.customerId,
-        customerName: customer.name,
+        customerName: terms.legalName || customer.name,
         customerPhone: customer.phone,
+        customerMentions: [terms.taxId ? `NIF ${terms.taxId}` : '', terms.address].filter(Boolean).join('\n'),
         seller: {
           name: business.businessName,
           legalName: settings.legalName,
@@ -68,7 +72,7 @@ export const issueInvoice = defineCommand({
           footer: settings.footer,
         },
         issuedOn,
-        dueOn: dueOn(issuedOn, settings.paymentDays),
+        dueOn: dueOn(issuedOn, terms.paymentDays ?? settings.paymentDays),
         vatPercent: settings.vatPercent,
         net,
         vat,
@@ -111,6 +115,7 @@ export const creditInvoice = defineCommand({
         customerId: invoice.customerId,
         customerName: invoice.customerName,
         customerPhone: invoice.customerPhone,
+        customerMentions: invoice.customerMentions,
         seller: invoice.seller,
         issuedOn,
         dueOn: null,

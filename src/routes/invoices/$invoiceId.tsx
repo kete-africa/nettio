@@ -116,6 +116,11 @@ function InvoicePage() {
 
         <p className="text-body-sm text-fg-muted">{m.invoice_customer()}</p>
         <p className="font-semibold">{invoice.customerName}</p>
+        {invoice.customerMentions.split('\n').filter(Boolean).map((line) => (
+          <p key={line} className="text-body-sm text-fg-muted">
+            {line}
+          </p>
+        ))}
         <p className="mb-4 font-number text-body-sm text-fg-muted">{formatPhone(invoice.customerPhone)}</p>
 
         {isCredit && invoice.creditsInvoiceId && (

@@ -1,6 +1,6 @@
 import { Chip, ChipGroup, TextField } from '@kete/design';
 import * as m from '@/paraglide/messages.js';
-import { paymentMethods, type PaymentMethod } from '../domain/order';
+import { moneyMethods, type PaymentMethod } from '../domain/order';
 import { methodWords } from './words';
 
 /** An amount and the way it is paid: cash, Mobile Money, card or transfer. */
@@ -8,12 +8,15 @@ export function MoneyFields({
   amount,
   method,
   hint,
+  methods = moneyMethods,
   onAmount,
   onMethod,
 }: {
   amount: string;
   method: PaymentMethod;
   hint?: string;
+  /** The ways offered: the customer's credit only when she has some. */
+  methods?: PaymentMethod[];
   onAmount: (amount: string) => void;
   onMethod: (method: PaymentMethod) => void;
 }) {
@@ -30,7 +33,7 @@ export function MoneyFields({
         onChange={(event) => onAmount(event.target.value)}
       />
       <ChipGroup label={m.money_method()}>
-        {paymentMethods.map((entry) => (
+        {methods.map((entry) => (
           <Chip key={entry} pressed={entry === method} onClick={() => onMethod(entry)}>
             {methodWords[entry]()}
           </Chip>

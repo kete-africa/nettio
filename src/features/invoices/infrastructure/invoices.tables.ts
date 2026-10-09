@@ -284,6 +284,7 @@ export async function insertInvoice(
     customerId: string;
     customerName: string;
     customerPhone: string;
+    customerMentions: string;
     seller: Seller;
     issuedOn: string;
     dueOn: string | null;
@@ -301,8 +302,8 @@ export async function insertInvoice(
   await db.query(
     `insert into invoices (invoice_id, organization_id, kind, number, customer_id, customer_name,
                            customer_phone, seller, issued_on, due_on, vat_percent, net, vat, total,
-                           credits_invoice_id, reason, created_by)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+                           credits_invoice_id, reason, created_by, customer_mentions)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       invoiceId,
       organizationId,
@@ -321,6 +322,7 @@ export async function insertInvoice(
       invoice.creditsInvoiceId,
       invoice.reason,
       invoice.createdBy,
+      invoice.customerMentions,
     ],
   );
   if (lines.length > 0) {
@@ -383,6 +385,7 @@ type InvoiceRow = {
   total: number;
   credits_invoice_id: string | null;
   reason: string;
+  customer_mentions: string;
   credited_by: string | null;
   credited_by_number: string | null;
   paid: string;
@@ -392,7 +395,7 @@ type InvoiceRow = {
 const INVOICE_SELECT = `
   select i.invoice_id, i.kind, i.number, i.customer_id, i.customer_name, i.customer_phone, i.seller,
          to_char(i.issued_on, 'YYYY-MM-DD') as issued_on, to_char(i.due_on, 'YYYY-MM-DD') as due_on,
-         i.vat_percent, i.net, i.vat, i.total, i.credits_invoice_id, i.reason,
+         i.vat_percent, i.net, i.vat, i.total, i.credits_invoice_id, i.reason, i.customer_mentions,
          c.invoice_id as credited_by, c.number as credited_by_number,
          coalesce((select sum(o.paid) from invoice_orders l join orders o on o.order_id = l.order_id
                     where l.invoice_id = i.invoice_id), 0) as paid
@@ -450,6 +453,7 @@ export async function findInvoice(db: SqlExecutor, invoiceId: string): Promise<I
   return {
     ...toSummary(row),
     customerPhone: row.customer_phone,
+    customerMentions: row.customer_mentions,
     seller: row.seller,
     vatPercent: Number(row.vat_percent),
     net: row.net,

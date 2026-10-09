@@ -5,8 +5,11 @@ import { RuleError } from '@/lib/rule-error';
 export const orderStatuses = ['received', 'in_progress', 'ready', 'collected', 'cancelled'] as const;
 export type OrderStatus = (typeof orderStatuses)[number];
 
-export const paymentMethods = ['cash', 'mobile_money', 'card', 'transfer'] as const;
+export const paymentMethods = ['cash', 'mobile_money', 'card', 'transfer', 'credit'] as const;
 export type PaymentMethod = (typeof paymentMethods)[number];
+
+/** The ways money comes in; « credit » is money that already came (specs/026-accounts). */
+export const moneyMethods: PaymentMethod[] = ['cash', 'mobile_money', 'card', 'transfer'];
 
 export const paymentKinds = ['deposit', 'balance', 'refund'] as const;
 export type PaymentKind = (typeof paymentKinds)[number];

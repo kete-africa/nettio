@@ -58,7 +58,14 @@ export type AssistantEvent =
 const HISTORY = 12;
 
 /** What sets a price or a rate: never offered to the model — Nettio neither sets nor advises one. */
-const NEVER_OFFERED = new Set(['catalog_set_price', 'catalog_save_pack', 'team_set_rate']);
+const NEVER_OFFERED = new Set([
+  'catalog_set_price',
+  'catalog_save_pack',
+  'team_set_rate',
+  'accounts_set_price',
+  'subscriptions_start',
+  'unclaimed_set_rules',
+]);
 
 /**
  * What a turn is made of. The model is offered the readings the person may open herself, and the
