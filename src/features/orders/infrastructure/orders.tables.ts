@@ -1,5 +1,6 @@
 import { newId } from '@kete/records';
 import { organizationPolicySql, type SqlExecutor } from '@kete/tenancy';
+import { moveCreditForPayment } from '@/features/accounts/infrastructure/accounts.tables';
 import type { OrderStatus, PaymentKind, PaymentMethod } from '../domain/order';
 import type { Order, OrderEvent, OrderItem, OrderSummary, Payment } from '../order.record';
 
@@ -260,6 +261,15 @@ export async function insertPayment(
       payment.createdBy,
     ],
   );
+  // Paid with the customer's credit: it is taken from her account — or given back by a refund.
+  if (payment.method === 'credit') {
+    await moveCreditForPayment(db, organizationId, {
+      orderId: payment.orderId,
+      amount: payment.amount,
+      refund: payment.kind === 'refund',
+      createdBy: payment.createdBy,
+    });
+  }
   await db.query(`update orders set paid = paid + $2 where order_id = $1`, [
     payment.orderId,
     payment.kind === 'refund' ? -payment.amount : payment.amount,
@@ -586,9 +596,13 @@ export async function daySummary(
     [query.from, query.to, site, query.dormantDays],
   );
   const money = await db.query<{ cashed: string }>(
-    `select coalesce(sum(case when kind = 'refund' then -amount else amount end), 0) as cashed
+    `select coalesce(sum(case when kind = 'refund' then -amount else amount end), 0)
+            + coalesce((select sum(e.cashed) from credit_entries e
+                         where e.kind = 'top_up' and e.created_at >= $1 and e.created_at < $2
+                           and $3::text is null), 0) as cashed
        from payments
-      where created_at >= $1 and created_at < $2 and ($3::text is null or site_id = $3)`,
+      where created_at >= $1 and created_at < $2 and ($3::text is null or site_id = $3)
+        and method <> 'credit'`,
     [query.from, query.to, site],
   );
   const row = orders.rows[0];

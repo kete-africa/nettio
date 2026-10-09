@@ -80,6 +80,11 @@ const sentences: Record<string, () => string> = {
   code_wrong: m.error_code_wrong,
   code_locked: m.error_code_locked,
   quick_switch_off: m.error_quick_switch_off,
+  credit_below_cashed: m.error_credit_below_cashed,
+  credit_insufficient: m.error_credit_insufficient,
+  subscription_not_running: m.error_subscription_not_running,
+  subscription_already_cashed: m.error_subscription_already_cashed,
+  quote_expired: m.error_quote_expired,
 };
 
 /** The sentence a screen shows for a gesture that did not go through. */

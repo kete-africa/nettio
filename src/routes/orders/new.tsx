@@ -9,10 +9,13 @@ import {
 } from '@kete/design';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { withCustomerPrices, type PriceLine } from '@/features/accounts/domain/accounts';
+import { fetchCounterAccount } from '@/features/accounts/functions';
 import { packAdmits, priceOf } from '@/features/catalog/domain/catalog';
 import type { Customer } from '@/features/customers';
 import { lookupCustomer } from '@/features/customers/functions';
 import type { PaymentMethod } from '@/features/orders';
+import { moneyMethods } from '@/features/orders/domain/order';
 import { priceOrder, type PricedLine } from '@/features/orders/domain/pricing';
 import { checkCost, fetchCounter, receiveOrder, understand } from '@/features/orders/functions';
 import { gestureKey, MoneyFields, wholeAmount } from '@/features/orders/ui/MoneyFields';
@@ -38,6 +41,8 @@ function NewOrderPage() {
   const [phone, setPhone] = useState('');
   const [found, setFound] = useState<{ phone: string; customer: Customer | null } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  /** Her own prices and her prepaid credit (specs/026-accounts). */
+  const [account, setAccount] = useState<{ prices: PriceLine[]; credit: number } | null>(null);
   const [name, setName] = useState('');
   const sold = useMemo(
     () =>
@@ -101,6 +106,21 @@ function NewOrderPage() {
     };
   }, [phone]);
 
+  const knownId = found?.customer?.customerId;
+  useEffect(() => {
+    setAccount(null);
+    if (!knownId) return;
+    let stale = false;
+    fetchCounterAccount({ data: { customerId: knownId } })
+      .then((read) => {
+        if (!stale) setAccount(read);
+      })
+      .catch(() => undefined);
+    return () => {
+      stale = true;
+    };
+  }, [knownId]);
+
   if (!counter) return <EmptyState title={m.error_not_allowed()} />;
   if (counter.sites.length === 0) return <EmptyState title={m.counter_no_site()} />;
   if (sold.length === 0) {
@@ -108,12 +128,14 @@ function NewOrderPage() {
   }
 
   const { catalog, settings } = counter;
+  // What this customer pays: her own prices where the laundry agreed some.
+  const prices = withCustomerPrices(catalog.prices, account?.prices ?? []);
   const service = sold.find((s) => s.serviceId === serviceId) ?? sold[0];
   const entries = Object.entries(quantities).filter(([, quantity]) => quantity > 0);
   const lines = entries.flatMap(([id, quantity]) => {
     const [lineService = '', lineArticle = ''] = id.split('|');
     const of = catalog.services.find((s) => s.serviceId === lineService);
-    const unitPrice = priceOf(catalog.prices, lineService, lineArticle || null);
+    const unitPrice = priceOf(prices, lineService, lineArticle || null);
     if (!of || unitPrice === undefined) return [];
     const article = catalog.articles.find((a) => a.articleId === lineArticle);
     return [
@@ -390,6 +412,16 @@ function NewOrderPage() {
                 {...(phoneError ? { error: phoneError } : {})}
                 onChange={(event) => setPhone(event.target.value)}
               />
+              {account && (account.prices.length > 0 || account.credit > 0) && (
+                <Note>
+                  {[
+                    account.prices.length > 0 ? m.counter_own_prices({ count: account.prices.length }) : '',
+                    account.credit > 0 ? m.counter_credit({ amount: formatMoney(account.credit) }) : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                </Note>
+              )}
               {found?.customer && (
                 <p className="rounded-control bg-surface-selected px-3 py-2">
                   <span className="font-semibold">{found.customer.name}</span>
@@ -532,7 +564,7 @@ function NewOrderPage() {
                 className="mt-4 max-w-60"
                 label={m.counter_kilos()}
                 hint={m.counter_kilo_price({
-                  price: formatMoney(priceOf(catalog.prices, service.serviceId, null) ?? 0),
+                  price: formatMoney(priceOf(prices, service.serviceId, null) ?? 0),
                 })}
                 type="number"
                 inputMode="decimal"
@@ -550,7 +582,7 @@ function NewOrderPage() {
               <ul className="mt-4 grid grid-cols-2 gap-3 min-[761px]:grid-cols-3 min-[1300px]:grid-cols-4">
                 {catalog.articles
                   .filter((article) =>
-                    service ? priceOf(catalog.prices, service.serviceId, article.articleId) !== undefined : false,
+                    service ? priceOf(prices, service.serviceId, article.articleId) !== undefined : false,
                   )
                   .map((article) => {
                     const id = `${service?.serviceId}|${article.articleId}`;
@@ -565,7 +597,7 @@ function NewOrderPage() {
                       >
                         <span className="truncate font-semibold">{article.name}</span>
                         <span className="font-number text-body-sm text-fg-muted">
-                          {formatMoney(priceOf(catalog.prices, service?.serviceId ?? '', article.articleId) ?? 0)}
+                          {formatMoney(priceOf(prices, service?.serviceId ?? '', article.articleId) ?? 0)}
                         </span>
                         <span className="flex items-center justify-between gap-2">
                           <button
@@ -778,6 +810,7 @@ function NewOrderPage() {
                     amount={amount}
                     method={method}
                     hint={m.counter_pay_hint({ total: formatMoney(price.total) })}
+                    methods={account && account.credit > 0 ? [...moneyMethods, 'credit'] : moneyMethods}
                     onAmount={setAmount}
                     onMethod={setMethod}
                   />

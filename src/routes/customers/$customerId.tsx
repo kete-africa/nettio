@@ -12,6 +12,8 @@ import {
 } from '@kete/design';
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
+import { AccountPanel } from '@/features/accounts/ui/AccountPanel';
+import { fetchCatalog } from '@/features/catalog/functions';
 import type { Customer, CustomerChannel } from '@/features/customers';
 import { customerChannels } from '@/features/customers/customer.record';
 import { formatPhone } from '@/features/customers/domain/phone';
@@ -30,6 +32,7 @@ export const Route = createFileRoute('/_app/clients/$customerId')({
   loader: async ({ params }) => ({
     customer: await fetchCustomer({ data: { customerId: params.customerId } }),
     orders: await fetchOrders({ data: { stage: 'all', customerId: params.customerId } }),
+    catalog: await fetchCatalog(),
   }),
   component: CustomerPage,
 });
@@ -43,7 +46,7 @@ const channelWords: Record<CustomerChannel, () => string> = {
 
 function CustomerPage() {
   const { me } = Route.useRouteContext();
-  const { customer, orders } = Route.useLoaderData();
+  const { customer, orders, catalog } = Route.useLoaderData();
   const router = useRouter();
   const navigate = useNavigate();
   const [draft, setDraft] = useState<Customer | null>(null);
@@ -133,6 +136,17 @@ function CustomerPage() {
       </PageSection>
       {can(me, 'invoices:read') && (
         <CustomerAccount customerId={customer.customerId} mayIssue={can(me, 'invoices:issue')} />
+      )}
+      {can(me, 'accounts:read') && (
+        <AccountPanel
+          customerId={customer.customerId}
+          catalog={catalog}
+          may={{
+            manage: can(me, 'accounts:manage'),
+            topUp: can(me, 'credit:top_up'),
+            quote: can(me, 'quotes:write'),
+          }}
+        />
       )}
 
       <Drawer

@@ -1,4 +1,6 @@
 import { defineCommand, type Actor } from '@kete/commands';
+import { withCustomerPrices } from '@/features/accounts/domain/accounts';
+import { customerPrices } from '@/features/accounts/infrastructure/accounts.tables';
 import type { SqlExecutor } from '@kete/tenancy';
 import { findStaffOf, listSites, plantOf, readSettings, receives } from '@/features/business';
 import { priceOf, readCatalog } from '@/features/catalog';
@@ -109,13 +111,15 @@ export const receiveOrder = defineCommand({
     if (!customer) throw new RuleError('customer_needed');
 
     const catalog = await readCatalog(db);
+    // Her own prices where the laundry agreed some (specs/026-accounts); the catalogue's elsewhere.
+    const prices = withCustomerPrices(catalog.prices, await customerPrices(db, customer.customerId));
     const items = input.lines.map((line) => {
       const service = catalog.services.find((s) => s.serviceId === line.serviceId && s.active);
       if (!service) throw new RuleError('not_found');
       const articleId = service.pricing === 'per_kg' ? null : line.articleId;
       const article = catalog.articles.find((a) => a.articleId === articleId && a.active);
       if (service.pricing === 'per_piece' && !article) throw new RuleError('not_found');
-      const unitPrice = priceOf(catalog.prices, service.serviceId, articleId);
+      const unitPrice = priceOf(prices, service.serviceId, articleId);
       if (unitPrice === undefined) {
         throw new RuleError('not_sold', {
           name: article ? `${article.name} · ${service.name}` : service.name,

@@ -13,9 +13,11 @@ import {
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
+import { fetchCounterAccount } from '@/features/accounts/functions';
 import { InvoiceLink } from '@/features/invoices/ui/InvoiceLink';
 import { OrderAsk } from '@/features/manager/ui/OrderAsk';
 import type { PaymentMethod } from '@/features/orders';
+import { moneyMethods } from '@/features/orders/domain/order';
 import {
   cancelOrder,
   collectOrder,
@@ -39,10 +41,15 @@ import * as m from '@/paraglide/messages.js';
 // A deposit in full: its real content, its money, its history — and the gestures the person may
 // do with it, each one named.
 export const Route = createFileRoute('/_app/depots/$orderId')({
-  loader: async ({ params }) => ({
-    order: await fetchOrder({ data: { orderId: params.orderId } }),
-    work: await fetchWork({ data: { orderId: params.orderId } }),
-  }),
+  loader: async ({ params }) => {
+    const [order, work] = await Promise.all([
+      fetchOrder({ data: { orderId: params.orderId } }),
+      fetchWork({ data: { orderId: params.orderId } }),
+    ]);
+    // Her prepaid credit, when she has some: one more way to pay (specs/026-accounts).
+    const credit = order ? (await fetchCounterAccount({ data: { customerId: order.customerId } })).credit : 0;
+    return { order, work, credit };
+  },
   component: OrderPage,
 });
 
@@ -50,7 +57,7 @@ type Gesture = 'pay' | 'ready' | 'store' | 'collect' | 'refund' | 'cancel';
 
 function OrderPage() {
   const { me } = Route.useRouteContext();
-  const { order, work } = Route.useLoaderData();
+  const { order, work, credit } = Route.useLoaderData();
   const router = useRouter();
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [amount, setAmount] = useState('');
@@ -373,9 +380,13 @@ function OrderPage() {
                   ? m.order_refund_hint({ amount: formatMoney(order.paid) })
                   : m.order_balance_of({ amount: formatMoney(balance) })
               }
+              methods={credit > 0 || gesture === 'refund' ? [...moneyMethods, 'credit'] : moneyMethods}
               onAmount={setAmount}
               onMethod={setMethod}
             />
+          )}
+          {credit > 0 && (gesture === 'pay' || (gesture === 'collect' && balance > 0)) && (
+            <p className="text-body-sm text-fg-muted">{m.counter_credit({ amount: formatMoney(credit) })}</p>
           )}
           {gesture === 'collect' && balance === 0 && <p>{m.order_collect_paid()}</p>}
           {gesture === 'collect' && balance > 0 && can(me, 'orders:release_unpaid') && (
