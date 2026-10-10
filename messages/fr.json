@@ -1640,5 +1640,13 @@
   "pending_kept": "Pas de réseau : ce dépôt est gardé sur cet appareil. Il partira tout seul dès que la connexion revient, et recevra alors son numéro.",
   "pending_customer_hint": "Pas de réseau : tapez le nom. Si ce client est déjà connu, Nettio le retrouvera à l’envoi.",
   "pending_drop": "Abandonner ce dépôt",
-  "pending_drop_confirm": "Le dépôt de {customer} gardé sur cet appareil sera effacé sans être envoyé. Ressaisissez-le si le linge est bien là."
+  "pending_drop_confirm": "Le dépôt de {customer} gardé sur cet appareil sera effacé sans être envoyé. Ressaisissez-le si le linge est bien là.",
+  "statement_account_title": "Relevé de compte",
+  "statement_account_link": "Relevé de compte à imprimer",
+  "statement_account_empty": "Aucune facture ni dépôt en cours pour ce client.",
+  "statement_deposit": "Dépôt {number}",
+  "statement_not_invoiced": "Pas encore facturé",
+  "statement_nothing_due": "rien de dû",
+  "statement_credit_held": "Crédit prépayé disponible",
+  "statement_account_how": "Ce relevé réunit les factures et les dépôts non encore facturés. Une facture annulée par un avoir ne réclame plus rien. Le crédit prépayé n’est pas déduit : il se dépense au comptoir."
 }

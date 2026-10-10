@@ -66,6 +66,11 @@ export function CustomerAccount({ customerId, mayIssue }: { customerId: string; 
 
   return (
     <PageSection title={m.account_title()}>
+      <p className="mb-2">
+        <a className="font-semibold text-fg-link underline" href={`/clients/${customerId}/releve`}>
+          {m.statement_account_link()}
+        </a>
+      </p>
       <p className="mb-4">
         <span className="text-fg-muted">{m.account_due()}</span>{' '}
         <span className="font-number text-title font-semibold">{formatMoney(account.due)}</span>

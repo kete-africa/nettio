@@ -124,4 +124,14 @@ test('a company is invoiced once for its month', async ({ page, context }) => {
   await expect(page.getByText(`F-${year}-0001 · Hôtel Sarakawa SA`)).toBeVisible();
   await shot(page, '48-month-run');
   expect(await sideways(page)).toBe(0);
+
+  // Its statement of account: every invoice, what is still owed, the credit it holds.
+  await toTheHotel(page);
+  await page.getByRole('link', { name: 'Relevé de compte à imprimer' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Relevé de compte');
+  await expect(page.getByText(`Facture F-${year}-0001`)).toBeVisible();
+  await expect(page.getByText('Ce client doit en tout')).toBeVisible();
+  await expect(page.getByText('Crédit prépayé disponible')).toBeVisible();
+  await shot(page, '60-account-statement');
+  expect(await sideways(page)).toBe(0);
 });

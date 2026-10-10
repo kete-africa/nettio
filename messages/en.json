@@ -1640,5 +1640,13 @@
   "pending_kept": "No network: this deposit is kept on this device. It will leave by itself once the connection returns, and will then get its number.",
   "pending_customer_hint": "No network: type the name. If this customer is already known, Nettio will find her when it is sent.",
   "pending_drop": "Give this deposit up",
-  "pending_drop_confirm": "The deposit of {customer} kept on this device will be erased without being sent. Enter it again if the laundry is really there."
+  "pending_drop_confirm": "The deposit of {customer} kept on this device will be erased without being sent. Enter it again if the laundry is really there.",
+  "statement_account_title": "Statement of account",
+  "statement_account_link": "Printable statement of account",
+  "statement_account_empty": "No invoice nor deposit under way for this customer.",
+  "statement_deposit": "Deposit {number}",
+  "statement_not_invoiced": "Not invoiced yet",
+  "statement_nothing_due": "nothing owed",
+  "statement_credit_held": "Prepaid credit available",
+  "statement_account_how": "This statement gathers the invoices and the deposits not invoiced yet. An invoice cancelled by a credit note claims nothing any more. Prepaid credit is not deducted: it is spent at the counter."
 }
