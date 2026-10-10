@@ -25,6 +25,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/pressing/schema', 'business/diagram.tsx'),
     route('/pressing/catalogue', 'business/catalog.tsx'),
     route('/pressing/points', 'business/sites.tsx'),
+    route('/pressing/reseau', 'business/network.tsx'),
     route('/pressing/equipe', 'business/team.tsx'),
     route('/pressing/travail', 'business/work.tsx'),
     route('/pressing/gerant', 'business/manager.tsx'),
@@ -41,6 +42,7 @@ export const routes = rootRoute('__root.tsx', [
   route('/devis/$quoteId', 'quotes/$quoteId.tsx'),
   // A slip too: the courier carries it, the customer signs it.
   route('/livraisons/$deliveryId', 'delivery/slip.tsx'),
+  route('/transferts/$transferId', 'business/transfer-slip.tsx'),
   route('/auth/connexion', 'auth/sign-in.ts'),
   route('/auth/callback', 'auth/callback.ts'),
   route('/auth/sortie', 'auth/sign-out.ts'),

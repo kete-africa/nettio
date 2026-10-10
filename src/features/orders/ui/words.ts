@@ -52,4 +52,7 @@ export const eventWords: Record<string, () => string> = {
   released: m.order_event_released,
   delivery_fee: m.order_event_delivery_fee,
   delivery_cancelled: m.order_event_delivery_cancelled,
+  transfer_sent: m.order_event_transfer_sent,
+  transfer_received: m.order_event_transfer_received,
+  transfer_missing: m.order_event_transfer_missing,
 };
