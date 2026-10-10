@@ -131,6 +131,8 @@ export interface Order extends OrderSummary {
   expressAmount: number;
   /** The storage fees charged since it sleeps at the laundry (specs/025-manager). */
   storageAmount: number;
+  /** The fees of the deliveries planned for it (specs/027-delivery). */
+  deliveryAmount: number;
   discount: number;
   discountReason: string;
   note: string;

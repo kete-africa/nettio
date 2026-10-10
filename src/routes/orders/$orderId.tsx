@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
 import { fetchCounterAccount } from '@/features/accounts/functions';
 import { InvoiceLink } from '@/features/invoices/ui/InvoiceLink';
+import { OrderDelivery } from '@/features/delivery/ui/OrderDelivery';
 import { OrderAsk } from '@/features/manager/ui/OrderAsk';
 import type { PaymentMethod } from '@/features/orders';
 import { moneyMethods } from '@/features/orders/domain/order';
@@ -266,6 +267,7 @@ function OrderPage() {
           {order.supplement > 0 && <Money label={m.counter_supplement()} value={formatMoney(order.supplement)} />}
           {order.expressAmount > 0 && <Money label={m.counter_express()} value={formatMoney(order.expressAmount)} />}
           {order.storageAmount > 0 && <Money label={m.invoice_line_storage()} value={formatMoney(order.storageAmount)} />}
+          {order.deliveryAmount > 0 && <Money label={m.invoice_line_delivery()} value={formatMoney(order.deliveryAmount)} />}
           {order.discount > 0 && (
             <Money
               label={`${m.counter_discount()} — ${order.discountReason}`}
@@ -323,6 +325,10 @@ function OrderPage() {
           )}
         </div>
       </PageSection>
+
+      {can(me, 'delivery:read') && order.status !== 'cancelled' && (
+        <OrderDelivery orderId={order.orderId} open={open || order.status === 'ready'} mayPlan={can(me, 'delivery:plan')} />
+      )}
 
       <OrderAsk
         orderId={order.orderId}

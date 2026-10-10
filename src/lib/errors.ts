@@ -85,6 +85,14 @@ const sentences: Record<string, () => string> = {
   subscription_not_running: m.error_subscription_not_running,
   subscription_already_cashed: m.error_subscription_already_cashed,
   quote_expired: m.error_quote_expired,
+  balance_due: m.error_balance_due_plain,
+  address_needed: m.error_address_needed,
+  zone_name_taken: m.error_zone_name_taken,
+  delivery_already_planned: m.error_delivery_already_planned,
+  delivery_not_planned: m.error_delivery_not_planned,
+  delivery_closed: m.error_delivery_closed,
+  delivery_not_yours: m.error_delivery_not_yours,
+  recipient_needed: m.error_recipient_needed,
 };
 
 /** The sentence a screen shows for a gesture that did not go through. */

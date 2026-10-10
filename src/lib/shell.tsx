@@ -57,7 +57,10 @@ const sections: Section[] = [
   },
   {
     label: m.nav_section_workshop,
-    entries: [{ to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' }],
+    entries: [
+      { to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' },
+      { to: '/livraisons', icon: 'send', label: m.nav_delivery, permission: 'delivery:read' },
+    ],
   },
   {
     label: m.nav_section_money,
@@ -109,6 +112,7 @@ const tabs: Entry[] = [
     primary: true,
   },
   { to: '/atelier', icon: 'tool', label: m.nav_workshop, permission: 'workshop:operate' },
+  { to: '/livraisons', icon: 'send', label: m.nav_delivery_short, permission: 'delivery:run' },
   { to: '/argent/caisse', icon: 'columns', label: m.nav_till, permission: 'cash:operate' },
   { to: '/argent/resultat', icon: 'chart', label: m.nav_result, permission: 'money:read' },
 ];

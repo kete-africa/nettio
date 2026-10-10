@@ -65,6 +65,7 @@ const NEVER_OFFERED = new Set([
   'accounts_set_price',
   'subscriptions_start',
   'unclaimed_set_rules',
+  'delivery_set_zone',
 ]);
 
 /**

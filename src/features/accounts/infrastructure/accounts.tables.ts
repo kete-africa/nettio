@@ -184,6 +184,16 @@ export async function saveTerms(
   );
 }
 
+/** Whether a deposit's customer is invoiced once a month: her deposits leave unpaid. */
+export async function invoicedMonthly(db: SqlExecutor, orderId: string): Promise<boolean> {
+  const { rows } = await db.query<{ monthly_invoice: boolean }>(
+    `select t.monthly_invoice from orders o join customer_terms t on t.customer_id = o.customer_id
+      where o.order_id = $1`,
+    [orderId],
+  );
+  return rows[0]?.monthly_invoice ?? false;
+}
+
 /** The customers invoiced once a month. */
 export async function monthlyCustomers(db: SqlExecutor): Promise<{ customerId: string; name: string }[]> {
   const { rows } = await db.query<{ customer_id: string; name: string }>(

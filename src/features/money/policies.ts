@@ -12,7 +12,7 @@ export const moneyPermissions: BusinessPermission[] = [
     label: words(m.perm_cash_operate),
     description: words(m.perm_cash_operate_body),
     roles: ['owner', 'admin'],
-    staff: ['owner', 'manager', 'cashier'],
+    staff: ['owner', 'manager', 'cashier', 'courier'],
   },
   {
     name: 'expenses:read',

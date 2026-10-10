@@ -16,6 +16,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/clients', 'customers/index.tsx'),
     route('/clients/$customerId', 'customers/$customerId.tsx'),
     route('/atelier', 'workshop/queue.tsx'),
+    route('/livraisons', 'delivery/board.tsx'),
     route('/demander', 'assistant/ask.tsx'),
     route('/argent/caisse', 'money/till.tsx'),
     route('/argent/depenses', 'money/expenses.tsx'),
@@ -38,6 +39,8 @@ export const routes = rootRoute('__root.tsx', [
   // An invoice too: only the document goes to the printer.
   route('/factures/$invoiceId', 'invoices/$invoiceId.tsx'),
   route('/devis/$quoteId', 'quotes/$quoteId.tsx'),
+  // A slip too: the courier carries it, the customer signs it.
+  route('/livraisons/$deliveryId', 'delivery/slip.tsx'),
   route('/auth/connexion', 'auth/sign-in.ts'),
   route('/auth/callback', 'auth/callback.ts'),
   route('/auth/sortie', 'auth/sign-out.ts'),
