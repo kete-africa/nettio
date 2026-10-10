@@ -15,6 +15,7 @@ import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
 import { networkMigrationSql } from '@/features/network';
 import { ordersMigrationSql } from '@/features/orders';
+import { stockMigrationSql } from '@/features/stock';
 import { presenceMigrationSql, teamMigrationSql } from '@/features/team';
 import { workshopMigrationSql } from '@/features/workshop';
 
@@ -111,4 +112,7 @@ export const migrations: Migration[] = [
   { name: '0019_delivery', sql: (context) => deliveryMigrationSql(context) },
   // Several sites (specs/028-sites): transfers and their slips, partner points, the spreading rule.
   { name: '0020_network', sql: (context) => networkMigrationSql(context) },
+  // Stock and purchasing (specs/029-stock): consumables and their movements, suppliers, purchase
+  // orders, what the laundry paid them.
+  { name: '0021_stock', sql: (context) => stockMigrationSql(context) },
 ];

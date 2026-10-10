@@ -26,6 +26,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/pressing/catalogue', 'business/catalog.tsx'),
     route('/pressing/points', 'business/sites.tsx'),
     route('/pressing/reseau', 'business/network.tsx'),
+    route('/pressing/stock', 'business/stock.tsx'),
     route('/pressing/equipe', 'business/team.tsx'),
     route('/pressing/travail', 'business/work.tsx'),
     route('/pressing/gerant', 'business/manager.tsx'),

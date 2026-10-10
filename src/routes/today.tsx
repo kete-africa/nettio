@@ -16,6 +16,7 @@ import { alertWords } from '@/features/assistant/ui/words';
 import { fetchCatalog } from '@/features/catalog/functions';
 import { fetchManager } from '@/features/manager/functions';
 import { fetchSessions } from '@/features/money/functions';
+import { fetchStockAlerts } from '@/features/stock/functions';
 import { fetchOrders, fetchToday } from '@/features/orders/functions';
 import { CounterSearch } from '@/features/orders/ui/CounterSearch';
 import { statusTones, statusWords } from '@/features/orders/ui/words';
@@ -31,7 +32,7 @@ import * as m from '@/paraglide/messages.js';
 export const Route = createFileRoute('/_app/aujourdhui')({
   // Read together: a day is many small questions, none waits for another.
   loader: async () => {
-    const [catalog, today, statement, alerts, presence, ready, queue, sessions, manager] = await Promise.all([
+    const [catalog, today, statement, alerts, presence, ready, queue, sessions, manager, shortages] = await Promise.all([
       fetchCatalog(),
       fetchToday(),
       // The day's statement, for whoever reads the money (specs/007-intelligence).
@@ -44,15 +45,16 @@ export const Route = createFileRoute('/_app/aujourdhui')({
       fetchQueue(),
       fetchSessions(),
       fetchManager(),
+      fetchStockAlerts(),
     ]);
-    return { catalog, today, statement, alerts, presence, ready, queue, sessions, manager };
+    return { catalog, today, statement, alerts, presence, ready, queue, sessions, manager, shortages };
   },
   component: TodayPage,
 });
 
 function TodayPage() {
   const { me } = Route.useRouteContext();
-  const { catalog, today, statement, ready, alerts, presence, queue, sessions, manager } = Route.useLoaderData();
+  const { catalog, today, statement, ready, alerts, presence, queue, sessions, manager, shortages } = Route.useLoaderData();
   const navigate = useNavigate();
   if (!me.role && me.permissions.length === 0) {
     return <EmptyState title={m.today_no_role_title()}>{m.today_no_role_body()}</EmptyState>;
@@ -82,6 +84,16 @@ function TodayPage() {
     ...alerts.map(alertWords),
     // What waits for a manager (specs/025-manager).
     ...managerToDo(manager),
+    // What to order before the work stops (specs/029-stock).
+    ...(shortages.length > 0
+      ? [
+          {
+            href: '/pressing/stock',
+            title: m.today_shortages({ count: shortages.length }),
+            meta: shortages.map((item) => item.name).join(' · '),
+          },
+        ]
+      : []),
   ];
   const myTill = sessions?.find((session) => session.cashierId === me.userId && !session.closedAt);
   // Her own post: what her role does first.
