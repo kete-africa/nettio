@@ -116,6 +116,10 @@ partner drop-off points.
 Consumables, suppliers, purchase orders, receptions, inventories, consumption against the cost
 sheets, shortage alerts.
 
+| Spec | What |
+|---|---|
+| `029-stock` | Consumables with their thresholds and their movements; suppliers, purchase orders and their reception, what is owed and paid (an expense); inventories; consumption against the cost sheets; shortages on the day |
+
 **Proof**: one month without a shortage of detergent or hangers.
 
 ## Phase 10 — Selling Nettio alone
@@ -143,6 +147,7 @@ accounting, Europe (VAT, certified till, card).
 | 6 — the team | yes (`015-team-pay`, `024-presence`, `025-manager`) — approvals by message run on recorded exchanges: no channel is connected yet | no |
 | 7 — customers, companies and delivery | yes (`018`, `019`, `026-accounts`, `027-delivery`) — the proof of a delivery is a name and a time; no channel is connected yet | no |
 | 8 — several sites | yes (`028-sites`) — the workshop's queue does not wait for a slip's reception | no |
-| 9 to 10 | planned | no |
+| 9 — stock and purchasing | yes (`029-stock`) — a withdrawal is typed by a person | no |
+| 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.
