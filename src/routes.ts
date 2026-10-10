@@ -27,6 +27,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/pressing/points', 'business/sites.tsx'),
     route('/pressing/reseau', 'business/network.tsx'),
     route('/pressing/stock', 'business/stock.tsx'),
+    route('/pressing/appareil', 'business/device.tsx'),
     route('/pressing/equipe', 'business/team.tsx'),
     route('/pressing/travail', 'business/work.tsx'),
     route('/pressing/gerant', 'business/manager.tsx'),
@@ -39,6 +40,8 @@ export const routes = rootRoute('__root.tsx', [
   ]),
   // The receipt stands outside the frame: only the ticket goes to the printer.
   route('/depots/$orderId/recu', 'orders/receipt.tsx'),
+  // Its labels too: one per page of the label printer.
+  route('/depots/$orderId/etiquettes', 'orders/labels.tsx'),
   // An invoice too: only the document goes to the printer.
   route('/factures/$invoiceId', 'invoices/$invoiceId.tsx'),
   route('/devis/$quoteId', 'quotes/$quoteId.tsx'),

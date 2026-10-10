@@ -130,6 +130,7 @@ The landing page, sign-up and subscription through the Compte Kete, offline coun
 | Spec | What |
 |---|---|
 | `030-standalone` | The front door read without signing in; legal notice, privacy and terms; help by role; the organization's access as the Compte Kete says it; the laundry's data exported whole by its owner |
+| `031-device` | A counter that keeps a deposit while the network is away and sends it once; the ticket at the printer's width; labels with the deposit's number as a bar code; a scanner that opens a deposit; a scale read on a serial port |
 
 **Proof**: a launderer nobody accompanied subscribes and records his first deposit the same day.
 
@@ -152,6 +153,6 @@ accounting, Europe (VAT, certified till, card).
 | 7 — customers, companies and delivery | yes (`018`, `019`, `026-accounts`, `027-delivery`) — the proof of a delivery is a name and a time; no channel is connected yet | no |
 | 8 — several sites | yes (`028-sites`) — the workshop's queue does not wait for a slip's reception | no |
 | 9 — stock and purchasing | yes (`029-stock`) — a withdrawal is typed by a person | no |
-| 10 — selling Nettio alone | in part (`030-standalone`): the front door, the legal pages (to be completed and reviewed), help by role, the export. Not built yet: the offline counter, hardware | no |
+| 10 — selling Nettio alone | yes (`030-standalone`, `031-device`) — the legal pages wait for the publisher's facts and a lawyer; sign-up and subscription happen at the Compte Kete and were not exercised end to end; no hardware was plugged in; offline is « the page is open » | no |
 
 This table is updated by the pull request that closes each spec.

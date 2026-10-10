@@ -55,6 +55,17 @@ export function CounterSearch() {
           placeholder={m.search_placeholder()}
           value={text}
           onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') return;
+            const asked = text.trim();
+            if (asked.length < 2) return;
+            // A label's bar code is the deposit's number: read by a scanner, it opens at once.
+            void fetchOrders({ data: { stage: 'all', text: asked } }).then((orders) => {
+              const exact = (orders ?? []).filter((order) => order.number.toUpperCase() === asked.toUpperCase());
+              const [only] = exact.length === 1 ? exact : (orders ?? []).length === 1 ? (orders ?? []) : [];
+              if (only) void navigate({ to: '/depots/$orderId', params: { orderId: only.orderId } });
+            });
+          }}
           className="h-11 w-full border-0 bg-transparent text-body text-fg outline-0 placeholder:text-fg-muted"
         />
       </label>

@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate, type LinkProps } from '@tanstack/react-
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Me } from '@/features/business/functions';
 import { AssistantLauncher, AssistantProvider, HeldPermissions } from '@/features/assistant/ui/Assistant';
+import { PendingDeposits } from '@/features/device/ui/PendingDeposits';
 import { PersonSwitch } from '@/features/manager/ui/PersonSwitch';
 import * as m from '@/paraglide/messages.js';
 import { can } from './signed-in';
@@ -98,6 +99,7 @@ const sections: Section[] = [
         permission: 'settings:manage',
       },
       { to: '/journal', icon: 'clock', label: m.nav_journal, permission: 'journal:read' },
+      { to: '/pressing/appareil', icon: 'tool', label: m.nav_device },
       { to: '/aide', icon: 'library', label: m.nav_help },
     ],
   },
@@ -237,6 +239,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           {m.access_ended_banner()}
         </p>
       )}
+      {me.business && <PendingDeposits />}
       {children}
     </Shell>
     </AssistantProvider>
