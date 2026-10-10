@@ -44,6 +44,8 @@ export const routes = rootRoute('__root.tsx', [
   route('/depots/$orderId/etiquettes', 'orders/labels.tsx'),
   // An invoice too: only the document goes to the printer.
   route('/factures/$invoiceId', 'invoices/$invoiceId.tsx'),
+  // A customer's statement of account: a document, like an invoice.
+  route('/clients/$customerId/releve', 'customers/statement.tsx'),
   route('/devis/$quoteId', 'quotes/$quoteId.tsx'),
   // A slip too: the courier carries it, the customer signs it.
   route('/livraisons/$deliveryId', 'delivery/slip.tsx'),

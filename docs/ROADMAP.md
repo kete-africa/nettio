@@ -97,6 +97,7 @@ monthly invoices and statements; the courier's round, proof of delivery, fees an
 | `019-invoices` | Invoices and credit notes numbered without a gap, on demand or for several deposits of a customer; cashing; the customer's account; mentions and VAT |
 | `026-accounts` | A price agreed with a customer; credit paid ahead and spent at the counter; subscriptions that recharge it; quotes; a company's mentions, its own delay and its month invoiced in one gesture |
 | `027-delivery` | Zones and their fees; a delivery planned from a deposit, a collection at a customer's; the courier's round, the hand-over with its proof and its money in her own till; the slip |
+| `032-account-statement` | A customer's statement of account, printable: invoices, deposits not invoiced, what is owed, the credit held |
 
 **Proof**: one company customer is invoiced a month without re-entry.
 

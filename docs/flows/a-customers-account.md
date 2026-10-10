@@ -41,3 +41,15 @@ sequenceDiagram
 
 A quote follows the same care as an invoice: numbered by year (`D-2026-0001`), its lines written
 at the prices of the day, never rewritten.
+
+## Her statement of account
+
+```mermaid
+flowchart LR
+  I[(invoices<br/>and their credit notes)] --> S[« Relevé de compte »<br/>a document, like an invoice]
+  U[(deposits on no invoice)] --> S
+  C[(prepaid credit)] --> S
+  S --> D[What is owed in all — the figure of her page,<br/>computed once]
+```
+
+An invoice a credit note cancelled claims nothing. Prepaid credit is shown, not deducted.
