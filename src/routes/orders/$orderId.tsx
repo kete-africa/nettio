@@ -186,6 +186,13 @@ function OrderPage() {
             >
               {m.action_receipt()}
             </Link>
+            <Link
+              to="/depots/$orderId/etiquettes"
+              params={{ orderId: order.orderId }}
+              className="inline-flex h-(--control-height) items-center rounded-control border border-line-control bg-surface-control px-(--control-padding) font-semibold text-fg hover:bg-surface-hover"
+            >
+              {m.action_labels()}
+            </Link>
             {order.status !== 'cancelled' && (
               <InvoiceLink orderId={order.orderId} mayIssue={can(me, 'invoices:issue')} onError={setError} />
             )}

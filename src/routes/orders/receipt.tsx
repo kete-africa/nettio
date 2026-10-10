@@ -2,6 +2,7 @@ import { Button, EmptyState } from '@kete/design';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { formatPhone } from '@/features/customers/domain/phone';
+import { paperCss, useDevice } from '@/features/device/ui/device';
 import { fetchTelegramLink } from '@/features/messaging/functions';
 import { fetchOrder } from '@/features/orders/functions';
 import { receiptMessage } from '@/features/orders/ui/receipt';
@@ -33,13 +34,15 @@ function ReceiptPage() {
   const { me } = Route.useRouteContext();
   const { order, telegramLink } = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
+  const device = useDevice();
   if (!order) return <EmptyState title={m.error_not_found()} />;
   const businessName = me.business?.businessName ?? m.app_name();
   const message = receiptMessage(order, businessName);
   const digits = order.customerPhone.replace(/\D/g, '');
   const balance = order.total - order.paid;
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[360px] flex-col gap-5 bg-canvas px-4 py-6 font-ui text-body text-fg">
+    <main className="mx-auto flex min-h-dvh max-w-[360px] flex-col gap-5 bg-canvas px-4 py-6 font-ui text-body text-fg print:max-w-none print:p-0">
+      {device.paper !== 'a4' && <style>{paperCss(device.paper)}</style>}
       <article className="rounded-box border border-line bg-surface p-5 print:border-0 print:p-0">
         <header className="mb-4 text-center">
           <p className="font-heading text-title font-semibold">{businessName}</p>

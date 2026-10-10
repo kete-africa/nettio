@@ -14,6 +14,8 @@ import { fetchCounterAccount } from '@/features/accounts/functions';
 import { packAdmits, priceOf } from '@/features/catalog/domain/catalog';
 import type { Customer } from '@/features/customers';
 import { lookupCustomer } from '@/features/customers/functions';
+import { isNetworkFailure, withPending } from '@/features/device/domain/pending';
+import { readDevice, readPending, readScale, savePending, scaleIsSupported } from '@/features/device/ui/device';
 import type { PaymentMethod } from '@/features/orders';
 import { moneyMethods } from '@/features/orders/domain/order';
 import { priceOrder, type PricedLine } from '@/features/orders/domain/pricing';
@@ -41,6 +43,11 @@ function NewOrderPage() {
   const [phone, setPhone] = useState('');
   const [found, setFound] = useState<{ phone: string; customer: Customer | null } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  /** The phone could not be looked up — no network: the name is typed, Nettio matches it later. */
+  const [lookupFailed, setLookupFailed] = useState(false);
+  const [kept, setKept] = useState<string | null>(null);
+  const [weighing, setWeighing] = useState(false);
+  const [canWeigh, setCanWeigh] = useState(false);
   /** Her own prices and her prepaid credit (specs/026-accounts). */
   const [account, setAccount] = useState<{ prices: PriceLine[]; credit: number } | null>(null);
   const [name, setName] = useState('');
@@ -85,10 +92,14 @@ function NewOrderPage() {
     }
   }, [counter]);
 
+  // A scale on a serial port is this device's own: asked of the browser once it is there.
+  useEffect(() => setCanWeigh(scaleIsSupported()), []);
+
   // The customer behind the phone, once enough digits are typed.
   useEffect(() => {
     setFound(null);
     setPhoneError(null);
+    setLookupFailed(false);
     if (phone.replace(/\D/g, '').length < 8) return;
     let stale = false;
     const timer = setTimeout(() => {
@@ -98,7 +109,12 @@ function NewOrderPage() {
           if (outcome.ok) setFound(outcome.output);
           else setPhoneError(errorSentence(outcome.code));
         })
-        .catch(() => undefined);
+        .catch((failure: unknown) => {
+          if (stale || !isNetworkFailure(failure, navigator.onLine)) return;
+          // No network: the deposit can still be taken, with the name typed.
+          setFound({ phone, customer: null });
+          setLookupFailed(true);
+        });
     }, 350);
     return () => {
       stale = true;
@@ -326,30 +342,27 @@ function NewOrderPage() {
     }
     setBusy(true);
     setError(null);
+    setKept(null);
+    const order = {
+      siteId,
+      ...(found.customer
+        ? { customerId: found.customer.customerId }
+        : { phone: found.phone, customerName: name }),
+      lines: lines.map((line) => ({
+        serviceId: line.priced.serviceId,
+        articleId: line.priced.articleId,
+        quantity: line.priced.quantity,
+        defects: defects[line.id] ?? '',
+      })),
+      packId: pack?.packId ?? null,
+      express,
+      discount: price.discount,
+      ...(price.discount > 0 ? { discountReason: reason } : {}),
+      note,
+      ...(paid !== null ? { payment: { amount: paid, method } } : {}),
+    };
     try {
-      const outcome = await receiveOrder({
-        data: {
-          key,
-          order: {
-            siteId,
-            ...(found.customer
-              ? { customerId: found.customer.customerId }
-              : { phone: found.phone, customerName: name }),
-            lines: lines.map((line) => ({
-              serviceId: line.priced.serviceId,
-              articleId: line.priced.articleId,
-              quantity: line.priced.quantity,
-              defects: defects[line.id] ?? '',
-            })),
-            packId: pack?.packId ?? null,
-            express,
-            discount: price.discount,
-            ...(price.discount > 0 ? { discountReason: reason } : {}),
-            note,
-            ...(paid !== null ? { payment: { amount: paid, method } } : {}),
-          },
-        },
-      });
+      const outcome = await receiveOrder({ data: { key, order } });
       if (outcome.ok) {
         window.localStorage.setItem(SITE_MEMORY, siteId);
         setKey(gestureKey('dep'));
@@ -357,10 +370,47 @@ function NewOrderPage() {
       } else {
         setError(errorSentence(outcome.code));
       }
-    } catch {
-      setError(m.error_generic());
+    } catch (failure) {
+      if (isNetworkFailure(failure, navigator.onLine)) {
+        // Kept on this device with its key: it is sent once the network returns, and only once.
+        savePending(
+          withPending(readPending(), {
+            key,
+            order,
+            customer: found.customer?.name ?? (name || found.phone),
+            total: price.total,
+            savedAt: new Date().toISOString(),
+          }),
+        );
+        setKey(gestureKey('dep'));
+        setQuantities({});
+        setDefects({});
+        setPhone('');
+        setName('');
+        setNote('');
+        setDiscount('');
+        setPaying(false);
+        setAmount('');
+        setKept(m.pending_kept());
+      } else {
+        setError(m.error_generic());
+      }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function weigh(lineId: string) {
+    setWeighing(true);
+    setError(null);
+    try {
+      const kilos = await readScale(readDevice().baud);
+      if (kilos === null) setError(m.scale_nothing());
+      else setQuantities((current) => ({ ...current, [lineId]: kilos }));
+    } catch {
+      setError(m.scale_failed());
+    } finally {
+      setWeighing(false);
     }
   }
 
@@ -403,6 +453,7 @@ function NewOrderPage() {
 
           <PageSection first title={m.counter_customer()}>
             <div className="flex flex-col gap-3">
+              {kept && <Note>{kept}</Note>}
               <TextField
                 label={m.customer_phone()}
                 type="tel"
@@ -435,7 +486,7 @@ function NewOrderPage() {
               {found && !found.customer && (
                 <TextField
                   label={m.customer_name()}
-                  hint={m.counter_new_customer()}
+                  hint={lookupFailed ? m.pending_customer_hint() : m.counter_new_customer()}
                   value={name}
                   maxLength={120}
                   onChange={(event) => setName(event.target.value)}
@@ -560,8 +611,9 @@ function NewOrderPage() {
               })}
             </div>
             {service?.pricing === 'per_kg' ? (
+              <div className="mt-4 flex flex-wrap items-end gap-3">
               <TextField
-                className="mt-4 max-w-60"
+                className="max-w-60"
                 label={m.counter_kilos()}
                 hint={m.counter_kilo_price({
                   price: formatMoney(priceOf(prices, service.serviceId, null) ?? 0),
@@ -578,6 +630,12 @@ function NewOrderPage() {
                   }))
                 }
               />
+              {canWeigh && (
+                <Button variant="secondary" disabled={weighing} onClick={() => void weigh(`${service.serviceId}|`)}>
+                  {m.scale_read_button()}
+                </Button>
+              )}
+              </div>
             ) : (
               <ul className="mt-4 grid grid-cols-2 gap-3 min-[761px]:grid-cols-3 min-[1300px]:grid-cols-4">
                 {catalog.articles
