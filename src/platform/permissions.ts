@@ -5,6 +5,7 @@ import { assistantPermissions } from '@/features/assistant/policies';
 import { businessPermissions } from '@/features/business/policies';
 import { catalogPermissions } from '@/features/catalog/policies';
 import { customerPermissions } from '@/features/customers/policies';
+import { deliveryPermissions } from '@/features/delivery/policies';
 import { invoicePermissions } from '@/features/invoices/policies';
 import { managerPermissions } from '@/features/manager/policies';
 import { messagingPermissions } from '@/features/messaging/policies';
@@ -29,6 +30,7 @@ export const businessPermissionList = [
   ...invoicePermissions,
   ...managerPermissions,
   ...accountPermissions,
+  ...deliveryPermissions,
 ];
 
 export const permissions = definePermissions(businessPermissionList);

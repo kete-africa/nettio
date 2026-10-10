@@ -1,6 +1,6 @@
 import { defineCommand, type Actor } from '@kete/commands';
 import { withCustomerPrices } from '@/features/accounts/domain/accounts';
-import { customerPrices } from '@/features/accounts/infrastructure/accounts.tables';
+import { customerPrices, invoicedMonthly } from '@/features/accounts/infrastructure/accounts.tables';
 import type { SqlExecutor } from '@kete/tenancy';
 import { findStaffOf, listSites, plantOf, readSettings, receives } from '@/features/business';
 import { priceOf, readCatalog } from '@/features/catalog';
@@ -359,7 +359,9 @@ export const collectOrder = defineCommand({
     const paid = input.payment
       ? await takePayment(db, organizationId, order, input.payment, actor)
       : order.paid;
-    const status = collect({ ...order, paid }, holds('orders:release_unpaid'));
+    // A company invoiced by the month leaves with its laundry: its invoice comes at month's end.
+    const mayLeaveUnpaid = holds('orders:release_unpaid') || (await invoicedMonthly(db, order.orderId));
+    const status = collect({ ...order, paid }, mayLeaveUnpaid);
     await setStatus(db, order.orderId, status);
     const balance = order.total - paid;
     await noteEvent(db, organizationId, {

@@ -70,6 +70,7 @@ function ReceiptPage() {
           {order.supplement > 0 && <Line label={m.counter_supplement()} value={formatMoney(order.supplement)} />}
           {order.expressAmount > 0 && <Line label={m.counter_express()} value={formatMoney(order.expressAmount)} />}
           {order.storageAmount > 0 && <Line label={m.invoice_line_storage()} value={formatMoney(order.storageAmount)} />}
+          {order.deliveryAmount > 0 && <Line label={m.invoice_line_delivery()} value={formatMoney(order.deliveryAmount)} />}
           {order.discount > 0 && <Line label={m.counter_discount()} value={`− ${formatMoney(order.discount)}`} />}
           <Line strong label={m.order_total()} value={formatMoney(order.total)} />
           <Line label={m.order_paid()} value={formatMoney(order.paid)} />

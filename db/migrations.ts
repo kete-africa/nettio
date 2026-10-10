@@ -8,6 +8,7 @@ import { businessMigrationSql } from '@/features/business';
 import { catalogMigrationSql } from '@/features/catalog';
 import { customersMigrationSql } from '@/features/customers';
 import { accountsMigrationSql } from '@/features/accounts';
+import { deliveryMigrationSql } from '@/features/delivery';
 import { invoicesMigrationSql } from '@/features/invoices';
 import { managerMigrationSql } from '@/features/manager';
 import { messagingMigrationSql } from '@/features/messaging';
@@ -105,4 +106,6 @@ export const migrations: Migration[] = [
   // A customer's account (specs/026-accounts): terms, her own prices, prepaid credit,
   // subscriptions, quotes — and a deposit may be paid with her credit.
   { name: '0018_accounts', sql: (context) => accountsMigrationSql(context) },
+  // Collecting and delivering (specs/027-delivery): zones and their fees, the trips, their proof.
+  { name: '0019_delivery', sql: (context) => deliveryMigrationSql(context) },
 ];

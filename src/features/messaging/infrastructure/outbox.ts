@@ -275,6 +275,42 @@ export async function queueOrderMessage(
   return route.send;
 }
 
+/**
+ * Queues a sentence about a deposit for its customer — outside the laundry's templates: her
+ * laundry is on its way. Same consent, same channel as any message. Returns whether it waits.
+ */
+export async function queueOrderNote(
+  db: SqlExecutor,
+  organizationId: string,
+  input: { orderId: string; body: (facts: { name: string; number: string; business: string }) => string },
+): Promise<boolean> {
+  const facts = await orderFacts(db, input.orderId);
+  if (!facts) return false;
+  const route = routeFor({
+    phone: facts.phone,
+    channel: facts.channel,
+    consent: facts.consent,
+    telegramChatId: facts.telegram_chat_id,
+  });
+  await db.query(
+    `insert into messages (message_id, organization_id, customer_id, order_id, kind, channel, recipient, body,
+                           status, reason)
+     values ($1, $2, $3, $4, 'reply', $5, $6, $7, $8, $9)`,
+    [
+      newId('msg'),
+      organizationId,
+      facts.customer_id,
+      input.orderId,
+      route.send ? route.channel : 'none',
+      route.send ? route.to : '',
+      input.body({ name: facts.name, number: facts.number, business: facts.business_name }),
+      route.send ? 'queued' : 'skipped',
+      route.send ? '' : route.reason,
+    ],
+  );
+  return route.send;
+}
+
 export interface QueuedMessage {
   messageId: string;
   orderId: string | null;

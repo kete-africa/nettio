@@ -50,4 +50,6 @@ export const eventWords: Record<string, () => string> = {
   storage_fee: m.order_event_storage_fee,
   abandon_notice: m.order_event_abandon_notice,
   released: m.order_event_released,
+  delivery_fee: m.order_event_delivery_fee,
+  delivery_cancelled: m.order_event_delivery_cancelled,
 };
