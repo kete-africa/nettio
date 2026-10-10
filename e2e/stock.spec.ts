@@ -68,7 +68,8 @@ test('a withdrawal under the threshold is said on the day; the supplier is paid'
   await page.goto('/pressing/stock');
   await page.getByRole('button', { name: 'Payer Togo Détergents' }).click();
   await expect(page.getByLabel('Montant (F CFA)')).toHaveValue('60000');
-  await page.getByRole('button', { name: 'Payer Togo Détergents' }).click();
+  // The row's button opened the form; the form's own button asks to confirm.
+  await page.getByRole('button', { name: 'Payer Togo Détergents' }).last().click();
   await page.getByRole('alertdialog').or(page.getByRole('dialog')).getByRole('button', { name: 'Payer Togo Détergents' }).click();
   await expect(page.getByText('60 000 F CFA payés à Togo Détergents.')).toBeVisible();
   await expect(page.getByText('rien de dû')).toBeVisible();
