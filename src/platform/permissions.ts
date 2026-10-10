@@ -12,6 +12,7 @@ import { messagingPermissions } from '@/features/messaging/policies';
 import { moneyPermissions } from '@/features/money/policies';
 import { networkPermissions } from '@/features/network/policies';
 import { orderPermissions } from '@/features/orders/policies';
+import { portabilityPermissions } from '@/features/portability/policies';
 import { stockPermissions } from '@/features/stock/policies';
 import { teamPermissions } from '@/features/team/policies';
 
@@ -35,6 +36,7 @@ export const businessPermissionList = [
   ...deliveryPermissions,
   ...networkPermissions,
   ...stockPermissions,
+  ...portabilityPermissions,
 ];
 
 export const permissions = definePermissions(businessPermissionList);

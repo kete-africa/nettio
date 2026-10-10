@@ -35,6 +35,7 @@ export const routes = rootRoute('__root.tsx', [
     route('/pressing/reglages', 'business/settings.tsx'),
     route('/verification/$draftId', 'review/$draftId.tsx'),
     route('/journal', 'journal.tsx'),
+    route('/aide', 'help.tsx'),
   ]),
   // The receipt stands outside the frame: only the ticket goes to the printer.
   route('/depots/$orderId/recu', 'orders/receipt.tsx'),
@@ -44,6 +45,10 @@ export const routes = rootRoute('__root.tsx', [
   // A slip too: the courier carries it, the customer signs it.
   route('/livraisons/$deliveryId', 'delivery/slip.tsx'),
   route('/transferts/$transferId', 'business/transfer-slip.tsx'),
+  // Public pages: read without signing in.
+  route('/mentions-legales', 'legal/notice.tsx'),
+  route('/confidentialite', 'legal/privacy.tsx'),
+  route('/conditions', 'legal/terms.tsx'),
   route('/auth/connexion', 'auth/sign-in.ts'),
   route('/auth/callback', 'auth/callback.ts'),
   route('/auth/sortie', 'auth/sign-out.ts'),
@@ -54,6 +59,7 @@ export const routes = rootRoute('__root.tsx', [
   route('/api/v1/$', 'api/v1.ts'),
   route('/api/avis', 'api/feedback.ts'),
   route('/api/assistant', 'api/assistant.ts'),
+  route('/api/export', 'api/export.ts'),
   route('/health', 'api/health.ts'),
   route('/.well-known/kete', 'well-known/kete.ts'),
   route('/.well-known/oauth-protected-resource', 'well-known/oauth-protected-resource.ts'),
