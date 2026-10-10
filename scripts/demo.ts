@@ -22,7 +22,7 @@ if (existsSync(demoEnv)) process.loadEnvFile(demoEnv);
 
 const PORT = 3403;
 const ORGANIZATION = 'org_demo';
-const roles = ['owner', 'manager', 'counter', 'cashier', 'workshop', 'accountant'] as const;
+const roles = ['owner', 'manager', 'counter', 'cashier', 'workshop', 'courier', 'accountant'] as const;
 type Role = (typeof roles)[number];
 const asked = process.argv[process.argv.indexOf('--as') + 1] as Role | undefined;
 const role: Role = process.argv.includes('--as') && asked && roles.includes(asked) ? asked : 'owner';
@@ -65,6 +65,7 @@ const people: Record<Exclude<Role, 'owner'>, KeteIdentity> = {
   counter: person('usr_demo_mawuli', 'Mawuli', 'member'),
   cashier: person('usr_demo_essi', 'Essi', 'member'),
   workshop: person('usr_demo_yao', 'Yao', 'member'),
+  courier: person('usr_demo_kodjo', 'Kodjo', 'member'),
   accountant: person('usr_demo_lawson', 'Mme Lawson', 'member'),
 };
 
@@ -108,8 +109,84 @@ async function seed(): Promise<void> {
     'business_overview',
     {},
   );
+  /**
+   * What the later phases added (specs 025 to 031), each once: a laundry seeded before them gets
+   * it too. Every rule, fee and price here is the demo owner's — Nettio proposes none.
+   */
+  async function sinceThen(): Promise<void> {
+    type Named = { name: string };
+    const { rules } = await act<{ rules: { quickSwitch: boolean } }>(afi, 'unclaimed_list', {});
+    if (!rules.quickSwitch) {
+      // A shared tablet at the counter: each one takes over with her own code.
+      await act(afi, 'unclaimed_set_rules', { freeDays: 30, feePerDay: 0, abandonDays: 90, quickSwitch: true });
+    }
+    const schedule = await act<{ people: { userId: string; week: unknown[] }[] }>(afi, 'schedule_read', {});
+    if (schedule.people.every((each) => each.week.length === 0)) {
+      const week = [0, 1, 2, 3, 4, 5].map((weekday) => ({ weekday, startMinute: 450, endMinute: 1050 }));
+      for (const who of [people.counter, people.workshop, people.cashier, people.courier]) {
+        await act(afi, 'schedule_set_week', { userId: who.userId, days: week });
+      }
+    }
+    const delivery = await act<{ zones: unknown[] }>(afi, 'delivery_board', {});
+    if (delivery.zones.length === 0) {
+      await act(afi, 'delivery_set_zone', { name: 'Agoè', fee: 500 });
+      await act(afi, 'delivery_set_zone', { name: 'Centre-ville', fee: 1000 });
+    }
+    const hotels = await act<{ customerId: string }[]>(afi, 'customers_search', { text: 'Hôtel Sarakawa' });
+    if (hotels.length === 0) {
+      const catalog = await act<{
+        services: (Named & { serviceId: string })[];
+        articles: (Named & { articleId: string })[];
+      }>(afi, 'catalog_read', {});
+      const hotel = await act<{ customerId: string }>(afi, 'customers_save', {
+        phone: '91 00 00 01',
+        name: 'Hôtel Sarakawa',
+        kind: 'business',
+      });
+      await act(afi, 'accounts_set_terms', {
+        customerId: hotel.customerId,
+        legalName: 'Hôtel Sarakawa SA',
+        taxId: '1000999',
+        address: 'Bd du Mono, Lomé',
+        monthlyInvoice: true,
+        paymentDays: 30,
+      });
+      await act(afi, 'accounts_set_price', {
+        customerId: hotel.customerId,
+        serviceId: catalog.services.find((s) => s.name === 'Lavage et repassage')?.serviceId,
+        articleId: catalog.articles.find((a) => a.name === 'Chemise')?.articleId,
+        amount: 400,
+      });
+      await act(afi, 'credit_top_up', { customerId: hotel.customerId, cashed: 20_000, method: 'mobile_money' });
+    }
+    const stock = await act<{ items: unknown[] }>(afi, 'stock_board', {});
+    if (stock.items.length === 0) {
+      const detergent = await act<{ itemId: string }>(afi, 'stock_set_item', { name: 'Lessive', unit: 'L', threshold: 10 });
+      const hangers = await act<{ itemId: string }>(afi, 'stock_set_item', { name: 'Cintres', unit: 'pièce', threshold: 100 });
+      const supplier = await act<{ supplierId: string }>(afi, 'suppliers_set', { name: 'Togo Détergents', phone: '90 00 00 07' });
+      const order = await act<{ purchaseId: string }>(afi, 'purchases_order', {
+        supplierId: supplier.supplierId,
+        lines: [
+          { itemId: detergent.itemId, quantity: 40, unitCost: 1500 },
+          { itemId: hangers.itemId, quantity: 500, unitCost: 50 },
+        ],
+      });
+      const { purchases } = await act<{
+        purchases: { purchaseId: string; lines: { lineId: string; quantity: number; unitCost: number }[] }[];
+      }>(afi, 'stock_board', {});
+      const lines = purchases.find((each) => each.purchaseId === order.purchaseId)?.lines ?? [];
+      await act(afi, 'purchases_receive', {
+        purchaseId: order.purchaseId,
+        lines: lines.map((line) => ({ lineId: line.lineId, quantity: line.quantity, unitCost: line.unitCost })),
+      });
+      // Most of the detergent is used: the day says it is time to order.
+      await act(afi, 'stock_use', { itemId: detergent.itemId, quantity: 32, note: 'Semaine en cours' });
+    }
+  }
+
   if (overview.settings) {
     say('« Pressing Démo » existe déjà : rien n’est recréé.');
+    await sinceThen();
     return;
   }
   say('Création de « Pressing Démo » (une minute)…');
@@ -251,6 +328,7 @@ async function seed(): Promise<void> {
     }
   }
   await act(afi, 'draws_record', { drawnOn: today, amount: 20_000, paidFrom: 'mobile_money' });
+  await sinceThen();
   say('« Pressing Démo » est prêt.');
 }
 

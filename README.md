@@ -29,7 +29,7 @@ pnpm dev
 
 ```bash
 pnpm demo                 # a browser opens, signed in as the owner of « Pressing Démo »
-pnpm demo -- --as cashier # or manager, counter, workshop, accountant
+pnpm demo -- --as cashier # or manager, counter, workshop, courier, accountant
 ```
 
 The production build on the Neon "test" branch, in its own organization (`org_demo`), with prices,
