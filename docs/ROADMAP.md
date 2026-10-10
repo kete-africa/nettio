@@ -127,6 +127,10 @@ sheets, shortage alerts.
 The landing page, sign-up and subscription through the Compte Kete, offline counter, hardware
 (ticket printer, label printer, scale, scanner), full data export, help per role, legal pages.
 
+| Spec | What |
+|---|---|
+| `030-standalone` | The front door read without signing in; legal notice, privacy and terms; help by role; the organization's access as the Compte Kete says it; the laundry's data exported whole by its owner |
+
 **Proof**: a launderer nobody accompanied subscribes and records his first deposit the same day.
 
 ## Options, only when a customer asks
@@ -148,6 +152,6 @@ accounting, Europe (VAT, certified till, card).
 | 7 — customers, companies and delivery | yes (`018`, `019`, `026-accounts`, `027-delivery`) — the proof of a delivery is a name and a time; no channel is connected yet | no |
 | 8 — several sites | yes (`028-sites`) — the workshop's queue does not wait for a slip's reception | no |
 | 9 — stock and purchasing | yes (`029-stock`) — a withdrawal is typed by a person | no |
-| 10 | planned | no |
+| 10 — selling Nettio alone | in part (`030-standalone`): the front door, the legal pages (to be completed and reviewed), help by role, the export. Not built yet: the offline counter, hardware | no |
 
 This table is updated by the pull request that closes each spec.

@@ -3,6 +3,7 @@ import { getRequest } from '@tanstack/react-start/server';
 import { getLocale } from '@/paraglide/runtime.js';
 import { transaction } from '@/platform/db';
 import { businessPermissionList } from '@/platform/permissions';
+import { PRODUCT } from '@/platform/app';
 import { asPerson, heldPermissions } from '@/platform/rights';
 import { perform } from '@/platform/screen';
 import { deviceOwnerOf, personOf, tokenOf } from '@/platform/session';
@@ -30,6 +31,11 @@ export interface Me {
   permissions: string[];
   /** On a shared device she took over with her code: who signed it in (specs/025-manager). */
   onDeviceOf: string | null;
+  /**
+   * What the Compte Kete says of the organization's access to Nettio (specs/030-standalone): until
+   * when it runs, where it is managed, and whether this deployment asks for it.
+   */
+  access: { until: string | null; active: boolean; required: boolean; accountUrl: string };
   /** Null while the laundry is not set up. */
   business: Pick<Settings, 'businessName' | 'profile' | 'staffing'> | null;
 }
@@ -51,6 +57,7 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
       role: null,
       permissions: [],
       onDeviceOf: null,
+      access: accessOf(identity.apps),
       business: null,
     };
   }
@@ -73,6 +80,8 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
       role: staff?.active ? staff.role : null,
       permissions: heldPermissions(),
       onDeviceOf: device && device.userId !== identity.userId ? device.name : null,
+      // The subscription is the organization's: read on the session that carries its token.
+      access: accessOf((device ?? identity).apps),
       business: settings
         ? {
             businessName: settings.businessName,
@@ -84,6 +93,17 @@ export const fetchMe = createServerFn({ method: 'GET' }).handler(async (): Promi
     await tokenOf(request),
   );
 });
+
+/** The organization's access to Nettio, as the Compte Kete's token says it. */
+function accessOf(apps: Record<string, Date>): Me['access'] {
+  const until = apps[PRODUCT] ?? null;
+  return {
+    until: until ? until.toISOString() : null,
+    active: until !== null && until.getTime() > Date.now(),
+    required: process.env.NETTIO_REQUIRE_SUBSCRIPTION === 'on',
+    accountUrl: process.env.KETE_ACCOUNT_URL ?? '',
+  };
+}
 
 export const fetchBusiness = createServerFn({ method: 'GET' }).handler(async () => {
   const read = await perform<{ settings: Settings | null; sites: Site[] }>('business_overview', {});

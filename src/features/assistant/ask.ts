@@ -67,6 +67,7 @@ const NEVER_OFFERED = new Set([
   'unclaimed_set_rules',
   'delivery_set_zone',
   'sites_set_partner',
+  'data_export',
 ]);
 
 /**

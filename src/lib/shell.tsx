@@ -98,6 +98,7 @@ const sections: Section[] = [
         permission: 'settings:manage',
       },
       { to: '/journal', icon: 'clock', label: m.nav_journal, permission: 'journal:read' },
+      { to: '/aide', icon: 'library', label: m.nav_help },
     ],
   },
 ];
@@ -231,6 +232,11 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
         ) : undefined
       }
     >
+      {me.access.required && !me.access.active && (
+        <p className="mb-4 rounded-control border border-state-verify bg-state-verify-surface px-3 py-2 text-body-sm text-state-verify-fg">
+          {m.access_ended_banner()}
+        </p>
+      )}
       {children}
     </Shell>
     </AssistantProvider>
