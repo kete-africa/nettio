@@ -105,6 +105,10 @@ monthly invoices and statements; the courier's round, proof of delivery, fees an
 Transfers with a slip between counters and the plant, shared costs allocated, the result per site,
 partner drop-off points.
 
+| Spec | What |
+|---|---|
+| `028-sites` | Deposits that travel between a counter and its plant with a numbered slip, checked on arrival; each site's result, the shared charges spread by the owner's key; a partner's point and its commission |
+
 **Proof**: a chain reads the result of each of its sites.
 
 ## Phase 9 — Stock and purchasing
@@ -138,6 +142,7 @@ accounting, Europe (VAT, certified till, card).
 | 5 — Kete Intelligence at every station | in part (`007`, `011`, `013`, `014`, `020`, `022`): the day's statement — read, and sent by itself —, the assistant on every screen (it prepares, never does), a deposit said, dictated or photographed, the alerts of the day, every capability open to copilots. « Demander » by WhatsApp or Telegram is built on recorded exchanges (`023`): no channel is connected yet | no |
 | 6 — the team | yes (`015-team-pay`, `024-presence`, `025-manager`) — approvals by message run on recorded exchanges: no channel is connected yet | no |
 | 7 — customers, companies and delivery | yes (`018`, `019`, `026-accounts`, `027-delivery`) — the proof of a delivery is a name and a time; no channel is connected yet | no |
-| 8 to 10 | planned | no |
+| 8 — several sites | yes (`028-sites`) — the workshop's queue does not wait for a slip's reception | no |
+| 9 to 10 | planned | no |
 
 This table is updated by the pull request that closes each spec.

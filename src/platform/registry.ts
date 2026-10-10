@@ -9,6 +9,7 @@ import { invoiceCapabilities } from '@/features/invoices';
 import { managerCapabilities } from '@/features/manager';
 import { messagingCapabilities } from '@/features/messaging';
 import { moneyCapabilities } from '@/features/money';
+import { networkCapabilities } from '@/features/network';
 import { orderCapabilities } from '@/features/orders';
 import { teamCapabilities } from '@/features/team';
 import { workshopCapabilities } from '@/features/workshop';
@@ -34,6 +35,7 @@ export const registry = createCapabilityRegistry(
     ...managerCapabilities,
     ...accountCapabilities,
     ...deliveryCapabilities,
+    ...networkCapabilities,
   ],
   {
     authorize: async (_caller, permission) => holds(permission),

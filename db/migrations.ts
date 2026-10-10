@@ -13,6 +13,7 @@ import { invoicesMigrationSql } from '@/features/invoices';
 import { managerMigrationSql } from '@/features/manager';
 import { messagingMigrationSql } from '@/features/messaging';
 import { moneyMigrationSql } from '@/features/money';
+import { networkMigrationSql } from '@/features/network';
 import { ordersMigrationSql } from '@/features/orders';
 import { presenceMigrationSql, teamMigrationSql } from '@/features/team';
 import { workshopMigrationSql } from '@/features/workshop';
@@ -108,4 +109,6 @@ export const migrations: Migration[] = [
   { name: '0018_accounts', sql: (context) => accountsMigrationSql(context) },
   // Collecting and delivering (specs/027-delivery): zones and their fees, the trips, their proof.
   { name: '0019_delivery', sql: (context) => deliveryMigrationSql(context) },
+  // Several sites (specs/028-sites): transfers and their slips, partner points, the spreading rule.
+  { name: '0020_network', sql: (context) => networkMigrationSql(context) },
 ];

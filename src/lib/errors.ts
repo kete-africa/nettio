@@ -93,6 +93,11 @@ const sentences: Record<string, () => string> = {
   delivery_closed: m.error_delivery_closed,
   delivery_not_yours: m.error_delivery_not_yours,
   recipient_needed: m.error_recipient_needed,
+  transfer_same_site: m.error_transfer_same_site,
+  transfer_empty: m.error_transfer_empty,
+  transfer_not_here: m.error_transfer_not_here,
+  transfer_already_received: m.error_transfer_already_received,
+  transfer_unknown_deposit: m.error_transfer_unknown_deposit,
 };
 
 /** The sentence a screen shows for a gesture that did not go through. */

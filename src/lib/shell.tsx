@@ -84,6 +84,7 @@ const sections: Section[] = [
         permission: 'business:read',
       },
       { to: '/pressing/points', icon: 'flag', label: m.nav_sites, permission: 'business:read' },
+      { to: '/pressing/reseau', icon: 'layers', label: m.nav_network, permission: 'transfers:read' },
       { to: '/pressing/equipe', icon: 'people', label: m.nav_team, permission: 'staff:manage' },
       { to: '/pressing/travail', icon: 'chart', label: m.nav_work, permission: 'pay:read' },
       { to: '/pressing/gerant', icon: 'flag', label: m.nav_manager, permission: 'approvals:request' },
