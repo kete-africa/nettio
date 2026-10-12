@@ -22,19 +22,12 @@ import { getPool, transaction } from '../src/platform/db';
 import { telegramWebhook, whatsappWebhook } from '../src/platform/inbound';
 import { registry } from '../src/platform/registry';
 import { asPerson } from '../src/platform/rights';
-import { parseUpdate, secretIsValid, telegramChannel } from '../src/platform/telegram';
-import {
-  parseNotification,
-  signatureIsValid,
-  verifySubscription,
-  whatsappChannel,
-} from '../src/platform/whatsapp';
 import { act, agentFor, done, freshSchema, hire, person } from './helpers';
 
 // The messaging's proof (specs/006-messaging): nothing leaves unless the laundry decided it and
 // the customer agreed; what leaves goes through WhatsApp or Telegram behind one port; every
-// message keeps its reason. The adapters are proven against recorded exchanges, not the live
-// services.
+// message keeps its reason. The adapters are the chassis' own (@kete/notify), proven there against
+// recorded exchanges; here the webhooks are, from the signed request to the answer that leaves.
 
 const values = {
   client: 'Mme Adjovi',
@@ -99,136 +92,6 @@ describe('the rules of a message', () => {
     const old = new Date('2026-09-01T10:00:00Z');
     expect(mayRemind({ ...base, readyAt: old, lastRemindedAt: new Date('2026-10-28T10:00:00Z') })).toBe(false);
     expect(mayRemind({ ...base, readyAt: old, lastRemindedAt: new Date('2026-10-24T10:00:00Z') })).toBe(true);
-  });
-});
-
-/** A provider that records what it is sent, and answers what the test says. */
-function recorded(answer: () => Response) {
-  const calls: { url: string; headers: Record<string, string>; body: Record<string, unknown> }[] = [];
-  const fake = (async (url: string | URL | Request, init?: RequestInit) => {
-    calls.push({
-      url: String(url),
-      headers: Object.fromEntries(new Headers(init?.headers).entries()),
-      body: JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>,
-    });
-    return answer();
-  }) as typeof fetch;
-  return { calls, fake };
-}
-
-describe('the WhatsApp adapter, against recorded exchanges', () => {
-  it('sends a text, and an approved template with its values in order', async () => {
-    const { calls, fake } = recorded(() => Response.json({ messages: [{ id: 'wamid.1' }] }));
-    const channel = whatsappChannel({ accessToken: 'test-token', phoneNumberId: '1055', fetch: fake });
-    await channel.sendText('22890123456', 'Bonjour');
-    await channel.sendTemplate?.('22890123456', {
-      name: 'depot_recu',
-      language: 'fr',
-      parameters: ['Mme Adjovi', 'A-0412'],
-    });
-    expect(calls[0]?.url).toBe('https://graph.facebook.com/v25.0/1055/messages');
-    expect(calls[0]?.headers['authorization']).toBe('Bearer test-token');
-    expect(calls[0]?.body).toMatchObject({
-      messaging_product: 'whatsapp',
-      to: '22890123456',
-      type: 'text',
-      text: { body: 'Bonjour' },
-    });
-    expect(calls[1]?.body).toMatchObject({
-      type: 'template',
-      template: {
-        name: 'depot_recu',
-        language: { code: 'fr' },
-        components: [
-          { type: 'body', parameters: [{ type: 'text', text: 'Mme Adjovi' }, { type: 'text', text: 'A-0412' }] },
-        ],
-      },
-    });
-  });
-
-  it('says why a message was refused', async () => {
-    const outside = whatsappChannel({
-      accessToken: 't',
-      phoneNumberId: '1',
-      fetch: recorded(() => Response.json({ error: { code: 131047 } }, { status: 400 })).fake,
-    });
-    await expect(outside.sendText('228', 'x')).rejects.toMatchObject({ reason: 'outside_window' });
-    const down = whatsappChannel({
-      accessToken: 't',
-      phoneNumberId: '1',
-      fetch: (async () => {
-        throw new Error('offline');
-      }) as typeof fetch,
-    });
-    await expect(down.sendText('228', 'x')).rejects.toMatchObject({ reason: 'network' });
-  });
-
-  it('authenticates a webhook before reading it', () => {
-    const body = JSON.stringify({ entry: [] });
-    const good = `sha256=${createHmac('sha256', 'app-secret').update(body).digest('hex')}`;
-    expect(signatureIsValid(body, good, 'app-secret')).toBe(true);
-    expect(signatureIsValid(`${body} `, good, 'app-secret')).toBe(false);
-    expect(signatureIsValid(body, null, 'app-secret')).toBe(false);
-    const check = (token: string) =>
-      verifySubscription(
-        new URL(`https://n.test/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=${token}&hub.challenge=42`),
-        'verify-me',
-      );
-    expect(check('verify-me').status).toBe(200);
-    expect(check('other').status).toBe(403);
-  });
-
-  it('reads the texts of a notification, and nothing else', () => {
-    const notification = {
-      entry: [
-        {
-          changes: [
-            {
-              value: {
-                messages: [
-                  { from: '22890123456', id: 'wamid.1', type: 'text', text: { body: 'Où en est ma commande ?' } },
-                  { from: '22890123456', id: 'wamid.2', type: 'image', image: { id: 'm1' } },
-                ],
-                statuses: [{ id: 'wamid.0', status: 'delivered' }],
-              },
-            },
-          ],
-        },
-      ],
-    };
-    expect(parseNotification(notification)).toEqual([
-      { sender: '22890123456', text: 'Où en est ma commande ?' },
-    ]);
-  });
-});
-
-describe('the Telegram adapter, against recorded exchanges', () => {
-  it('sends a text to a chat', async () => {
-    const { calls, fake } = recorded(() => Response.json({ ok: true, result: {} }));
-    await telegramChannel({ botToken: '123:test', fetch: fake }).sendText('4242', 'Bonjour');
-    expect(calls[0]?.url).toBe('https://api.telegram.org/bot123:test/sendMessage');
-    expect(calls[0]?.body).toEqual({ chat_id: '4242', text: 'Bonjour' });
-  });
-
-  it('says when the person blocked the bot', async () => {
-    const blocked = telegramChannel({
-      botToken: '123:test',
-      fetch: recorded(() => Response.json({ ok: false }, { status: 403 })).fake,
-    });
-    await expect(blocked.sendText('4242', 'x')).rejects.toMatchObject({ reason: 'recipient_unreachable' });
-  });
-
-  it('authenticates a webhook, and only hears a private chat', () => {
-    expect(secretIsValid('s3cret', 's3cret')).toBe(true);
-    expect(secretIsValid('other', 's3cret')).toBe(false);
-    expect(secretIsValid(null, 's3cret')).toBe(false);
-    const update = (chat: object) => ({
-      message: { message_id: 7, from: { id: 4242 }, chat, text: '/start AbC_123-xyz9' },
-    });
-    expect(parseUpdate(update({ id: 4242, type: 'private' }))).toEqual([
-      { sender: '4242', text: '/start AbC_123-xyz9' },
-    ]);
-    expect(parseUpdate(update({ id: -100, type: 'group' }))).toEqual([]);
   });
 });
 

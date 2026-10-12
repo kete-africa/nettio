@@ -37,10 +37,10 @@ importers:
         version: '@kete-africa/feedback@0.1.1(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react@19.3.0)'
       '@kete/jobs':
         specifier: npm:@kete-africa/jobs@^0.1.0
-        version: '@kete-africa/jobs@0.1.0(@kete-africa/notify@0.2.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))'
+        version: '@kete-africa/jobs@0.1.0(@kete-africa/notify@0.3.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))'
       '@kete/notify':
-        specifier: npm:@kete-africa/notify@^0.2.0
-        version: '@kete-africa/notify@0.2.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
+        specifier: npm:@kete-africa/notify@^0.3.0
+        version: '@kete-africa/notify@0.3.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
       '@kete/records':
         specifier: npm:@kete-africa/records@^0.1.1
         version: '@kete-africa/records@0.1.1'
@@ -645,8 +645,8 @@ packages:
       '@kete/notify':
         optional: true
 
-  '@kete-africa/notify@0.2.0':
-    resolution: {integrity: sha512-p/HyrpEPotNUDw4BF436ptKRW5YSQHzubXZYaPC1NEJ1GHvtwAdPQA3T4hwK2q6aB87dNo4Tq7TT6/THX7QEOw==, tarball: https://npm.pkg.github.com/download/@kete-africa/notify/0.2.0/bc53ba9b824eaa2e01527a98adef47aa351d36c7}
+  '@kete-africa/notify@0.3.0':
+    resolution: {integrity: sha512-9GRTYYToYlSZLdfIFcM/9J/f2e2K5micxYrUbysLr9vlQbGbf+PNIqHJtbUKYmTQ1ugDp9mbLD++DXN5GNFGNA==, tarball: https://npm.pkg.github.com/download/@kete-africa/notify/0.3.0/c5972cfada1e90936f53d3b0252e6d542dfc66aa}
     peerDependencies:
       react: ^19.3.0
       react-dom: ^19.3.0
@@ -4286,15 +4286,15 @@ snapshots:
       - pg-native
       - supports-color
 
-  '@kete-africa/jobs@0.1.0(@kete-africa/notify@0.2.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))':
+  '@kete-africa/jobs@0.1.0(@kete-africa/notify@0.3.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0))':
     dependencies:
       pg-boss: 12.35.0
     optionalDependencies:
-      '@kete/notify': '@kete-africa/notify@0.2.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
+      '@kete/notify': '@kete-africa/notify@0.3.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)'
     transitivePeerDependencies:
       - pg-native
 
-  '@kete-africa/notify@0.2.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@kete-africa/notify@0.3.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@kete/records': '@kete-africa/records@0.1.1'
       '@kete/tenancy': '@kete-africa/tenancy@0.1.1(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(kysely@0.28.17)(pg@8.23.1))'

@@ -28,7 +28,7 @@
     "@kete/drafts": "npm:@kete-africa/drafts@^0.1.1",
     "@kete/feedback": "npm:@kete-africa/feedback@^0.1.1",
     "@kete/jobs": "npm:@kete-africa/jobs@^0.1.0",
-    "@kete/notify": "npm:@kete-africa/notify@^0.2.0",
+    "@kete/notify": "npm:@kete-africa/notify@^0.3.0",
     "@kete/records": "npm:@kete-africa/records@^0.1.1",
     "@kete/sdk": "npm:@kete-africa/sdk@^0.6.0",
     "@kete/tenancy": "npm:@kete-africa/tenancy@^0.1.1",

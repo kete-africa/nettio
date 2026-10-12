@@ -1,6 +1,5 @@
 import type { Channels } from '@/features/messaging/ports';
-import { telegramChannel } from './telegram';
-import { whatsappChannel } from './whatsapp';
+import { telegramChannel, whatsAppChannel } from '@kete/notify';
 
 let channels: Channels | undefined;
 
@@ -14,7 +13,7 @@ export function getChannels(): Channels {
   const telegram = process.env.TELEGRAM_BOT_TOKEN;
   channels ??= {
     whatsapp: whatsapp
-      ? whatsappChannel({
+      ? whatsAppChannel({
           accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
           phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? '',
         })
