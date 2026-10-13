@@ -1,4 +1,5 @@
-import { ask, askStream, BudgetExceededError } from '@kete/ai';
+import { runAgent, streamAgent, type AgentCall, type AgentTurn } from '@kete/agents';
+import { BudgetExceededError } from '@kete/ai';
 import type { Caller } from '@kete/capabilities';
 import type { ModelMessage } from 'ai';
 import { getBudgets, getModel } from '@/platform/ai';
@@ -74,12 +75,13 @@ const NEVER_OFFERED = new Set([
  * What a turn is made of. The model is offered the readings the person may open herself, and the
  * gestures she may do — which, called by an agent, only prepare a draft she must confirm (levels 3
  * and 4). Level 2 gestures act at once: the assistant is never offered them. It receives the
- * conversation and what its tools returned, never the database.
+ * conversation and what its tools returned, never the database. The turn itself — the model, its
+ * tools, its steps — runs on the chassis' agents runtime (`@kete/agents`).
  */
 async function turnOf(
   person: { userId: string; organizationId: string },
   input: { question: string; history?: Turn[]; screen?: string | undefined; readOnly?: boolean },
-) {
+): Promise<AgentTurn | null> {
   const model = getModel();
   if (!model) return null;
   const caller: Caller = {
@@ -110,8 +112,10 @@ async function turnOf(
     },
   ];
   return {
+    agent: ASSISTANT,
+    name: 'Nettio',
     model,
-    system: SYSTEM,
+    instructions: SYSTEM,
     messages,
     tools,
     maxSteps: 6,
@@ -122,13 +126,12 @@ async function turnOf(
   };
 }
 
-/** What a tool call became: a reading that was read, or a gesture that was prepared. */
-function outcomeOf(name: string, output: unknown): AssistantEvent | null {
-  const result = output as { status?: string; draftId?: string } | null;
-  if (result?.status === 'draft' && typeof result.draftId === 'string') {
-    return { type: 'prepared', name, draftId: result.draftId };
+/** What a call became: a reading that was read, or a gesture that was prepared. */
+function outcomeOf(call: AgentCall): AssistantEvent | null {
+  if (call.status === 'draft' && call.draftId) {
+    return { type: 'prepared', name: call.name, draftId: call.draftId };
   }
-  if (result?.status === 'done') return { type: 'reading', name };
+  if (call.status === 'done') return { type: 'reading', name: call.name };
   return null;
 }
 
@@ -148,8 +151,8 @@ export async function askNettio(
   const turn = await turnOf(person, { question, history, screen, readOnly: options.readOnly === true });
   if (!turn) return { available: false, reason: 'not_connected' };
   try {
-    const answer = await ask(turn);
-    const events = answer.toolResults.map((result) => outcomeOf(result.name, result.output));
+    const answer = await runAgent(turn);
+    const events = answer.calls.map(outcomeOf);
     return {
       available: true,
       answer: answer.text.trim(),
@@ -177,24 +180,12 @@ export async function* converse(
     yield { type: 'unavailable', reason: 'not_connected' };
     return;
   }
-  try {
-    const result = await askStream(turn);
-    for await (const part of result.fullStream as AsyncIterable<Record<string, unknown>>) {
-      if (part.type === 'text-delta') {
-        const delta = (part.text ?? part.textDelta ?? part.delta) as string | undefined;
-        if (delta) yield { type: 'text', delta };
-      } else if (part.type === 'tool-result') {
-        const event = outcomeOf(String(part.toolName), part.output ?? part.result);
-        if (event) yield event;
-      } else if (part.type === 'error') {
-        throw part.error instanceof Error ? part.error : new Error('stream');
-      }
-    }
-    yield { type: 'done' };
-  } catch (error) {
-    yield {
-      type: 'unavailable',
-      reason: error instanceof BudgetExceededError ? 'budget_spent' : 'failed',
-    };
+  for await (const event of streamAgent(turn)) {
+    if (event.type === 'text') yield { type: 'text', delta: event.delta };
+    else if (event.type === 'call') {
+      const outcome = outcomeOf(event);
+      if (outcome) yield outcome;
+    } else if (event.type === 'done') yield { type: 'done' };
+    else yield { type: 'unavailable', reason: event.reason };
   }
 }

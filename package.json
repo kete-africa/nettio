@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@kete/admin": "npm:@kete-africa/admin@^0.2.1",
+    "@kete/agents": "npm:@kete-africa/agents@^0.1.0",
     "@kete/ai": "npm:@kete-africa/ai@^0.2.0",
     "@kete/auth": "npm:@kete-africa/auth@^0.3.0",
     "@kete/capabilities": "npm:@kete-africa/capabilities@^0.4.0",
