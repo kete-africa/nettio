@@ -10,8 +10,14 @@ import { getChannels } from './channels';
 import { getPool, transaction } from './db';
 import { decisionHeard } from './decisions';
 import { asStaff } from './rights';
-import { parseUpdate, secretIsValid } from './telegram';
-import { parseNotification, signatureIsValid, verifySubscription } from './whatsapp';
+import {
+  parseTelegramUpdate,
+  parseWhatsAppNotification,
+  telegramSecretIsValid,
+  verifyWhatsAppSubscription,
+  whatsAppSignatureIsValid,
+  type ChatInbound,
+} from '@kete/notify';
 
 // The webhooks of the messaging channels: each call is authenticated before anything is read,
 // then what a customer wrote is heard, and the answer leaves at once.
@@ -30,11 +36,28 @@ async function statementLinked(sender: string, text: string): Promise<boolean> {
   return true;
 }
 
-async function heard(channel: 'whatsapp' | 'telegram', messages: { sender: string; text: string }[]) {
-  for (const message of messages) {
+/**
+ * What a customer or a member of the team wrote, as Nettio hears it: the texts only. WhatsApp names
+ * a phone by its digits when the provider gives it; a person who hides her number is named by the
+ * provider's own identifier, which no customer nor colleague is known by yet — she is answered like
+ * any unknown sender. Telegram names a chat.
+ */
+function texts(inbound: ChatInbound[]): { sender: string; text: string }[] {
+  return inbound
+    .filter((message) => message.kind === 'text')
+    .map((message) => ({
+      sender:
+        message.channel === 'whatsapp'
+          ? (message.sender.phone?.replace(/\D/g, '') ?? message.sender.id)
+          : message.sender.address,
+      text: message.text ?? '',
+    }));
+}
+
+async function heard(channel: 'whatsapp' | 'telegram', inbound: ChatInbound[]) {
+  for (const message of texts(inbound)) {
     if (channel === 'telegram' && (await statementLinked(message.sender, message.text))) continue;
-    // WhatsApp names a phone by its digits; Telegram, a chat.
-    const sender = channel === 'whatsapp' ? message.sender.replace(/\D/g, '') : message.sender;
+    const sender = message.sender;
     // A manager's « OUI 12 » on a request that waits for her (specs/025-manager).
     if (await decisionHeard({ channel, sender, text: message.text })) continue;
     const fromTeam = await heardFromStaff(
@@ -71,7 +94,7 @@ const notConnected = () => new Response(null, { status: 404 });
 /** Meta's subscription check. */
 export function whatsappSubscription(request: Request): Response {
   const token = process.env.WHATSAPP_VERIFY_TOKEN;
-  return token ? verifySubscription(new URL(request.url), token) : notConnected();
+  return token ? verifyWhatsAppSubscription(new URL(request.url), token) : notConnected();
 }
 
 /** A WhatsApp notification: refused unless Meta signed it with the app secret. */
@@ -79,10 +102,10 @@ export async function whatsappWebhook(request: Request): Promise<Response> {
   const secret = process.env.WHATSAPP_APP_SECRET;
   if (!secret) return notConnected();
   const raw = await request.text();
-  if (!signatureIsValid(raw, request.headers.get('x-hub-signature-256'), secret)) {
+  if (!whatsAppSignatureIsValid(raw, request.headers.get('x-hub-signature-256'), secret)) {
     return new Response(null, { status: 401 });
   }
-  await heard('whatsapp', parseNotification(JSON.parse(raw)));
+  await heard('whatsapp', parseWhatsAppNotification(JSON.parse(raw)));
   return new Response(null, { status: 200 });
 }
 
@@ -90,9 +113,9 @@ export async function whatsappWebhook(request: Request): Promise<Response> {
 export async function telegramWebhook(request: Request): Promise<Response> {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!secret) return notConnected();
-  if (!secretIsValid(request.headers.get('x-telegram-bot-api-secret-token'), secret)) {
+  if (!telegramSecretIsValid(request.headers.get('x-telegram-bot-api-secret-token'), secret)) {
     return new Response(null, { status: 401 });
   }
-  await heard('telegram', parseUpdate(await request.json()));
+  await heard('telegram', parseTelegramUpdate(await request.json()));
   return new Response(null, { status: 200 });
 }

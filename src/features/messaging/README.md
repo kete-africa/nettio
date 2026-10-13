@@ -62,5 +62,8 @@ boundary: three SQL functions return identifiers only, and nothing else does.
 ## Ports and adapters
 
 The feature knows `ChatChannel` (`@kete/notify`) and `Channels`; no vendor is named in it. The
-adapters — `src/platform/whatsapp.ts` (Meta Cloud API), `src/platform/telegram.ts` (Bot API) — were
-written from Firmo's and are tested against recorded exchanges, not the live services.
+adapters are the chassis' own since `@kete/notify` 0.3.0 (`whatsAppChannel`, `telegramChannel`,
+and what authenticates and reads their webhooks): Nettio wires them in `src/platform/channels.ts`
+and `src/platform/inbound.ts`, and keeps no copy. They are tested there against recorded exchanges,
+not the live services. A person who hides her WhatsApp number is named by the provider's own
+identifier: Nettio knows no customer by it yet, and answers her like an unknown sender.
